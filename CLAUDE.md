@@ -11,7 +11,7 @@ Sản phẩm: Quán Quen, web app trên điện thoại, bản đồ quán ăn n
 | [docs/quan-quen-thiet-ke.md](docs/quan-quen-thiet-ke.md) | Thiết kế sản phẩm: người dùng, phạm vi, 6 màn hình, nhận diện, dữ liệu, kiểm duyệt, ISO 25010, quyền riêng tư, kiểm thử, fanpage, kế hoạch, rủi ro | Mọi việc liên quan đến hành vi, giao diện, câu chữ |
 | [docs/quan-quen-ky-thuat.md](docs/quan-quen-ky-thuat.md) | Phương án kỹ thuật: stack, thư mục, router, SQL bảng/RLS/`submit_review`, cấu hình Google/Supabase/Vercel, bảo mật, test, phân việc theo ngày | Mọi việc code, cấu hình, database |
 
-Bản thiết kế là nguồn gốc về sản phẩm; bản kỹ thuật là nguồn gốc về cách làm. Mục 10 bản kỹ thuật liệt kê các chỗ bản kỹ thuật bổ sung hoặc sửa bản thiết kế. Bản gốc của thiết kế (có sơ đồ vẽ) nằm trên Claude Docs, link ở đầu file thiết kế.
+Bản thiết kế là nguồn gốc về sản phẩm; bản kỹ thuật là nguồn gốc về cách làm. Mục 10 bản kỹ thuật liệt kê các chỗ bản kỹ thuật bổ sung hoặc sửa bản thiết kế. Hai file trong `docs/` là **bản chuẩn**; bản nháp trên Claude Docs (link ở đầu file thiết kế) cũ hơn, không dùng làm căn cứ. Khi sửa một quyết định, sửa cả hai file cho thống nhất.
 
 ## Quyết định đã chốt
 
@@ -30,7 +30,10 @@ Bản thiết kế là nguồn gốc về sản phẩm; bản kỹ thuật là n
 - `map.js` là file duy nhất biết đến Google Maps.
 - Bảng `reviews` có quyền theo cột: truy vấn phải liệt kê cột, không dùng `select=*`.
 - Cấu trúc database chỉ sửa qua `supabase/schema.sql` (chạy lại được từ đầu).
-- `service_role` key không bao giờ nằm trong repo hay biến `VITE_*`.
+- Supabase dùng key kiểu mới: frontend dùng publishable key (`sb_publishable_…`, biến `VITE_SUPABASE_PUBLISHABLE_KEY`); secret key (`sb_secret_…`) không bao giờ nằm trong repo hay biến `VITE_*`. Dự án tạo sau 11/2025 không có anon key/service_role key, nên hướng dẫn cũ nói "anon key" thì hiểu là publishable key. Vai trò Postgres vẫn là `anon` và `authenticated`.
+- Nén ảnh: luôn kiểm `blob.type` sau `toBlob('image/webp')`; iOS trả PNG mà không báo lỗi, khi đó dùng JPEG.
+- Email đăng nhập bắt buộc đi qua SMTP riêng (Resend hoặc Brevo); SMTP mặc định của Supabase chỉ gửi tới thành viên nhóm.
+- Điểm Google trên trang quán phải ghi nguồn "Google Maps" và không được lưu ngoài bộ nhớ của tab.
 - Ngưỡng hiển thị: dưới 3 đánh giá hiện "Mới"; dưới 3 lượt báo giá hiện "giá tham khảo"; đánh giá `is_sample` không tính vào điểm hay giá.
 
 ## Còn mở
@@ -38,4 +41,4 @@ Bản thiết kế là nguồn gốc về sản phẩm; bản kỹ thuật là n
 - Tên chính thức có giữ "Quán Quen" và linh vật "Bé Bao" không; giữ ngưỡng 50k hay đổi theo thành phố.
 - Thành phố và các cụm trường đã chọn chưa được ghi vào tài liệu.
 - SMTP: Resend (cần tên miền) hay Brevo; tên miền chính thức trên Vercel.
-- Các con số hạn mức, giá dịch vụ viết theo trí nhớ, cần kiểm lại (mục 12 bản kỹ thuật).
+- Hạn mức, giá và hành vi dịch vụ đã kiểm ngày 05/10/2026 (bảng nguồn ở mục 12 bản kỹ thuật). Còn 3 điểm chỉ thử được khi có dự án thật, liệt kê cuối mục 12.

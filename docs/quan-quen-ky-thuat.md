@@ -1,6 +1,6 @@
 # Quán Quen: Phương án kỹ thuật
 
-Viết ngày 05/10/2026, dựa trên [Quán Quen: Thiết kế sản phẩm](quan-quen-thiet-ke.md) (gọi tắt là "bản thiết kế", trích theo số mục). Tài liệu này trả lời câu "làm bằng gì, cụ thể ra sao" để nhóm 3 người code được ngay từ 06/10. Chỗ nào khác hoặc chi tiết hơn bản thiết kế đều được ghi rõ ở mục 10.
+Viết ngày 05/10/2026, dựa trên [Quán Quen: Thiết kế sản phẩm](quan-quen-thiet-ke.md) (gọi tắt là "bản thiết kế", trích theo số mục). Tài liệu này trả lời câu "làm bằng gì, cụ thể ra sao" để nhóm 3 người code được ngay từ 06/10. Chỗ nào bổ sung hoặc khác bản thiết kế đều được ghi ở mục 10. Các con số về hạn mức, giá và hành vi của dịch vụ đã được kiểm ngày 05/10/2026; nguồn ở mục 12.
 
 **Giả định.** Bản thiết kế đã đánh dấu xong hai câu hỏi mở nhưng chưa ghi câu trả lời. Tài liệu này giả định: (1) nhóm có thẻ, dùng **Google Maps**; (2) dùng **JavaScript thuần**. Nếu khác, xem mục 11 (phương án Leaflet). Nếu nhóm quen React thì chỉ đổi mục 3, mọi phần khác giữ nguyên.
 
@@ -20,7 +20,9 @@ Viết ngày 05/10/2026, dựa trên [Quán Quen: Thiết kế sản phẩm](qua
 | Giám sát, sao lưu | UptimeRobot + một GitHub Action chạy mỗi đêm | Action vừa sao lưu dữ liệu vừa giữ Supabase không bị tạm dừng |
 | Kiểm thử | `node --test` cho hàm thuần, `supabase/test.sql` cho RLS và view | Không dùng framework test |
 
-Nguyên tắc xuyên suốt: **frontend chỉ hiển thị, database quyết định.** Ai sửa được gì, check-in có hợp lệ không, ảnh có phải chờ duyệt không, đều do Postgres (RLS, hàm, trigger) quyết định. Người dùng có anon key (công khai theo thiết kế của Supabase) cũng không vượt qua được.
+Nguyên tắc xuyên suốt: **frontend chỉ hiển thị, database quyết định.** Ai sửa được gì, check-in có hợp lệ không, ảnh có phải chờ duyệt không, đều do Postgres (RLS, hàm, trigger) quyết định. Ai cũng có thể lấy được publishable key (key này được thiết kế để công khai), nhưng có key cũng không vượt qua được các quy tắc trên.
+
+**Về key của Supabase.** Dự án tạo sau tháng 11/2025 không còn "anon key" và "service_role key". Frontend dùng **publishable key** (`sb_publishable_…`). **Secret key** (`sb_secret_…`) bỏ qua RLS và chỉ dùng trong dashboard hoặc GitHub Secrets; Supabase tự từ chối nếu secret key được gửi từ trình duyệt. Tên vai trò trong Postgres không đổi: request dùng publishable key chạy dưới vai `anon`, người đã đăng nhập chạy dưới vai `authenticated`. Vì vậy SQL bên dưới vẫn viết `anon` và `authenticated`. Hướng dẫn trên mạng viết trước 2026 nói "anon key" thì hiểu là publishable key.
 
 ## 2. Kiến trúc
 
@@ -29,7 +31,7 @@ Nguyên tắc xuyên suốt: **frontend chỉ hiển thị, database quyết đ�
   └─ Web app tĩnh (Vite build, ~6 file JS)
        ├─ HTML/JS/CSS ───────────────> Vercel (CDN, rewrite mọi đường dẫn về index.html)
        ├─ Maps JS + Places ──────────> Google Maps Platform (key khóa theo domain, giới hạn lượt/ngày)
-       ├─ REST/RPC (anon key + JWT) ─> Supabase PostgREST ──> Postgres (RLS, view, submit_review, trigger)
+       ├─ REST/RPC (publishable key + JWT) ─> Supabase PostgREST ──> Postgres (RLS, view, submit_review, trigger)
        ├─ Đăng nhập ─────────────────> Supabase Auth ──> Google OAuth / SMTP riêng (Resend hoặc Brevo)
        └─ Tải ảnh lên/xuống ─────────> Supabase Storage (bucket "photos", thư mục theo user_id)
 
@@ -48,7 +50,7 @@ quan-quen/
   index.html            khung trang, thẻ Open Graph, preconnect font
   vercel.json           rewrite + header bảo mật
   package.json          scripts: dev, build, test
-  .env.local            (không commit) VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_GMAPS_KEY, VITE_GMAPS_MAP_ID
+  .env.local            (không commit) VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY, VITE_GMAPS_KEY, VITE_GMAPS_MAP_ID
   src/
     main.js             router, trạng thái chung, bộ lọc, chế độ danh sách, ngăn kéo
     map.js              nạp Maps JS, ghim, gom cụm, chuyển sang danh sách khi lỗi
@@ -60,7 +62,7 @@ quan-quen/
     util.test.js        test cho util.js (node --test)
     style.css
   public/
-    icons/              7 biểu tượng món + 4 biểu cảm Bé Bao (SVG)
+    icons/              7 biểu tượng món (WebP 64 px, chuyển từ Fluent Emoji 3D) + 4 biểu cảm Bé Bao (SVG)
     og.png              ảnh xem trước 1200×630 khi dán link
   supabase/
     schema.sql          bảng, view, RLS, hàm, trigger, bucket (chạy lại được từ đầu)
@@ -156,7 +158,8 @@ const p = new Place({ id: place.google_place_id })
 await p.fetchFields({ fields: ['rating', 'userRatingCount', 'googleMapsURI'] })
 ```
 
-  Kết quả chỉ giữ trong một biến `Map` của tab đang mở, không ghi vào `localStorage`, cho đúng điều khoản. Lỗi hoặc hết hạn mức thì ẩn dòng điểm Google, thay bằng link `https://www.google.com/maps/search/?api=1&query=Google&query_place_id=<place_id>`. Dòng điểm có chữ "Google" làm ghi nguồn.
+  Kết quả chỉ giữ trong một biến `Map` của tab đang mở, không ghi vào `localStorage`, vì chính sách Places chỉ cho lưu lâu dài `place_id`. Lỗi hoặc hết hạn mức thì ẩn dòng điểm Google, thay bằng link `https://www.google.com/maps/search/?api=1&query=Google&query_place_id=<place_id>`.
+- Ghi nguồn: dòng điểm nằm ngoài bản đồ Google nên bắt buộc có logo Google Maps, hoặc chữ "Google Maps" nếu chỗ hẹp, ví dụ "4,3★ (1.204) · Google Maps". Request này tính giá theo nhóm Enterprise (do có `rating`, `userRatingCount`), nên không yêu cầu thêm trường nào khác để tránh tốn thêm.
 - Chỉ đường: `https://www.google.com/maps/dir/?api=1&destination=<lat>,<lng>&destination_place_id=<place_id>`.
 - Chia sẻ: `navigator.share({ title, url })`, nếu trình duyệt không có thì sao chép link bằng `navigator.clipboard.writeText` và hiện thông báo "Đã chép link".
 - Ảnh: `<img loading="lazy" decoding="async" width height alt>`. Lưới ảnh dùng bản 400 px, bấm vào mới mở bản 1280 px.
@@ -166,7 +169,7 @@ await p.fetchFields({ fields: ['rating', 'userRatingCount', 'googleMapsURI'] })
 
 1. **Check-in:** `navigator.geolocation.getCurrentPosition(ok, err, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 })`. Nếu `accuracy > 100` thì báo "Ra chỗ thoáng hơn rồi thử lại nhé". Màn "Bạn đang ở quán" chỉ là gợi ý trên máy (dùng `distanceM`). Kiểm tra thật nằm trong `submit_review`.
 2. **Gửi:** `supabase.rpc('submit_review', {...})` nhận về `review_id`. Lỗi từ hàm là một mã ngắn (`too_far`, `already_reviewed_today`, `daily_limit`, `comment_has_contact`, ...), `review.js` đổi mã đó thành câu tiếng Việt.
-3. **Ảnh** (sau khi có `review_id`): mỗi ảnh nén thành 2 file, tải lên `<user_id>/<review_id>/<n>.webp` và `<n>_t.webp` với `cacheControl: '31536000'` (đường dẫn không bao giờ đổi), rồi `insert` một dòng vào `photos`. Một ảnh lỗi không làm hỏng đánh giá đã gửi; app báo "1 ảnh chưa lên được" và cho thử lại.
+3. **Ảnh** (sau khi có `review_id`): mỗi ảnh nén thành 2 file, tải lên `<user_id>/<review_id>/<n>.<đuôi>` và `<n>_t.<đuôi>` (đuôi là `webp` hoặc `jpg`, lấy theo `blob.type` thật) với `contentType` đúng loại và `cacheControl: '31536000'` (đường dẫn không bao giờ đổi), rồi `insert` một dòng vào `photos`. Một ảnh lỗi không làm hỏng đánh giá đã gửi; app báo "1 ảnh chưa lên được" và cho thử lại.
 
 ```js
 export async function compress(file, maxEdge) {
@@ -178,7 +181,8 @@ export async function compress(file, maxEdge) {
   c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height)
   const toBlob = type => new Promise(r => c.toBlob(r, type, 0.8))
   let blob = await toBlob('image/webp')
-  if (blob.type !== 'image/webp') blob = await toBlob('image/jpeg') // Safari có thể chưa xuất được WebP
+  // Safari và mọi trình duyệt trên iOS không xuất được WebP: toBlob không báo lỗi mà trả PNG nặng gấp ~10 lần
+  if (blob.type !== 'image/webp') blob = await toBlob('image/jpeg')
   return { blob, width: c.width, height: c.height } // vẽ lại qua canvas nên EXIF (có GPS) đã mất
 }
 ```
@@ -193,7 +197,9 @@ export async function compress(file, maxEdge) {
 export const isInAppBrowser = ua => /FBAN|FBAV|FB_IAB|Instagram|Zalo/i.test(ua)
 ```
 
-- Tấm đăng nhập là một `<dialog>`. Trong trình duyệt của Facebook hoặc Zalo thì ẩn nút Google, đưa lựa chọn email lên đầu, thêm nút "Sao chép link để mở bằng Chrome/Safari".
+- Tấm đăng nhập là một `<dialog>`. Trong trình duyệt của Facebook, Messenger, Instagram hoặc Zalo, Google luôn trả lỗi `403 disallowed_useragent` (chuyển sang redirect hay popup đều không giúp được), nên app ẩn nút Google, đưa lựa chọn email lên đầu, và thêm nút mở bằng trình duyệt thật:
+  - Android: link `intent://<host><path>#Intent;scheme=https;package=com.android.chrome;end` mở thẳng trang đang xem trong Chrome.
+  - iPhone: không có cách mở Safari từ code, nên nút này sao chép link và hướng dẫn "Bấm ⋯ rồi chọn Mở bằng trình duyệt".
 - Google: `signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin } })`. Trước khi chuyển trang, lưu đường dẫn đang làm vào `sessionStorage['qq:afterLogin']`; quay về thì đọc ra và điều hướng tiếp.
 - Email: `signInWithOtp({ email })`, rồi `verifyOtp({ email, token, type: 'email' })`. Không rời trang.
 - Client tạo với `auth: { flowType: 'pkce' }`. Sau khi đăng nhập, Supabase trả về `?code=` trên URL thay cho token trong hash, nên router không phải xử lý trường hợp đặc biệt.
@@ -207,7 +213,8 @@ export const isInAppBrowser = ua => /FBAN|FBAV|FB_IAB|Instagram|Zalo/i.test(ua)
 | Be Vietnam Pro qua Google Fonts với `display=swap`, `preconnect` tới `fonts.gstatic.com`, chỉ 3 độ đậm | Tránh chữ trống khi tải |
 | Tất cả `<img>` có `width`, `height`, `loading="lazy"` | Không bị CLS, không tải ảnh chưa cuộn tới |
 | Ngân sách: JS + CSS của app dưới 150 KB (supabase-js khoảng 45 KB nén) | Kiểm bằng `vite build`, Vite in kích thước từng file |
-| Icon là SVG trong `public/`, linh vật dưới 10 KB mỗi file | |
+| Biểu tượng món là WebP 64 px (khoảng 3 KB mỗi hình), linh vật là SVG dưới 10 KB | Fluent Emoji kiểu 3D là PNG 256 px (khoảng 28 KB), để nguyên thì 7 hình đã gần 200 KB |
+| Lưới ảnh và danh sách chỉ dùng ảnh 400 px | Giữ dưới hạn mức 5 GB băng thông của Supabase gói miễn phí |
 
 Chạy Lighthouse ngay ngày 07/10 trên bản deploy đầu tiên, không đợi đến 11/10. Nếu Maps JS kéo điểm Performance xuống dưới 90, cách xử lý là chỉ nạp bản đồ khi người dùng chạm vào vùng bản đồ hoặc sau `requestIdleCallback`.
 
@@ -277,7 +284,7 @@ create table photos (
   review_id bigint not null references reviews on delete cascade,
   place_id bigint not null references places on delete cascade,
   user_id uuid not null default auth.uid() references profiles on delete cascade,
-  storage_path text not null unique,      -- bản 1280 px; bản 400 px là <path bỏ .webp>_t.webp
+  storage_path text not null unique,      -- bản 1280 px, vd '<uid>/<review_id>/1.webp'; bản 400 px là '…/1_t.webp' (cùng đuôi)
   width int, height int,
   status text not null default 'pending' check (status in ('pending','visible','hidden')),
   created_at timestamptz not null default now()
@@ -427,10 +434,10 @@ Duyệt bằng cách sửa ô `status` trong Table Editor. Đánh giá mẫu cũ
 - [ ] Bật **Maps JavaScript API** và **Places API (New)**.
 - [ ] **Key prod:** HTTP referrer là `https://<domain-thật>/*`; API restriction chỉ hai API trên.
 - [ ] **Key dev:** referrer là `http://localhost:5173/*`. Dùng key riêng để không phải mở key prod cho localhost.
-- [ ] Quotas: Map loads 300/ngày; Place Details 30/ngày.
+- [ ] Quotas: Map loads 300/ngày (miễn phí 10.000/tháng); Place Details 30/ngày (miễn phí 1.000/tháng cho nhóm Enterprise).
 - [ ] Budget alert 1 USD, gửi email cho cả 3 người.
 - [ ] Map Management: tạo Map ID loại JavaScript, Vector. Tạo Map Style có bản sáng và tối, tắt "Points of interest" và "Transit", gắn vào Map ID.
-- [ ] OAuth consent screen: loại External, scope `email` và `profile`, rồi **bấm Publish (In production)**. Nếu để ở chế độ Testing thì chỉ tài khoản có trong danh sách test user mới đăng nhập được, người ngoài nhóm sẽ bị chặn.
+- [ ] OAuth consent screen (trong Console mới nằm ở mục Google Auth Platform: Branding, Audience): loại External, scope `email` và `profile`, rồi ở mục Audience **bấm Publish app (In production)**. Nếu để ở chế độ Testing thì chỉ tài khoản có trong danh sách test user mới đăng nhập được, người ngoài nhóm sẽ bị chặn. Hai scope này không nhạy cảm, nên không phải chờ Google xét duyệt.
 - [ ] OAuth Client ID (Web): redirect URI là `https://<project-ref>.supabase.co/auth/v1/callback`.
 
 ### 5.2 Supabase
@@ -439,29 +446,31 @@ Duyệt bằng cách sửa ô `status` trong Table Editor. Đánh giá mẫu cũ
 - [ ] Auth → Providers: bật Google (dán Client ID và secret), bật Email với OTP.
 - [ ] Auth → URL Configuration: Site URL là domain thật; Redirect URLs gồm domain thật và `http://localhost:5173`.
 - [ ] Auth → Email Templates: mẫu "Magic Link" dùng `{{ .Token }}` (mã 6 số) thay cho link, viết bằng tiếng Việt.
-- [ ] Auth → SMTP: cấu hình SMTP riêng (mục 5.4).
+- [ ] Auth → SMTP: cấu hình SMTP riêng (mục 5.4). Sau đó vào Auth → Rate Limits nâng giới hạn gửi email (mặc định sau khi bật SMTP riêng khoảng 30 email/giờ) cho khớp hạn mức của nhà cung cấp.
+- [ ] Settings → API Keys: chép publishable key vào biến `VITE_SUPABASE_PUBLISHABLE_KEY`. Secret key chỉ dán vào GitHub Secrets nếu thật sự cần.
 - [ ] Bật xác thực 2 bước cho tài khoản của cả 3 người.
 
 ### 5.3 Vercel và GitHub
 
 - Repo GitHub để private (chứa dữ liệu sao lưu trong artifact). Nhánh `main` là production; nhánh khác tạo bản preview.
 - Biến môi trường trên Vercel: 4 biến `VITE_*`. Bản preview dùng key Google dev nên bản đồ không hiện và tự chuyển sang danh sách. Chấp nhận được, vì bản preview chỉ để kiểm giao diện và luồng.
-- Không bao giờ để `service_role` key trong repo hay trong biến `VITE_*` (mọi biến `VITE_*` đều lộ ra trình duyệt).
+- Không bao giờ để secret key (`sb_secret_…`) trong repo hay trong biến `VITE_*` (mọi biến `VITE_*` đều lộ ra trình duyệt).
+- Vercel Hobby chỉ dành cho dự án phi thương mại; bài dự thi thỏa điều kiện này.
 
 ### 5.4 Email đăng nhập
 
-SMTP mặc định của Supabase chỉ dành cho thử nghiệm: theo hiểu biết hiện tại, nó chỉ gửi tới email của thành viên trong tổ chức Supabase và giới hạn vài email mỗi giờ. Vì vậy người dùng thật (nhất là người mở app trong Facebook, vốn chỉ đăng nhập được bằng email) **sẽ không nhận được mã**. Đây là việc bắt buộc của ngày 07/10, không phải chỉ là phương án dự phòng.
+SMTP mặc định của Supabase chỉ dành cho thử nghiệm: nó **chỉ gửi tới email của thành viên trong tổ chức Supabase** và tối đa 2 email mỗi giờ. Vì vậy người dùng thật (nhất là người mở app trong Facebook, vốn chỉ đăng nhập được bằng email) **sẽ không nhận được mã**. Đây là việc bắt buộc của ngày 07/10, không phải chỉ là phương án dự phòng.
 
 | Cách | Cần gì | Ghi chú |
 | --- | --- | --- |
-| Resend (gói miễn phí khoảng 100 email/ngày) | Một tên miền riêng đã xác minh DNS | Gửi ổn định nhất. Tên miền `.id.vn` có chương trình miễn phí cho người 18–23 tuổi (cần kiểm lại điều kiện); khi đó dùng luôn tên miền này cho Vercel |
-| Brevo (gói miễn phí khoảng 300 email/ngày) | Xác minh một địa chỉ người gửi | Không cần tên miền, nhưng email gửi từ địa chỉ Gmail dễ vào thư rác hơn |
+| Resend (miễn phí 100 email/ngày, 3.000 email/tháng) | Một tên miền riêng đã xác minh DNS | Gửi ổn định nhất. VNNIC tặng tên miền `.id.vn` miễn phí 2 năm cho công dân từ đủ 18 đến 23 tuổi, chương trình đã gia hạn đến hết năm 2026; đăng ký qua nhà đăng ký tên miền, cần xác minh danh tính bằng CCCD (eKYC). Khi đó dùng luôn tên miền này cho Vercel |
+| Brevo (miễn phí 300 email/ngày) | Xác minh một địa chỉ người gửi | Không cần tên miền, nhưng email gửi từ địa chỉ Gmail dễ vào thư rác hơn; email có chân trang quảng cáo của Brevo |
 
 Ngay sau khi cấu hình, gửi thử tới một địa chỉ Gmail và một địa chỉ Outlook không thuộc nhóm, và kiểm tra cả hộp thư rác.
 
 ### 5.5 Giám sát và sao lưu
 
-- **UptimeRobot**, 2 monitor 5 phút: (1) trang chủ trên Vercel; (2) `https://<ref>.supabase.co/rest/v1/areas?select=id&limit=1&apikey=<anon>`. Cần kiểm lại việc truyền `apikey` qua query string; gói miễn phí của UptimeRobot có thể không cho thêm header.
+- **UptimeRobot**, 2 monitor 5 phút: (1) trang chủ trên Vercel; (2) `https://<ref>.supabase.co/rest/v1/areas?select=id&limit=1&apikey=<publishable key>`. Gói miễn phí của UptimeRobot không cho thêm header tùy chỉnh, nên key phải đi qua tham số `apikey` trên URL; Supabase bản cloud chấp nhận cách này. Trước khi tạo monitor, chạy thử đúng URL đó bằng `curl` và xác nhận nhận về mã 200.
 - **GitHub Action mỗi đêm** (`.github/workflows/backup.yml`): `supabase db dump --data-only --schema public` rồi lưu thành artifact 14 ngày. Action này đồng thời là một lượt truy cập database mỗi ngày, nên dự án miễn phí không bị tạm dừng kể cả khi UptimeRobot hỏng. Secret cần có: `SUPABASE_DB_URL`. Ảnh trong Storage không được sao lưu; mất ảnh thì ít hại hơn mất đánh giá.
 
 ```yaml
@@ -504,7 +513,8 @@ Bổ sung cho ma trận thiết bị và buổi thử với sinh viên ở mục
   - Gọi `submit_review` từ tọa độ cách quán 1 km: phải báo `too_far`. Gọi 2 lần trong ngày: phải báo `already_reviewed_today`.
   - Thêm 3 báo cáo từ 3 người: đánh giá phải chuyển `hidden`.
   - Dùng `assert` trong khối `do $$ ... $$` để có lỗi là dừng ngay.
-- **Kiểm từ bên ngoài:** dùng `curl` với anon key gọi `DELETE /rest/v1/reviews?id=eq.<id>`, và `GET /rest/v1/reviews?select=checkin_distance_m`. Cả hai phải bị từ chối.
+- **Kiểm từ bên ngoài:** dùng `curl` với publishable key gọi `DELETE /rest/v1/reviews?id=eq.<id>`, và `GET /rest/v1/reviews?select=checkin_distance_m`. Cả hai phải bị từ chối.
+- **Ảnh từ iPhone:** tải một ảnh chụp bằng iPhone lên, kiểm tra trong Storage rằng file là JPEG thật (không phải PNG mang đuôi `.webp`), dưới 300 KB, và không còn EXIF.
 
 ## 8. Phân việc kỹ thuật theo ngày
 
@@ -536,31 +546,54 @@ Bổ sung cho ma trận thiết bị và buổi thử với sinh viên ở mục
 | 5 | Quyền theo cột cho `reviews` | RLS không giấu được cột `checkin_distance_m` |
 | 6 | Tên hiển thị mặc định không lấy từ email | Tránh lộ một phần email |
 | 7 | Mỗi ảnh lưu 2 cỡ (1280 px và 400 px) | Storage miễn phí không resize ảnh; lưới ảnh và danh sách cần ảnh nhỏ để đạt Lighthouse |
-| 8 | Ảnh có thể là JPEG thay vì WebP | Safari có thể chưa xuất được WebP qua canvas; EXIF vẫn bị xóa |
+| 8 | Ảnh là JPEG trên iOS, WebP ở nơi khác | Safari và mọi trình duyệt trên iOS không xuất được WebP qua canvas (trả PNG mà không báo lỗi); EXIF vẫn bị xóa |
 | 9 | Xóa file ảnh qua Storage API trước khi xóa tài khoản | `on delete cascade` không xóa được file |
 | 10 | Đường dẫn thật (`/quan/12`) + PKCE thay vì hash | Link chia sẻ đẹp hơn, và không xung đột với token OAuth |
 | 11 | Hai key Google (prod và dev) | Không phải mở key prod cho localhost hay các domain preview |
 | 12 | Sao lưu mỗi đêm bằng GitHub Action | Gói miễn phí của Supabase không có bản sao lưu tải về được; mất đánh giá giữa mùa thi là mất bài |
 | 13 | Đặt `Referrer-Policy` rõ ràng | Key khóa theo domain cần header Referer |
 | 14 | Ảnh xem trước khi dán link chỉ có một ảnh chung cho cả app | Facebook không chạy JS khi lấy ảnh xem trước. Ảnh riêng cho từng quán cần render phía server, để sau cuộc thi |
+| 15 | Publishable key và secret key thay cho anon key và service_role key | Dự án Supabase tạo sau 11/2025 chỉ có key kiểu mới |
+| 16 | Biểu tượng món là WebP 64 px chuyển từ PNG | Fluent Emoji kiểu 3D là PNG 256 px, không phải SVG |
+| 17 | Ghi nguồn điểm Google là "Google Maps" (hoặc logo), không chỉ "Google" | Chính sách Places API khi hiện dữ liệu ngoài bản đồ Google |
+| 18 | Trích Luật Bảo vệ dữ liệu cá nhân 2025 và Nghị định 356/2025/NĐ-CP | Nghị định 13/2023/NĐ-CP đã bị thay thế từ 01/01/2026 |
+| 19 | Nút mở Chrome bằng link `intent://` trên Android | Người dùng trong Facebook/Zalo vẫn đăng nhập Google được mà không phải tự sao chép link |
 
 ## 11. Phương án B: Leaflet (không có billing Google)
 
 Chỉ viết lại `map.js` và phần điểm Google trong `place.js`:
 
 - Leaflet (khoảng 42 KB) + `leaflet.markercluster`. Ghim dùng `L.divIcon` với đúng HTML/SVG của ghim hiện tại.
-- Nền bản đồ: CARTO Voyager (sáng) và Dark Matter (tối) trên dữ liệu OpenStreetMap, ghi nguồn "© OpenStreetMap contributors © CARTO". Cần kiểm lại điều khoản sử dụng miễn phí của CARTO.
+- Nền bản đồ: CARTO Voyager (sáng) và Dark Matter (tối) trên dữ liệu OpenStreetMap. Theo điều khoản CARTO cập nhật ngày 29/09/2026: **bắt buộc có API key riêng** (đăng ký miễn phí tại carto.com/basemaps/apikey); dùng phi thương mại (cá nhân, giáo dục, nghiên cứu) miễn phí đến 5 triệu lượt tải ô bản đồ mỗi tháng; ghi nguồn "© OpenStreetMap contributors © CARTO" phải hiện rõ trên bản đồ. Bài dự thi thuộc nhóm phi thương mại.
 - Bỏ dòng điểm Google, giữ link "Xem trên Google Maps" và nút chỉ đường (Google Maps URLs miễn phí, không cần key).
 - Đề xuất quán: kéo ghim bằng `draggable: true` của Leaflet.
 
 Database, đăng nhập, ảnh và mọi luồng khác giữ nguyên.
 
-## 12. Cần kiểm lại trên trang chính thức
+## 12. Đã kiểm chứng và nguồn
 
-Các điểm sau viết theo hiểu biết đến năm 2026, chưa tra cứu trực tuyến:
+Kiểm ngày 05/10/2026. Nếu đọc tài liệu này sau ngày nộp bài, kiểm lại trước khi dựa vào các con số.
 
-- Hạn mức miễn phí của Google: Dynamic Maps khoảng 10.000 lượt/tháng; Place Details có trường `rating` thuộc nhóm Enterprise, khoảng 1.000 lượt/tháng.
-- Giới hạn SMTP mặc định của Supabase, và việc Supabase tạm dừng dự án miễn phí sau 7 ngày không hoạt động.
-- Hạn mức miễn phí của Resend và Brevo; điều kiện nhận tên miền `.id.vn` miễn phí.
-- Gửi anon key Supabase qua query string `?apikey=`, và việc UptimeRobot gói miễn phí có hỗ trợ header tùy chỉnh hay không.
-- Yêu cầu ghi nguồn khi hiển thị dữ liệu Places bên ngoài bản đồ Google.
+| Điều đã kiểm | Kết quả | Nguồn |
+| --- | --- | --- |
+| Hạn mức miễn phí Google Maps (từ 03/2025, tính riêng từng SKU) | Essentials 10.000, Pro 5.000, Enterprise 1.000 lượt/tháng; Dynamic Maps thuộc Essentials | [Pricing categories](https://developers.google.com/maps/billing-and-pricing/pricing-categories), [Billing FAQ](https://developers.google.com/maps/billing-and-pricing/faq) |
+| Place Details với `rating`, `userRatingCount` | Tính theo nhóm Enterprise; `googleMapsUri` thuộc Pro; request tính theo trường đắt nhất | [Place Details (New)](https://developers.google.com/maps/documentation/places/web-service/place-details) |
+| Ghi nguồn và lưu dữ liệu Places | Ngoài bản đồ Google phải có logo Google Maps, hoặc chữ "Google Maps" nếu chỗ hẹp; chỉ `place_id` được lưu không thời hạn | [Places API policies](https://developers.google.com/maps/documentation/places/web-service/policies) |
+| Google chặn đăng nhập trong trình duyệt nhúng | `403 disallowed_useragent` trong Facebook, Messenger, Instagram, Zalo; chỉ cách mở trình duyệt thật mới qua được | [Google OAuth: embedded webviews](https://developers.googleblog.com/upcoming-security-changes-to-googles-oauth-20-authorization-endpoint-in-embedded-webviews/) |
+| SMTP mặc định của Supabase | Chỉ gửi tới thành viên nhóm, 2 email/giờ | [Supabase: Custom SMTP](https://supabase.com/docs/guides/auth/auth-smtp) |
+| Supabase tạm dừng dự án miễn phí | Sau 7 ngày ít hoạt động; phải bật lại bằng tay trong dashboard | [Project Pausing](https://supabase.com/docs/guides/platform/free-project-pausing) |
+| Key kiểu mới của Supabase | Dự án tạo sau 11/2025 chỉ có publishable key và secret key | [API keys](https://supabase.com/docs/guides/api/api-keys) |
+| Đổi cỡ ảnh trong Supabase Storage | Chỉ có từ gói Pro | [Image Transformations](https://supabase.com/docs/guides/storage/serving/image-transformations) |
+| Truyền `apikey` qua URL | Supabase cloud chấp nhận | [supabase/supabase#28930](https://github.com/supabase/supabase/issues/28930) |
+| UptimeRobot gói miễn phí | Không có header tùy chỉnh | [UptimeRobot pricing](https://uptimerobot.com/pricing/) |
+| Resend, Brevo gói miễn phí | Resend 100/ngày, 3.000/tháng; Brevo 300/ngày | [Resend pricing](https://resend.com/pricing), [Brevo pricing](https://www.brevo.com/pricing/) |
+| Tên miền `.id.vn` miễn phí | Công dân từ đủ 18 đến 23 tuổi, miễn phí 2 năm, gia hạn chương trình đến hết 2026 | [Thư viện Pháp luật](https://thuvienphapluat.vn/chinh-sach-phap-luat-moi/vn/ho-tro-phap-luat/chinh-sach-moi/64708/mien-phi-2-nam-su-dung-ten-mien-id-vn-cho-cong-dan-viet-nam-tu-du-18-den-23-tuoi), [Bộ KH&CN](https://mst.gov.vn/khoi-tao-hien-dien-so-voi-ten-mien-quoc-gia-viet-nam-vn-197260908161420492.htm) |
+| Safari xuất WebP qua canvas | Không hỗ trợ, kể cả Safari 26; `toBlob` trả PNG mà không báo lỗi | [Can I use](https://caniuse.com/mdn-api_htmlcanvaselement_toblob_type_parameter_webp) |
+| Fluent Emoji | Giấy phép MIT; kiểu 3D là PNG 256 px (khoảng 28 KB), kiểu Color là SVG; đủ hình cho 7 loại món | [microsoft/fluentui-emoji](https://github.com/microsoft/fluentui-emoji) |
+| Điều khoản CARTO Basemaps | Bắt buộc API key; phi thương mại miễn phí 5 triệu lượt tải ô bản đồ/tháng; ghi nguồn OSM và CARTO | [CARTO Basemap Terms](https://carto.com/legal/basemap-terms/) |
+
+Chưa kiểm được trước khi có dự án thật, nhóm tự thử:
+
+- Truyền **publishable key** (key kiểu mới) qua `?apikey=` cho UptimeRobot: nguồn trên xác nhận với key kiểu cũ. Thử bằng `curl` (mục 5.5).
+- Điểm Lighthouse khi có Maps JS: chỉ đo được trên bản deploy thật (ngày 07/10).
+- Trình duyệt của Facebook và Zalo trên máy thật có cho lấy vị trí GPS không: nằm trong ma trận thiết bị của bản thiết kế, mục 11.
