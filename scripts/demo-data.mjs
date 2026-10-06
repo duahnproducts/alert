@@ -21,10 +21,10 @@ const AREAS = [
 // Tên quán tự đặt theo phong cách chibi của app, để không ai nhầm với quán thật
 const PLACES = {
   bun_pho_mi: ['Phở Mèo Mập', 'Bún Chả Nhà Mây', 'Mì Vằn Thắn Cá Heo', 'Bún Bò Sóc Nâu', 'Hủ Tiếu Gà Con', 'Bún Riêu Cua Nhỏ', 'Phở Cuốn Mây Trắng'],
-  com: ['Cơm Tấm Gấu Trúc', 'Cơm Rang Bếp Thỏ', 'Cơm Nhà Bé Bao', 'Cơm Gà Chíp Chíp', 'Cơm Văn Phòng Nai Con', 'Cơm Niêu Heo Hồng'],
+  com: ['Cơm Tấm Gấu Trúc', 'Cơm Rang Bếp Thỏ', 'Cơm Nhà Bao', 'Cơm Gà Chíp Chíp', 'Cơm Văn Phòng Nai Con', 'Cơm Niêu Heo Hồng'],
   banh_mi_xoi: ['Bánh Mì Thỏ Ngọc', 'Xôi Cô Tiên', 'Bánh Mì Cú Mèo', 'Xôi Gấc Hạt Đậu', 'Bánh Mì Chim Sẻ', 'Xôi Lá Dứa Ếch Xanh'],
   an_vat: ['Xiên Que Chú Cún', 'Nem Chua Rán Mây Hồng', 'Bánh Tráng Mèo Lười', 'Ốc Nhỏ Vui Vẻ', 'Bột Chiên Mèo Hồng', 'Khoai Lắc Gà Bông'],
-  do_uong: ['Trà Sữa Bé Bao', 'Trà Chanh Cá Vàng', 'Sinh Tố Dâu Tây Nhỏ', 'Trà Đào Hươu Cao Cổ', 'Trà Sữa Mây Tím', 'Nước Mía Cún Con'],
+  do_uong: ['Trà Sữa Bao', 'Trà Chanh Cá Vàng', 'Sinh Tố Dâu Tây Nhỏ', 'Trà Đào Hươu Cao Cổ', 'Trà Sữa Mây Tím', 'Nước Mía Cún Con'],
   ca_phe: ['Cà Phê Cú Đêm', 'Cà Phê Sách Gấu Bông', 'Cà Phê Muối Hải Cẩu', 'Cà Phê Mèo Mun', 'Cà Phê Lá Me', 'Cà Phê Sóc Chuột'],
   che: ['Chè Cô Tiên Nhỏ', 'Chè Khúc Bạch Mây', 'Tào Phớ Thỏ Trắng', 'Kem Dừa Chim Cánh Cụt', 'Chè Thái Cá Vàng', 'Sữa Chua Nếp Cẩm Thỏ'],
 }

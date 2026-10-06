@@ -40,7 +40,7 @@ const placeIcon = (p, size = 40) =>
 
 // Hiện một trang con (mọi màn trừ bản đồ). Bản đồ vẫn giữ nguyên phía sau để quay lại không phải vẽ lại.
 export function page(title, nodes, back = { href: './', label: 'Bản đồ' }) {
-  document.title = `${title} · Quán Quen`
+  document.title = `${title} · Hometown`
   $('home').hidden = true
   const main = $('page')
   main.hidden = false
@@ -173,7 +173,7 @@ function renderList(list = filtered()) {
   if (!state.places.length) {
     if (state.loading) {
       title.textContent = 'Đang tìm quán ngon…'
-      ul.replaceChildren(h('li', { class: 'empty' }, mascot('doi', 72), h('p', null, 'Bé Bao đang đi tìm quán…')))
+      ul.replaceChildren(h('li', { class: 'empty' }, mascot('doi', 72), h('p', null, 'Bao đang đi tìm quán…')))
     } else {
       title.textContent = 'Chưa tải được quán'
       ul.replaceChildren(h('li', null, errorBox('Không tải được danh sách quán. Kiểm tra mạng rồi bấm thử lại nhé.', loadData)))

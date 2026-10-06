@@ -1,8 +1,8 @@
-# alert / Quán Quen
+# alert / Hometown
 
 Bài dự thi "From Idea to Impact" (CLB FPC), hạn nộp **12/10/2026**. Bản chạy được để thử với sinh viên: **10/10/2026**. Từ 12/10 chỉ sửa lỗi, không thêm tính năng.
 
-Sản phẩm: Quán Quen, web app trên điện thoại, bản đồ quán ăn ngon dưới 50k quanh các trường đại học ở Hà Nội và TP. Hồ Chí Minh, kèm các địa danh nổi tiếng có ảnh thật. Sinh viên check-in GPS tại quán rồi mới được chấm điểm, báo giá thật, chụp ảnh thật. Một người làm (tài liệu cũ ghi nhóm 3 người). Đích cuối: một đường link công khai, ai bấm vào cũng dùng được.
+Sản phẩm: Hometown, web app trên điện thoại, bản đồ quán ăn ngon dưới 50k quanh các trường đại học ở Hà Nội và TP. Hồ Chí Minh, kèm các địa danh nổi tiếng có ảnh thật. Sinh viên check-in GPS tại quán rồi mới được chấm điểm, báo giá thật, chụp ảnh thật. Một người làm (tài liệu cũ ghi nhóm 3 người). Đích cuối: một đường link công khai, ai bấm vào cũng dùng được.
 
 ## Tài liệu (đọc trước khi code)
 
@@ -15,6 +15,7 @@ Bản thiết kế là nguồn gốc về sản phẩm; bản kỹ thuật là n
 
 ## Quyết định đã chốt
 
+- Tên app: **Hometown**, linh vật: **Bao** (chốt 06/10/2026, đổi từ "Quán Quen" và "Bé Bao"). Tên nội bộ giữ nguyên: file `docs/quan-quen-*.md`, `public/icons/bebao-*.svg`, khóa `qq:` trong localStorage, class `qq-icon`.
 - Không server riêng: GitHub Pages (file tĩnh, https://duahnproducts.github.io/alert/) + Leaflet + Supabase (Postgres, Auth, Storage). Không dùng Vercel (chốt 06/10/2026). Workflow `pages.yml` chỉ deploy từ nhánh mặc định của repo.
 - App chạy dưới đường dẫn con `/alert/`: mọi đường dẫn trong code là tương đối theo thẻ `<base>` (vd `icons/x.svg`, `quan/12`, `./`), không viết `/` ở đầu.
 - Vite + JavaScript thuần, 3 gói chạy trên trình duyệt: `@supabase/supabase-js`, `leaflet`, `protomaps-leaflet` (vẽ bản đồ chibi từ dữ liệu vector).
@@ -42,7 +43,7 @@ Google Cloud chỉ còn dùng cho nút "Tiếp tục với Google" (OAuth, miễ
 
 ## Còn mở
 
-- Tên chính thức có giữ "Quán Quen" và linh vật "Bé Bao" không; giữ ngưỡng 50k hay đổi theo thành phố.
+- Giữ ngưỡng 50k hay đổi theo thành phố.
 - Thành phố đã chốt (06/10/2026): Hà Nội và TP. Hồ Chí Minh. Các cụm trường chưa được ghi vào tài liệu.
 - SMTP: Resend (cần tên miền) hay Brevo; có gắn tên miền riêng cho GitHub Pages không.
 - Hạn mức, giá và hành vi dịch vụ đã kiểm ngày 05/10/2026 (bảng nguồn ở mục 12 bản kỹ thuật). Còn 3 điểm chỉ thử được khi có dự án thật, liệt kê cuối mục 12.

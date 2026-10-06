@@ -1,6 +1,6 @@
-# Quán Quen: Phương án kỹ thuật
+# Hometown: Phương án kỹ thuật
 
-Viết ngày 05/10/2026, dựa trên [Quán Quen: Thiết kế sản phẩm](quan-quen-thiet-ke.md) (gọi tắt là "bản thiết kế", trích theo số mục). Tài liệu này trả lời câu "làm bằng gì, cụ thể ra sao" để nhóm 3 người code được ngay từ 06/10. Chỗ nào bổ sung hoặc khác bản thiết kế đều được ghi ở mục 10. Các con số về hạn mức, giá và hành vi của dịch vụ đã được kiểm ngày 05/10/2026; nguồn ở mục 12.
+Viết ngày 05/10/2026, dựa trên [Hometown: Thiết kế sản phẩm](quan-quen-thiet-ke.md) (gọi tắt là "bản thiết kế", trích theo số mục). Tài liệu này trả lời câu "làm bằng gì, cụ thể ra sao" để nhóm 3 người code được ngay từ 06/10. Chỗ nào bổ sung hoặc khác bản thiết kế đều được ghi ở mục 10. Các con số về hạn mức, giá và hành vi của dịch vụ đã được kiểm ngày 05/10/2026; nguồn ở mục 12.
 
 **Đã chốt 06/10/2026:** (1) không có thẻ để mở thanh toán Google Cloud, nên bản đồ dùng **Leaflet** (mục 11), không dùng Google Maps; (2) dùng **JavaScript thuần**. Google Cloud chỉ còn dùng để tạo OAuth client cho nút "Tiếp tục với Google" (miễn phí, không cần thẻ). Các mục bên dưới đã sửa theo quyết định này.
 
@@ -61,7 +61,7 @@ quan-quen/
     util.test.js        test cho util.js (node --test)
     style.css
   public/
-    icons/              bộ icon tự vẽ (SVG): 7 biểu tượng món, 17 biểu tượng địa danh `lm-*.svg`, 4 biểu cảm Bé Bao
+    icons/              bộ icon tự vẽ (SVG): 7 biểu tượng món, 17 biểu tượng địa danh `lm-*.svg`, 4 biểu cảm Bao
     covers/             7 tranh minh họa quán theo loại món (SVG 640×320, mỗi tranh dưới 5 KB), làm ảnh bìa khi quán chưa có ảnh thật
     og.png              ảnh xem trước 1200×630 khi dán link
   supabase/
@@ -93,7 +93,7 @@ GitHub Pages không cho đặt header, nên `Referrer-Policy` đặt bằng th�
 
 ### 3.3 Tải và lọc dữ liệu
 
-- Khi mở app: đọc bản lưu `localStorage['qq:places:v1']` (nếu có) và vẽ ngay, rồi gọi `places_public` (mục 4.3) một lần để lấy bản mới, khoảng 30 KB cho 50 quán. Lấy được thì lưu lại kèm `savedAt`. Không lấy được thì giữ bản cũ và hiện dòng "Dữ liệu lưu lúc 20:15". Không có cả hai thì hiện Bé Bao buồn và nút thử lại.
+- Khi mở app: đọc bản lưu `localStorage['qq:places:v1']` (nếu có) và vẽ ngay, rồi gọi `places_public` (mục 4.3) một lần để lấy bản mới, khoảng 30 KB cho 50 quán. Lấy được thì lưu lại kèm `savedAt`. Không lấy được thì giữ bản cũ và hiện dòng "Dữ liệu lưu lúc 20:15". Không có cả hai thì hiện Bao buồn và nút thử lại.
 - Mọi bộ lọc chạy trên mảng trong bộ nhớ: cụm trường (`area_id`), giá (dùng `price_median` nếu `price_count >= 3`, nếu không thì dùng `price_max`), loại món, "đang mở".
 - Ô tìm kiếm so khớp không dấu trên tên quán, món được nhắc nhiều và tên loại món. Gõ "bun cha" vẫn ra "Bún chả":
 
@@ -139,7 +139,7 @@ Trong Google Sheet, nhóm gõ JSON vào một ô. Khi xuất CSV, Sheets tự th
 - Ghi nguồn đặt ở góc trên bên trái (góc dưới bị ngăn kéo danh sách che). Nút zoom ở góc trên bên phải. `minZoom: 11` để không kéo ra ngoài cỡ một thành phố.
 - Mỗi quán là một `L.marker` với `L.divIcon({ html: <div class="pin">…</div> })`, dựng bằng `createElement` (không dùng chuỗi HTML). `title` và `aria-label` là nhãn đọc màn hình ("Bún chả Hương, 35 nghìn, 4,6 sao, cách 300 mét"). Vương miện, trạng thái mờ và mặt trăng là class CSS. Hiệu ứng nảy dùng `@keyframes` và bị tắt trong `@media (prefers-reduced-motion: reduce)`.
 - Gom cụm tự viết, khoảng 25 dòng: ở mỗi mức zoom chia màn hình thành ô lưới 64 px, các quán cùng ô gộp thành một bong bóng mây có biểu tượng loại món nhiều nhất và số quán trong huy hiệu hồng. Bấm cụm thì phóng tới vừa các quán trong cụm. Từ zoom 18 trở lên không gộp nữa. Đủ cho vài trăm quán; nhiều hơn thì dùng `leaflet.markercluster`.
-- Ghim chibi: đầu tròn phồng màu theo loại món, viền trắng dày, đuôi nhỏ, bóng dưới chân, lắc lư nhẹ lệch nhịp nhau; quán điểm cao có vương miện, quán đang đóng nhạt màu kèm 💤; ghim được chọn nảy lên. Vị trí của bạn là Bé Bao nhỏ có vòng sóng. Mọi chuyển động tắt khi máy bật giảm chuyển động.
+- Ghim chibi: đầu tròn phồng màu theo loại món, viền trắng dày, đuôi nhỏ, bóng dưới chân, lắc lư nhẹ lệch nhịp nhau; quán điểm cao có vương miện, quán đang đóng nhạt màu kèm 💤; ghim được chọn nảy lên. Vị trí của bạn là Bao nhỏ có vòng sóng. Mọi chuyển động tắt khi máy bật giảm chuyển động.
 - Khi lọc: dùng lại marker đã tạo, chỉ tính lại cụm.
 - CSS của Leaflet ép `width: auto` cho ảnh trong lớp ghim, nên cỡ biểu tượng phải đặt bằng selector mạnh hơn (`.leaflet-container .qq-icon .pin img`). `#map` có `isolation: isolate` để các lớp của Leaflet (z-index 400 đến 1000) không đè lên ngăn kéo danh sách.
 - **Chuyển sang danh sách khi lỗi:** không tải được thư viện, hoặc sau 8 giây chưa tải được ô bản đồ nào trong khi khung bản đồ đang hiện. Gặp một trong hai trường hợp thì chuyển hẳn sang chế độ danh sách, kèm dòng "Bản đồ đang nghỉ, xem danh sách nhé".
@@ -147,7 +147,7 @@ Trong Google Sheet, nhóm gõ JSON vào một ô. Khi xuất CSV, Sheets tự th
 ### 3.6 Trang quán (`place.js`)
 
 - Dữ liệu chính lấy từ mảng đã tải. Chỉ đánh giá và ảnh cần gọi thêm: `reviews_public` và `photos` theo `place_id`, 20 dòng mới nhất.
-- Không lấy điểm Google. Dòng dưới điểm Quán Quen là link "Xem đánh giá trên Google Maps": `https://www.google.com/maps/search/?api=1&query=<tên quán>&query_place_id=<place_id>` (không có `place_id` thì dùng tọa độ).
+- Không lấy điểm Google. Dòng dưới điểm Hometown là link "Xem đánh giá trên Google Maps": `https://www.google.com/maps/search/?api=1&query=<tên quán>&query_place_id=<place_id>` (không có `place_id` thì dùng tọa độ).
 - Chỉ đường: `https://www.google.com/maps/dir/?api=1&destination=<lat>,<lng>&destination_place_id=<place_id>`.
 - Chia sẻ: `navigator.share({ title, url })`, nếu trình duyệt không có thì sao chép link bằng `navigator.clipboard.writeText` và hiện thông báo "Đã chép link".
 - Ảnh: `<img loading="lazy" decoding="async" width height alt>`. Lưới ảnh dùng bản 400 px, bấm vào mới mở bản 1280 px.
@@ -554,7 +554,7 @@ Bổ sung cho ma trận thiết bị và buổi thử với sinh viên ở mục
 | 13 | Đặt `Referrer-Policy` rõ ràng | Key khóa theo domain cần header Referer |
 | 14 | Ảnh xem trước khi dán link chỉ có một ảnh chung cho cả app | Facebook không chạy JS khi lấy ảnh xem trước. Ảnh riêng cho từng quán cần render phía server, để sau cuộc thi |
 | 15 | Publishable key và secret key thay cho anon key và service_role key | Dự án Supabase tạo sau 11/2025 chỉ có key kiểu mới |
-| 16 | Bộ icon tự vẽ bằng SVG (món ăn và địa danh), thay cho Fluent Emoji | Có phong cách riêng đồng bộ với Bé Bao, nhẹ hơn, không phụ thuộc giấy phép bên ngoài |
+| 16 | Bộ icon tự vẽ bằng SVG (món ăn và địa danh), thay cho Fluent Emoji | Có phong cách riêng đồng bộ với Bao, nhẹ hơn, không phụ thuộc giấy phép bên ngoài |
 | 17 | (Bỏ từ 06/10) Ghi nguồn điểm Google | App không còn lấy điểm Google |
 | 18 | Trích Luật Bảo vệ dữ liệu cá nhân 2025 và Nghị định 356/2025/NĐ-CP | Nghị định 13/2023/NĐ-CP đã bị thay thế từ 01/01/2026 |
 | 19 | Nút mở Chrome bằng link `intent://` trên Android | Người dùng trong Facebook/Zalo vẫn đăng nhập Google được mà không phải tự sao chép link |

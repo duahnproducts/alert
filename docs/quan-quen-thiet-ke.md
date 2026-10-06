@@ -1,4 +1,4 @@
-# Quán Quen: Thiết kế sản phẩm
+# Hometown: Thiết kế sản phẩm
 
 Bản trong repo là **bản chuẩn**, cập nhật ngày 05/10/2026: các con số về hạn mức, giá và quy định đã được kiểm trên trang chính thức (nguồn ở cuối tài liệu), và đã thống nhất với [phương án kỹ thuật](quan-quen-ky-thuat.md). Bản nháp đầu tiên (có sơ đồ vẽ) nằm trên Claude Docs, có thể cũ hơn bản này: https://claude.ai/code/artifact/eb3e82df-65aa-44b2-8470-35029f08e2e5
 
@@ -8,13 +8,13 @@ Tài liệu này mô tả sản phẩm làm gì và vì sao. Cách làm cụ th�
 
 ## 1. Tóm tắt
 
-Quán Quen (tên tạm) là bản đồ các quán ăn ngon dưới 50k quanh các trường đại học ở Hà Nội và TP. Hồ Chí Minh. Sinh viên và người dân địa phương chấm điểm, báo giá thật và chụp ảnh thật; mỗi quán hiện trên bản đồ bằng một biểu tượng dễ thương.
+Hometown là bản đồ các quán ăn ngon dưới 50k quanh các trường đại học ở Hà Nội và TP. Hồ Chí Minh. Sinh viên và người dân địa phương chấm điểm, báo giá thật và chụp ảnh thật; mỗi quán hiện trên bản đồ bằng một biểu tượng dễ thương.
 
 - **Cho ai:** sinh viên 18–24 tuổi, đặc biệt là tân sinh viên mới lên thành phố, chưa biết ăn ở đâu và phải tiêu tiền kỹ.
 - **Lời hứa:** quán ngon vì người ăn thật nói ngon, không phải vì được quảng cáo.
 - **Phạm vi dự thi:** hai thành phố (Hà Nội, TP. Hồ Chí Minh), 3–5 cụm trường, 30–50 quán do nhóm tự đi ăn và chụp.
 
-|  | Google Maps | Foody / ShopeeFood | Quán Quen |
+|  | Google Maps | Foody / ShopeeFood | Hometown |
 | --- | --- | --- | --- |
 | Ai chấm điểm | Bất kỳ ai, kể cả khách du lịch và đánh giá mua | Khách đặt món, quán có trả phí quảng cáo | Người đã check-in GPS tại quán |
 | Giá | Khoảng giá chung chung | Giá menu giao hàng, thường cao hơn ăn tại chỗ | "Giá thật": số tiền người ăn báo lại |
@@ -108,7 +108,7 @@ Bản đồ ──> Chi tiết quán ──> [Đã đăng nhập?] ──rồi�
 
 - **Ảnh bìa:** ảnh thật mới nhất, nhãn "Ảnh thật · 3 ngày trước". Quán chưa có ảnh thật thì hiện tranh vẽ quán vỉa hè theo loại món, nhãn "Hình minh họa · chưa có ảnh thật". Không dùng ảnh do máy tạo trông như ảnh chụp, vì như vậy là bịa "ảnh thật".
 - **Thông tin:** tên, loại món, địa chỉ, khoảng cách, "Đang mở · đóng lúc 21:00".
-- **Khối điểm:** dòng lớn "Quán Quen 4,6★ (23 đánh giá)"; dòng nhỏ là link "Xem đánh giá trên Google Maps". App không lấy và không hiện điểm Google (mục 10).
+- **Khối điểm:** dòng lớn "Hometown 4,6★ (23 đánh giá)"; dòng nhỏ là link "Xem đánh giá trên Google Maps". App không lấy và không hiện điểm Google (mục 10).
 - **Giá thật:** "Thường 35k · từ 30k đến 45k · theo 18 người đã ăn".
 - **Món được nhắc nhiều:** các chip như "Bún chả (12)", "Nem (5)".
 - **Lưới ảnh thật,** rồi **danh sách đánh giá** mới nhất trước. Mỗi đánh giá gồm tên hiển thị, huy hiệu "Đã check-in", số sao, giá đã trả, món, một câu, ảnh, ngày và nút "Báo cáo".
@@ -157,7 +157,7 @@ Bản đồ trông như một tấm bản đồ ẩm thực vẽ tay kiểu chib
 | Cà phê học bài | `ca_phe` | Tách cà phê có phin | Nâu #A47551 |
 | Chè, tráng miệng | `che` | Cốc chè ba lớp có đá | Xanh ngọc #6CC5C0 |
 
-Bộ biểu tượng do nhóm tự vẽ (cập nhật 06/10/2026, thay cho Fluent Emoji): 7 biểu tượng món và 17 biểu tượng địa danh, cùng một phong cách với Bé Bao. Viền nâu đậm #3A2A1F bo tròn, màu kẹo pastel, và mỗi hình có khuôn mặt chibi (mắt tròn có đốm sáng, má hồng, miệng cười). Mỗi hình là một file SVG 64 × 64 khoảng 1–2 KB trong `public/icons/`, nét ở mọi cỡ màn hình, không cần ghi nguồn hay giấy phép của bên ngoài.
+Bộ biểu tượng do nhóm tự vẽ (cập nhật 06/10/2026, thay cho Fluent Emoji): 7 biểu tượng món và 17 biểu tượng địa danh, cùng một phong cách với Bao. Viền nâu đậm #3A2A1F bo tròn, màu kẹo pastel, và mỗi hình có khuôn mặt chibi (mắt tròn có đốm sáng, má hồng, miệng cười). Mỗi hình là một file SVG 64 × 64 khoảng 1–2 KB trong `public/icons/`, nét ở mọi cỡ màn hình, không cần ghi nguồn hay giấy phép của bên ngoài.
 
 **Quy tắc vẽ ghim trên bản đồ**
 
@@ -167,7 +167,7 @@ Bộ biểu tượng do nhóm tự vẽ (cập nhật 06/10/2026, thay cho Fluen
 - Ghim đang được chọn phóng to 1,25 lần và nảy nhẹ trong 200 ms. Nếu máy bật chế độ giảm chuyển động thì không nảy.
 - Thu nhỏ bản đồ thì các quán gộp thành cụm: hình tròn màu kem, có số quán và biểu tượng của loại món nhiều nhất trong cụm.
 
-**Linh vật "Bé Bao"** (tên tạm) là một chiếc bánh bao có mặt, dùng 4 biểu cảm:
+**Linh vật "Bao"** là một chiếc bánh bao có mặt, dùng 4 biểu cảm:
 
 - **Vui:** khi gửi đánh giá thành công.
 - **Đói:** khi đang tải.
@@ -208,7 +208,7 @@ Toàn bộ dữ liệu của app nằm trong 6 bảng Postgres trên Supabase. T
 
 **Các con số hiển thị** được tính bằng một view SQL `place_stats`, không lưu riêng:
 
-- **Điểm Quán Quen:** trung bình số sao của các đánh giá đang hiện. Quán có dưới 3 đánh giá hiện chữ "Mới" thay cho điểm.
+- **Điểm Hometown:** trung bình số sao của các đánh giá đang hiện. Quán có dưới 3 đánh giá hiện chữ "Mới" thay cho điểm.
 - **Giá thật:** trung vị của `price_paid`, kèm khoảng từ phân vị 25 đến phân vị 75. Quán có dưới 3 lượt báo giá thì hiện khoảng giá của nhóm, ghi là "giá tham khảo".
 - **Bộ lọc "dưới 50k":** dùng giá thật nếu có, nếu chưa có thì dùng `price_max`.
 - **Món được nhắc nhiều:** 3 món xuất hiện nhiều nhất trong `dishes`.
@@ -244,7 +244,7 @@ Sơ đồ kiến trúc (dạng chữ):
 
 ```text
 Điện thoại người dùng (Chrome, Safari, Facebook, Zalo)
-  └─ Web app Quán Quen (HTML, CSS, JS thuần; nén ảnh, check-in GPS; lưu tạm dữ liệu quán khi mất kết nối)
+  └─ Web app Hometown (HTML, CSS, JS thuần; nén ảnh, check-in GPS; lưu tạm dữ liệu quán khi mất kết nối)
        ├─ tải trang ─────────────> GitHub Pages (file tĩnh, tự deploy khi push lên nhánh mặc định)
        ├─ dữ liệu bản đồ ────────> OpenFreeMap (miễn phí, không key); app tự vẽ kiểu chibi, ghim và gom cụm ngay trên máy
        └─ publishable key + RLS ─> Supabase (Auth: Google, mã email qua SMTP riêng; Postgres + RLS, submit_review; Storage: ảnh đã nén)
@@ -319,7 +319,7 @@ App giữ được chữ "thật" nhờ ba lớp. Thứ nhất, chỉ người �
 
 Bản 2023 của ISO/IEC 25010 có 9 đặc tính chất lượng sản phẩm: Functional suitability, Performance efficiency, Compatibility, Interaction capability, Reliability, Security, Maintainability, Flexibility và Safety (đã đối chiếu ngày 05/10/2026). So với bản 2011, Usability đổi thành Interaction capability, Portability đổi thành Flexibility, và Safety là đặc tính mới. Bảng dưới đây cho mỗi đặc tính một cách đáp ứng và một cách đo, để đưa thẳng vào trang Về dự án và caption.
 
-| Đặc tính | Quán Quen đáp ứng thế nào | Đo bằng gì, đạt khi nào |
+| Đặc tính | Hometown đáp ứng thế nào | Đo bằng gì, đạt khi nào |
 | --- | --- | --- |
 | Phù hợp chức năng | Đủ vòng tìm quán, xem, đi, đánh giá; giá thật là trung vị, không bị một giá bất thường kéo lệch | Chạy view `place_stats` trên bộ dữ liệu biết trước kết quả |
 | Hiệu năng | JS và CSS của app dưới 150 KB lúc mở (không tính thư viện bản đồ khoảng 86 KB, tải sau khi trang đã hiện); ảnh nén sẵn 2 cỡ, chỉ tải khi cuộn tới | Lighthouse mobile: LCP dưới 2,5 giây, điểm Performance từ 90 |
@@ -405,7 +405,7 @@ Theo thể lệ: react +10, comment +20, share +50. Chỉ tính tương tác c�
 
 **Cơ chế trong app**
 
-- Nút "Chia sẻ Quán Quen" trong app trỏ về bài dự thi trên fanpage, không trỏ về link app, và có dòng nhắc "Nhớ follow fanpage nhé".
+- Nút "Chia sẻ Hometown" trong app trỏ về bài dự thi trên fanpage, không trỏ về link app, và có dòng nhắc "Nhớ follow fanpage nhé".
 - Nút chia sẻ từng quán vẫn gửi link quán, vì đây là tính năng thật người dùng cần khi rủ bạn đi ăn.
 - Trang quán do người xem gợi ý ghi "Gợi ý bởi \[tên\]". Đây là lý do để người đó khoe với bạn bè.
 
@@ -419,7 +419,7 @@ Theo thể lệ: react +10, comment +20, share +50. Chỉ tính tương tác c�
 
 > Ăn trưa quanh trường mà vẫn được dưới 50k? Có đấy, nhưng không nằm trong mấy bài quảng cáo đâu.
 >
-> Quán Quen là bản đồ ăn ngon giá sinh viên quanh \[cụm trường\], do chính sinh viên chấm điểm. Muốn đánh giá phải check-in tại quán. Giá hiển thị là giá người ăn thật đã trả. Ảnh là ảnh chụp tại bàn, không phải ảnh studio.
+> Hometown là bản đồ ăn ngon giá sinh viên quanh \[cụm trường\], do chính sinh viên chấm điểm. Muốn đánh giá phải check-in tại quán. Giá hiển thị là giá người ăn thật đã trả. Ảnh là ảnh chụp tại bàn, không phải ảnh studio.
 >
 > Nhóm tự đi ăn \[X\] quán trong 7 ngày để làm bản đồ đầu tiên. Giờ đến lượt bạn: Comment tên quán ruột của bạn, nhóm sẽ đến ăn thử và đưa lên bản đồ, ghi tên bạn là người gợi ý. Share về nhóm lớp để cả lớp có bản đồ ăn rẻ. (Nhớ follow fanpage để lượt tương tác được tính nhé.)
 
@@ -428,7 +428,7 @@ Theo thể lệ: react +10, comment +20, share +50. Chỉ tính tương tác c�
 1. Bản đồ đầy biểu tượng món ăn: ảnh chính, dùng để thu hút người xem.
 2. Trang quán có dòng "Giá thật: 35k" và hai điểm đặt cạnh nhau.
 3. Màn check-in "Bạn đang ở quán".
-4. Linh vật Bé Bao và bộ biểu tượng.
+4. Linh vật Bao và bộ biểu tượng.
 
 **Không làm**
 
@@ -485,7 +485,7 @@ Rủi ro lớn nhất là app ngừng chạy giữa mùa thi, vì theo thể l�
 | Thành phố nào, những cụm trường nào? | Đã trả lời | Hà Nội và TP. Hồ Chí Minh (chốt 06/10/2026). Cụm trường: *cần ghi vào đây* |
 | Nhóm có thẻ để mở billing Google Cloud không? (quyết định dùng Google Maps hay Leaflet) | Đã trả lời | Không có thẻ (06/10/2026): dùng Leaflet, tự vẽ bản đồ chibi từ dữ liệu OpenFreeMap |
 | Nhóm quen React hay JavaScript thuần? | Đã trả lời | *Cần ghi vào đây.* Phương án kỹ thuật tạm giả định là JavaScript thuần |
-| Tên chính thức có giữ "Quán Quen" và linh vật "Bé Bao" không? | Chưa trả lời | |
+| Tên chính thức có giữ "Quán Quen" và linh vật "Bé Bao" không? | Đã trả lời | Đổi thành **Hometown**, linh vật **Bao** (chốt 06/10/2026). Tên file tài liệu `quan-quen-*.md` giữ nguyên để không gãy liên kết |
 | Giữ ngưỡng 50k, hay đổi theo mặt bằng giá của thành phố đã chọn? | Chưa trả lời | |
 | Gửi email đăng nhập qua Resend (cần tên miền riêng) hay Brevo? | Chưa trả lời | Xem mục 5.4 phương án kỹ thuật |
 

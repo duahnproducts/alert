@@ -45,7 +45,7 @@ export async function renderPlace(id) {
 
     h('section', { class: 'card scores', 'aria-label': 'Điểm' },
       h('p', { class: 'score-main' },
-        p.review_count >= 3 ? `Quán Quen ${formatStars(p.avg_stars)}★` : 'Quán Quen: Mới',
+        p.review_count >= 3 ? `Hometown ${formatStars(p.avg_stars)}★` : 'Hometown: Mới',
         h('small', null, ` (${p.review_count} đánh giá${DEMO ? ' mẫu' : ''})`)),
       // Quán minh họa trong bản demo không có thật: không dẫn sang Google Maps hay chỉ đường tới một tọa độ ngẫu nhiên
       !DEMO && h('p', { class: 'score-google muted' }, h('a', { href: gmaps, target: '_blank', rel: 'noopener' }, 'Xem đánh giá trên Google Maps'))),
@@ -166,7 +166,7 @@ function reportFlow(type, targetId) {
 async function share(p) {
   const url = new URL(`quan/${p.id}`, document.baseURI).href
   if (navigator.share) {
-    try { await navigator.share({ title: p.name, text: `${p.name} trên Quán Quen`, url }) } catch {}
+    try { await navigator.share({ title: p.name, text: `${p.name} trên Hometown`, url }) } catch {}
     return
   }
   try {

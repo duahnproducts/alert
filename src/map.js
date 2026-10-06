@@ -283,7 +283,7 @@ export function moveTo(center, zoom) {
   if (map) map.setView([center.lat, center.lng], zoom ?? map.getZoom())
 }
 
-// Vị trí của bạn: Bé Bao nhỏ có vòng sóng
+// Vị trí của bạn: Bao nhỏ có vòng sóng
 export function showUser(pos) {
   if (!map) return
   const L = map.qqL

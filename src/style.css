@@ -291,7 +291,7 @@ label, .label { display: block; font-weight: 600; margin-bottom: 6px; }
   background: #FF8FB1; color: #FFFFFF; border: 3px solid #FFFFFF; font: 800 14px/20px 'Be Vietnam Pro', system-ui, sans-serif; text-align: center;
 }
 
-/* Vị trí của bạn: Bé Bao nhỏ có vòng sóng */
+/* Vị trí của bạn: Bao nhỏ có vòng sóng */
 .me { position: relative; width: 36px; height: 36px; display: grid; place-items: center; background: #FFFFFF; border-radius: 50%; border: 3px solid #7BC67E; }
 .me::before { content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 3px solid #7BC67E; animation: ripple 1.8s ease-out infinite; }
 @keyframes ripple { from { transform: scale(1); opacity: .8 } to { transform: scale(2.2); opacity: 0 } }
