@@ -103,8 +103,8 @@ function rules(pm, c) {
 function newMap({ L, pm, tiles }, el, center, zoom) {
   const city = boxOf(L, center) ?? L.latLngBounds(CITIES[0].box) // ở ngoài cả hai thành phố thì mở Hà Nội
   const m = L.map(el, { zoomControl: false, attributionControl: false, maxZoom: 19, maxBounds: city, maxBoundsViscosity: 1 })
-    .setView(city.contains(center) ? center : city.getCenter(), zoom)
-  fitCity(m)
+  fitCity(m) // trước setView: zoom mở đầu nhỏ hơn mức vừa khung thì tự nâng lên
+  m.setView(city.contains(center) ? center : city.getCenter(), zoom)
   m.on('resize', () => fitCity(m))
   L.control.zoom({ position: 'topright', zoomInTitle: 'Phóng to', zoomOutTitle: 'Thu nhỏ' }).addTo(m)
   // Ghi nguồn ở góc trên: góc dưới bị ngăn kéo danh sách che, mà điều khoản bắt buộc ghi nguồn
@@ -199,7 +199,7 @@ export async function initMap(el, { center, onSelect, onIdle, onFail }) {
   setTimeout(watchdog, 8000)
   try {
     const lb = await loadLib()
-    const { m, base } = newMap(lb, el, center, 15)
+    const { m, base } = newMap(lb, el, center, 0) // 0: mở ở mức thu nhỏ nhất cho phép, nội thành phủ kín màn hình
     map = m
     map.qqL = lb.L
     onSelectCb = onSelect
@@ -309,21 +309,62 @@ export function moveTo(center, zoom) {
   if (map) goTo(map, [center.lat, center.lng], zoom)
 }
 
-// Vị trí của bạn: Bé Bao nhỏ có vòng sóng
-export function showUser(pos) {
+// Vị trí của bạn: Bao nhỏ có vòng sóng
+function meMarker(L, pos) {
+  const me = document.createElement('div')
+  me.className = 'me'
+  me.append(img('icons/bebao-vui.svg', 30))
+  return L.marker(pos, {
+    icon: L.divIcon({ html: me, className: 'qq-icon', iconSize: [36, 36], iconAnchor: [18, 18] }),
+    title: 'Vị trí của bạn', keyboard: false, interactive: false, zIndexOffset: 2000,
+  })
+}
+
+// padBottom: số px ở đáy bản đồ bị thẻ che, để vị trí nằm giữa phần còn thấy
+export function showUser(pos, padBottom = 0) {
   if (!map) return
-  const L = map.qqL
-  if (!userMarker) {
-    const me = document.createElement('div')
-    me.className = 'me'
-    me.append(img('icons/bebao-vui.svg', 30))
-    userMarker = L.marker(pos, {
-      icon: L.divIcon({ html: me, className: 'qq-icon', iconSize: [36, 36], iconAnchor: [18, 18] }),
-      title: 'Vị trí của bạn', keyboard: false, interactive: false, zIndexOffset: 2000,
-    }).addTo(map)
-  }
+  userMarker ??= meMarker(map.qqL, pos).addTo(map)
   userMarker.setLatLng(pos)
-  goTo(map, pos)
+  // Ngoài khung thành phố đang xem thì không dời (main.js đổi thành phố trước nếu bạn đang ở thành phố kia)
+  if (map.options.maxBounds.contains(pos)) map.panTo(map.unproject(map.project(pos).add([0, padBottom / 2])))
+}
+
+// Bản đồ chỉ đường: ghim quán, vị trí của bạn, đường đi kiểu nét kẹo viền trắng.
+// Trả về { user(pos), route([[lat, lng], ...]) } hoặc null nếu không tải được bản đồ.
+export async function routeMap(el, place) {
+  try {
+    const lb = await loadLib()
+    const { L } = lb
+    const { m } = newMap(lb, el, [place.lat, place.lng], 16)
+    L.marker([place.lat, place.lng], {
+      icon: L.divIcon({ html: pinEl(place.category), className: 'qq-icon', iconSize: [48, 60], iconAnchor: [24, 58] }),
+      title: place.name, keyboard: false, interactive: false, zIndexOffset: 1000,
+    }).addTo(m)
+    const me = meMarker(L, [place.lat, place.lng])
+    const line = L.layerGroup().addTo(m)
+    new ResizeObserver(() => m.invalidateSize()).observe(el)
+    let touchedAt = 0 // lần cuối người dùng tự kéo hoặc zoom bản đồ
+    for (const ev of ['pointerdown', 'wheel']) el.addEventListener(ev, () => { touchedAt = Date.now() }, { passive: true })
+    return {
+      // Bản đồ theo bạn: chỉ dời khi Bao sắp ra khỏi khung (giữ nguyên khung cả tuyến khi còn thấy),
+      // và không giành lại bản đồ trong 15 giây sau khi bạn tự kéo hoặc zoom để xem chỗ khác
+      user: pos => {
+        me.setLatLng(pos)
+        if (!m.hasLayer(me)) me.addTo(m)
+        if (Date.now() - touchedAt > 15000) m.panInside(pos, { padding: [60, 60] })
+      },
+      route: pts => {
+        line.clearLayers()
+        const style = { lineCap: 'round', lineJoin: 'round', interactive: false }
+        line.addLayer(L.polyline(pts, { ...style, color: '#FFFFFF', weight: 11 }))
+        line.addLayer(L.polyline(pts, { ...style, color: '#C2410C', weight: 6 }))
+        m.fitBounds(L.latLngBounds(pts), { padding: [48, 48] })
+      },
+    }
+  } catch (err) {
+    console.error(err)
+    return null
+  }
 }
 
 // Bản đồ nhỏ có ghim kéo được, cho form đề xuất quán. Trả về { get, set } hoặc null nếu không tải được.

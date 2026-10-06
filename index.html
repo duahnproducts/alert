@@ -8,10 +8,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#FFF8EF" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#1F1A17" media="(prefers-color-scheme: dark)">
-  <title>Quán Quen · Ăn ngon dưới 50k quanh trường</title>
+  <title>Hometown · Ăn ngon dưới 50k quanh trường</title>
   <meta name="description" content="Bản đồ quán ăn ngon dưới 50k quanh trường, do sinh viên chấm điểm. Phải check-in tại quán mới được đánh giá. Giá là giá người ăn thật đã trả.">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Quán Quen · Ăn ngon dưới 50k quanh trường">
+  <meta property="og:title" content="Hometown · Ăn ngon dưới 50k quanh trường">
   <meta property="og:description" content="Do sinh viên chấm điểm. Phải check-in tại quán mới được đánh giá. Giá thật, ảnh thật.">
   <meta property="og:url" content="%VITE_SITE_URL%/">
   <meta property="og:image" content="%VITE_SITE_URL%/og.png">
@@ -30,9 +30,9 @@
 
   <section id="home">
     <header class="bar">
-      <a href="./" class="logo" aria-label="Quán Quen, trang chủ">
+      <a href="./" class="logo" aria-label="Hometown, trang chủ">
         <img src="/icons/bebao-vui.svg" width="36" height="36" alt="">
-        <span>Quán Quen</span>
+        <span>Hometown</span>
       </a>
       <input type="search" id="q" class="search" placeholder="Tìm quán hoặc món, vd: bún chả" aria-label="Tìm quán hoặc món" autocomplete="off" enterkeyhint="search">
       <details class="menu">
@@ -42,17 +42,18 @@
           <a href="cua-toi">Của tôi</a>
           <a href="gioi-thieu">Về dự án</a>
           <!-- CẦN ĐIỀN: link bài dự thi trên fanpage -->
-          <a href="https://www.facebook.com/" target="_blank" rel="noopener" class="fanpage">Chia sẻ Quán Quen<small>Nhớ follow fanpage nhé</small></a>
+          <a href="https://www.facebook.com/" target="_blank" rel="noopener" class="fanpage">Chia sẻ Hometown<small>Nhớ follow fanpage nhé</small></a>
         </nav>
       </details>
+      <p class="demo-only demo-banner">🧪 Bản demo: quán và đánh giá là minh họa, không phải quán thật</p>
     </header>
     <div class="filters" id="filters" role="group" aria-label="Bộ lọc">
-      <select id="area" class="chip" aria-label="Chọn cụm trường"><option value="0">Tất cả cụm trường</option></select>
     </div>
     <div id="map" role="region" aria-label="Bản đồ quán ăn"></div>
     <button type="button" id="locate" class="fab" aria-label="Vị trí của tôi">◎</button>
     <div id="quick" class="quick" hidden></div>
     <section id="sheet" class="sheet" aria-label="Danh sách quán">
+      <section id="near" class="near-card" aria-label="Gợi ý quanh bạn" hidden></section>
       <button type="button" id="sheet-toggle" class="sheet-handle" aria-expanded="false" aria-controls="list">
         <span id="sheet-title">Đang tìm quán ngon…</span>
       </button>
@@ -76,12 +77,13 @@
 
   <template id="about">
     <article class="prose">
-      <h1>Về Quán Quen</h1>
-      <p>Quán Quen là bản đồ các quán ăn ngon dưới 50k quanh trường, do chính sinh viên chấm điểm. Quán ngon vì người ăn thật nói ngon, không phải vì được quảng cáo.</p>
+      <h1>Về Hometown</h1>
+      <p class="demo-only note"><b>Đây là bản demo.</b> Các quán (tên tự đặt), đánh giá, giá và cảm nhận về địa danh đều là dữ liệu minh họa, được gắn nhãn “Mẫu”, không phản ánh quán thật nào. Địa danh, vị trí và ảnh địa danh là thật. Khi app chạy thật, chỉ người đã check-in tại quán mới viết được đánh giá.</p>
+      <p>Hometown là bản đồ các quán ăn ngon dưới 50k quanh trường, do chính sinh viên chấm điểm. Quán ngon vì người ăn thật nói ngon, không phải vì được quảng cáo.</p>
 
       <h2>Cách tính điểm</h2>
       <ul>
-        <li><b>Điểm Quán Quen</b> là trung bình số sao của các đánh giá đang hiện. Quán có dưới 3 đánh giá thì hiện chữ “Mới” thay cho điểm.</li>
+        <li><b>Điểm Hometown</b> là trung bình số sao của các đánh giá đang hiện. Quán có dưới 3 đánh giá thì hiện chữ “Mới” thay cho điểm.</li>
         <li>App không lấy hay gộp điểm của Google. Muốn xem thêm đánh giá trên Google, bấm link “Xem đánh giá trên Google Maps” ở trang quán.</li>
         <li>Đánh giá có nhãn “Mẫu” chỉ để minh họa, không được tính vào điểm hay giá.</li>
       </ul>
@@ -102,14 +104,14 @@
       </ul>
 
       <h2>Cam kết</h2>
-      <p>Quán Quen không nhận tiền từ quán, không có quảng cáo, không có chỗ trả tiền để lên đầu. Đánh giá chỉ nói về trải nghiệm ăn uống, không thay cơ quan chức năng đánh giá vệ sinh an toàn thực phẩm. Chủ quán thấy đánh giá sai sự thật có thể bấm “Báo cáo” hoặc liên hệ nhóm, nhóm trả lời trong 24 giờ.</p>
+      <p>Hometown không nhận tiền từ quán, không có quảng cáo, không có chỗ trả tiền để lên đầu. Đánh giá chỉ nói về trải nghiệm ăn uống, không thay cơ quan chức năng đánh giá vệ sinh an toàn thực phẩm. Chủ quán thấy đánh giá sai sự thật có thể bấm “Báo cáo” hoặc liên hệ nhóm, nhóm trả lời trong 24 giờ.</p>
 
       <h2>Nguồn dữ liệu</h2>
       <ul>
         <li>Tên, vị trí, giờ mở cửa của quán: nhóm tự đi khảo sát và bạn đọc đề xuất.</li>
-        <li>Bản đồ: dữ liệu © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> qua <a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> và OpenMapTiles, nhóm tự vẽ lại kiểu chibi bằng <a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a> và protomaps-leaflet. Nút “Chỉ đường” mở Google Maps.</li>
+        <li>Bản đồ: dữ liệu © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> qua <a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> và OpenMapTiles, nhóm tự vẽ lại kiểu chibi bằng <a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a> và protomaps-leaflet. Chỉ đường: <a href="https://github.com/valhalla/valhalla" target="_blank" rel="noopener">Valhalla</a> trên máy chủ miễn phí của <a href="https://www.fossgis.de" target="_blank" rel="noopener">FOSSGIS</a>, dữ liệu OpenStreetMap; luôn có nút mở bằng Google Maps.</li>
         <li>Địa danh nổi tiếng: vị trí từ <a href="https://www.wikidata.org" target="_blank" rel="noopener">Wikidata</a>, giới thiệu từ Wikipedia tiếng Việt (CC BY-SA 4.0), ảnh thật từ <a href="https://commons.wikimedia.org" target="_blank" rel="noopener">Wikimedia Commons</a>; tên tác giả và giấy phép ghi ngay dưới mỗi ảnh.</li>
-        <li>Biểu tượng món ăn, địa danh và linh vật Bé Bao: nhóm tự vẽ.</li>
+        <li>Biểu tượng món ăn, địa danh và linh vật Bao: nhóm tự vẽ.</li>
         <li>Font chữ: Be Vietnam Pro, giấy phép SIL Open Font License.</li>
       </ul>
 
@@ -141,6 +143,7 @@
           </tbody>
         </table>
       </div>
+      <p><b>Vị trí:</b> khi bạn cho phép, app dùng vị trí để gợi ý quán gần bạn và tính khoảng cách. Việc này làm ngay trên máy bạn: vị trí không gửi đi, không lưu lại, đóng trang là mất. Riêng lúc check-in để viết đánh giá, vị trí được gửi một lần để kiểm tra bạn có đang ở quán không, và chỉ khoảng cách tới quán được lưu. Khi bạn mở trang “Chỉ đường”, vị trí của bạn và của quán được gửi tới máy chủ tìm đường của FOSSGIS (Đức) để vẽ đường; app không lưu, FOSSGIS ghi yêu cầu vào nhật ký máy chủ theo chính sách riêng tư của họ.</p>
       <p><b>Không thu:</b> tọa độ của bạn, lịch sử duyệt web, danh bạ. App không dùng công cụ phân tích hay quảng cáo của bên thứ ba.</p>
       <p><b>Ảnh:</b> trước khi tải lên, app vẽ lại ảnh ngay trên máy bạn nên mọi thông tin đi kèm ảnh (gồm vị trí GPS chụp ảnh) bị xóa. Ảnh chỉ dùng để hiện trong trang quán. Bạn xóa ảnh bằng cách xóa đánh giá chứa nó trong mục “Của tôi”.</p>
       <p><b>Lưu ở đâu:</b> dữ liệu nằm trên Supabase (cơ sở dữ liệu và kho ảnh). Trình duyệt của bạn lưu tạm danh sách quán để xem được khi mất mạng, thành phố bạn chọn, và phiên đăng nhập. Bản đồ tải từ OpenFreeMap, ảnh địa danh tải từ Wikimedia; app không gửi thông tin gì của bạn cho hai nơi này.</p>

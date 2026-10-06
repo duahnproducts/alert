@@ -1,6 +1,7 @@
-// Trang chi tiết quán: ảnh, giá thật, điểm của app, link sang Google Maps, đánh giá, báo cáo.
-import { fetchReviews, fetchPhotos, photoUrl, thumbPath, report } from './supabase.js'
-import { CATEGORIES, h, hoursText, isOpenNow, formatPrice, formatStars, formatDistance, badgeFor, timeAgo, formatDate, distanceM, priceShort } from './util.js'
+// Trang chi tiết quán: ảnh, giá thật, điểm của app, link sang Google Maps, đánh giá, báo cáo; trang chỉ đường trong app.
+import { DEMO, demoData, fetchReviews, fetchPhotos, photoUrl, thumbPath, report } from './supabase.js'
+import { CATEGORIES, h, hoursText, isOpenNow, formatPrice, formatStars, formatDistance, badgeFor, timeAgo, formatDate, priceShort, suggestNear, distanceM, decodePolyline, formatDuration, distanceToPath } from './util.js'
+import { routeMap } from './map.js'
 import { state, page, toast, mascot, errorBox, dataReady, dist } from './main.js'
 import { openLogin } from './auth.js'
 
@@ -20,8 +21,6 @@ export async function renderPlace(id) {
   const closed = isOpenNow(p.opening_hours) === false
   const photosBox = h('div', { class: 'grid' })
   const reviewsBox = h('ul', { class: 'reviews' }, h('li', { class: 'muted' }, 'Đang tải đánh giá…'))
-  const dir = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}` +
-    (p.google_place_id ? `&destination_place_id=${encodeURIComponent(p.google_place_id)}` : '')
   // Bản đồ dùng Leaflet nên không lấy điểm Google; chỉ đưa link sang Google Maps (Google Maps URLs, miễn phí, không cần key)
   const gmaps = p.google_place_id
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name)}&query_place_id=${encodeURIComponent(p.google_place_id)}`
@@ -39,21 +38,22 @@ export async function renderPlace(id) {
     h('h1', { tabindex: -1 }, p.name),
     h('p', { class: 'muted' }, [cat.label, p.address].filter(Boolean).join(' · ')),
     h('p', { class: 'meta' },
-      d != null && h('span', null, `Cách ${formatDistance(d)}${state.userPos ? '' : ' từ tâm cụm trường'}`),
+      d != null && h('span', null, `Cách ${formatDistance(d)}${state.userPos ? '' : ' từ trung tâm thành phố'}`),
       hours && h('span', { class: closed ? 'muted' : 'open' }, closed && mascot('ngu', 24), hours)),
     p.suggested_by_name && h('p', { class: 'suggested' }, `Gợi ý bởi ${p.suggested_by_name}`),
 
     h('section', { class: 'card scores', 'aria-label': 'Điểm' },
       h('p', { class: 'score-main' },
-        p.review_count >= 3 ? `Quán Quen ${formatStars(p.avg_stars)}★` : 'Quán Quen: Mới',
-        h('small', null, ` (${p.review_count} đánh giá)`)),
-      h('p', { class: 'score-google muted' }, h('a', { href: gmaps, target: '_blank', rel: 'noopener' }, 'Xem đánh giá trên Google Maps'))),
+        p.review_count >= 3 ? `Hometown ${formatStars(p.avg_stars)}★` : 'Hometown: Mới',
+        h('small', null, ` (${p.review_count} đánh giá${DEMO ? ' mẫu' : ''})`)),
+      // Quán minh họa trong bản demo không có thật: không dẫn sang Google Maps hay chỉ đường tới một tọa độ ngẫu nhiên
+      !DEMO && h('p', { class: 'score-google muted' }, h('a', { href: gmaps, target: '_blank', rel: 'noopener' }, 'Xem đánh giá trên Google Maps'))),
 
     h('section', { class: 'card' },
-      h('h2', null, 'Giá thật'),
+      h('h2', null, DEMO ? 'Giá mẫu' : 'Giá thật'),
       h('p', { class: 'price-line' }, p.price_count >= 3
         ? [h('b', { class: 'price big' }, `Thường ${formatPrice(p.price_median)}`),
-           ` · từ ${formatPrice(p.price_p25)} đến ${formatPrice(p.price_p75)} · theo ${p.price_count} người đã ăn`]
+           ` · từ ${formatPrice(p.price_p25)} đến ${formatPrice(p.price_p75)} · theo ${p.price_count} ${DEMO ? 'đánh giá mẫu' : 'người đã ăn'}`]
         : p.price_min && p.price_max
           ? [h('b', null, `Khoảng ${formatPrice(p.price_min)}–${formatPrice(p.price_max)}`), ' · giá tham khảo lúc nhóm khảo sát']
           : 'Chưa có ai báo giá. Ăn xong báo giá giúp mọi người nhé!'),
@@ -65,7 +65,7 @@ export async function renderPlace(id) {
     h('section', null, h('h2', null, 'Đánh giá'), reviewsBox),
 
     h('nav', { class: 'actionbar', 'aria-label': 'Hành động' },
-      h('a', { class: 'btn-ghost', href: dir, target: '_blank', rel: 'noopener' }, 'Chỉ đường'),
+      !DEMO && h('a', { class: 'btn-ghost', href: `quan/${p.id}/chi-duong` }, 'Chỉ đường'),
       h('a', { class: 'btn', href: `quan/${p.id}/danh-gia` }, 'Viết đánh giá'),
       h('button', { type: 'button', class: 'btn-ghost icon-only', 'aria-label': 'Chia sẻ quán', onclick: () => share(p) }, '↗')),
   ])
@@ -80,6 +80,130 @@ export async function renderPlace(id) {
     reviewsBox.replaceChildren(h('li', null, errorBox('Chưa tải được đánh giá. Kiểm tra mạng rồi thử lại nhé.', load)))
   })
   load()
+}
+
+// ───────── Chỉ đường ngay trong app ─────────
+// Valhalla trên máy chủ miễn phí của FOSSGIS: có chế độ xe máy, câu chỉ dẫn tiếng Việt, không cần key.
+// Điều kiện dùng: ghi nguồn OSM kèm link sửa bản đồ, tối đa 1 yêu cầu/giây, không dùng nặng (routing.openstreetmap.de/about.html).
+// ponytail: máy chủ demo, không cam kết chạy mãi; lỗi thì người dùng vẫn còn nút "Mở bằng Google Maps".
+const ROUTER = 'https://valhalla1.openstreetmap.de/route'
+const MODES = { motor_scooter: '🛵 Xe máy', pedestrian: '🚶 Đi bộ' }
+const MAX_ROUTE_M = 30000 // xa hơn thì nhiều khả năng vị trí sai (máy tính đoán theo IP); không tốn máy chủ miễn phí
+
+async function fetchRoute(from, to, costing) {
+  const q = {
+    locations: [{ lat: from.lat, lon: from.lng }, { lat: to.lat, lon: to.lng }],
+    costing, directions_options: { language: 'vi-VN', units: 'kilometers' },
+  }
+  const r = await fetch(`${ROUTER}?json=${encodeURIComponent(JSON.stringify(q))}`)
+  if (!r.ok) throw new Error(`route ${r.status}`)
+  const { trip } = await r.json()
+  return { ...trip.summary, steps: trip.legs[0].maneuvers, shape: decodePolyline(trip.legs[0].shape) }
+}
+
+const gmapsDir = p => `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}` +
+  (p.google_place_id ? `&destination_place_id=${encodeURIComponent(p.google_place_id)}` : '')
+
+export async function renderDirections(id) {
+  // Quán minh họa của bản demo không có thật: không chỉ đường tới một tọa độ bịa
+  if (DEMO) return page('Bản demo', errorBox('Bản demo chưa có chỉ đường vì quán đang hiện là minh họa, không có thật. Khi app chạy thật, bấm "Chỉ đường" ở trang quán nhé.'))
+  const path = location.pathname
+  let p = state.places.find(x => x.id === id)
+  if (!p) {
+    await dataReady()
+    p = state.places.find(x => x.id === id)
+  }
+  if (location.pathname !== path) return
+  if (!p) return page('Không thấy quán', errorBox('Không thấy quán này. Có thể quán đang chờ duyệt, đã bị ẩn, hoặc bạn đang mất mạng.'))
+
+  const here = () => location.pathname === path
+  const mapEl = h('div', { class: 'route-map' })
+  const sum = h('p', { class: 'route-sum', role: 'status' }, 'Bao đang tìm bạn…')
+  const steps = h('ol', { class: 'steps' })
+  const arrived = h('div', { class: 'card ok-box', hidden: true }, mascot('vui', 48),
+    h('div', { class: 'stack' }, h('strong', null, 'Tới nơi rồi! Chúc bạn ăn ngon'),
+      h('a', { class: 'btn btn-sm', href: `quan/${p.id}/danh-gia` }, 'Ăn xong viết đánh giá')))
+  const modes = h('div', { class: 'chips', role: 'group', 'aria-label': 'Đi bằng gì' },
+    Object.entries(MODES).map(([key, label]) =>
+      h('button', { type: 'button', class: 'chip', 'aria-pressed': 'false', 'data-mode': key, onclick: () => draw(key) }, label)))
+  const routes = {} // theo chế độ đi, để đổi qua lại không phải hỏi lại máy chủ
+  let from = null, mode = null, ctl = null, reroutedAt = 0
+
+  page(`Đường tới ${p.name}`, [
+    h('h1', { tabindex: -1 }, `Đường tới ${p.name}`),
+    modes, sum, mapEl, arrived, steps,
+    h('p', { class: 'small muted' },
+      'Để vẽ đường, vị trí của bạn và của quán được gửi tới máy chủ tìm đường miễn phí của FOSSGIS (Đức). App không lưu vị trí của bạn.'),
+    h('p', { class: 'small muted' }, 'Đường đi: Valhalla, máy chủ FOSSGIS · Dữ liệu © ',
+      h('a', { href: 'https://www.openstreetmap.org/copyright', target: '_blank', rel: 'noopener' }, 'OpenStreetMap'), ' · Thấy đường sai? ',
+      h('a', { href: 'https://www.openstreetmap.org/fixthemap', target: '_blank', rel: 'noopener' }, 'Sửa bản đồ')),
+    h('a', { class: 'btn-ghost', href: gmapsDir(p), target: '_blank', rel: 'noopener' }, 'Mở bằng Google Maps'),
+  ], { href: `quan/${p.id}`, label: p.name })
+
+  async function draw(key) {
+    mode = key
+    for (const b of modes.children) b.setAttribute('aria-pressed', String(b.dataset.mode === key))
+    if (!from) return // chưa có vị trí: nhớ chế độ đã chọn, có vị trí thì tìm đường theo chế độ này
+    const far = distanceM(from, p)
+    if (far > MAX_ROUTE_M) {
+      sum.textContent = `Bạn đang cách quán ${formatDistance(far)}, xa quá nên Bao không vẽ đường. Nếu vị trí sai, bật GPS rồi tải lại trang, hoặc mở bằng Google Maps nhé.`
+      return
+    }
+    sum.textContent = 'Bao đang tìm đường…'
+    try {
+      const r = routes[key] ??= await fetchRoute(from, p, key)
+      if (!here() || mode !== key) return
+      sum.textContent = `${formatDistance(r.length * 1000)} · khoảng ${formatDuration(r.time)} ${key === 'pedestrian' ? 'đi bộ' : 'đi xe máy'}`
+      steps.replaceChildren(...r.steps.map(s => h('li', null, s.instruction,
+        s.length > 0 && h('span', { class: 'muted' }, ` · ${formatDistance(s.length * 1000)}`))))
+      ctl?.route(r.shape)
+    } catch (err) {
+      console.error(err)
+      if (!here() || mode !== key) return
+      sum.textContent = 'Chưa tìm được đường.'
+      steps.replaceChildren(h('li', { class: 'empty' },
+        errorBox('Máy chủ tìm đường chưa trả lời. Kiểm tra mạng rồi bấm thử lại, hoặc mở bằng Google Maps nhé.', () => draw(key))))
+    }
+  }
+
+  // Có vị trí lần đầu thì tìm đường (gần thì mặc định đi bộ). Sau đó dời Bao theo bạn; đi lệch khỏi đường thì tìm lại.
+  const onPos = (pos, acc = 0) => {
+    state.userPos = pos
+    ctl?.user(pos)
+    const left = distanceM(pos, p)
+    arrived.hidden = left > 50
+    if (!from) {
+      from = pos
+      return draw(mode ?? (left <= 1500 ? 'pedestrian' : 'motor_scooter'))
+    }
+    // Lệch quá 40 m (hoặc quá sai số GPS lúc đó) thì tìm đường mới từ chỗ đang đứng.
+    // Tối đa 30 giây một lần: máy chủ miễn phí chỉ cho 1 yêu cầu/giây, và GPS trong phố hay nhảy.
+    const r = routes[mode]
+    if (r && left > 50 && Date.now() - reroutedAt > 30000 && distanceToPath(pos, r.shape) > Math.max(40, acc)) {
+      reroutedAt = Date.now()
+      from = pos
+      for (const k in routes) delete routes[k]
+      toast('Bạn đi khác đường rồi, Bao tìm đường mới nhé')
+      draw(mode)
+    }
+  }
+  ctl = await routeMap(mapEl, p)
+  if (!here()) return
+  if (!ctl) mapEl.replaceChildren(h('p', { class: 'muted' }, 'Bản đồ đang nghỉ, bạn đi theo các bước bên dưới nhé.'))
+  if (state.userPos) onPos(state.userPos)
+  if (!navigator.geolocation) {
+    if (!from) sum.textContent = 'Máy bạn không lấy được vị trí nên Bao chưa tìm được đường. Mở bằng Google Maps nhé.'
+    return
+  }
+  const watch = navigator.geolocation.watchPosition(g => {
+    if (!here()) return navigator.geolocation.clearWatch(watch) // đã rời trang chỉ đường
+    onPos({ lat: g.coords.latitude, lng: g.coords.longitude }, g.coords.accuracy)
+  }, e => {
+    if (from || !here()) return
+    sum.textContent = e.code === 1
+      ? 'Bạn chưa cho phép vị trí nên Bao chưa tìm được đường. Cho phép vị trí cho trang này rồi tải lại, hoặc mở bằng Google Maps nhé.'
+      : 'Chưa lấy được vị trí. Ra chỗ thoáng hơn chờ chút nhé, hoặc mở bằng Google Maps.'
+  }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 })
 }
 
 function photoAlt(p, photo, reviews) {
@@ -165,7 +289,7 @@ function reportFlow(type, targetId) {
 async function share(p) {
   const url = new URL(`quan/${p.id}`, document.baseURI).href
   if (navigator.share) {
-    try { await navigator.share({ title: p.name, text: `${p.name} trên Quán Quen`, url }) } catch {}
+    try { await navigator.share({ title: p.name, text: `${p.name} trên Hometown`, url }) } catch {}
     return
   }
   try {
@@ -187,12 +311,19 @@ const LM_TYPES = {
 
 export function openLandmark(l) {
   const ph = l.photo
-  const near = state.places
-    .map(p => ({ p, d: distanceM(l, p) }))
-    .filter(x => x.d <= 2000)
-    .sort((a, b) => a.d - b.d)
-    .slice(0, 3)
+  const near = suggestNear(state.places, l)
   const desc = l.desc && l.desc[0].toUpperCase() + l.desc.slice(1)
+  // Bản demo: vài câu cảm nhận mẫu (có nhãn "Mẫu") lấy từ demo.json
+  const notes = h('section', { class: 'lm-notes', hidden: true })
+  if (DEMO) demoData().then(d => {
+    const list = d.landmarkNotes?.[l.id] ?? []
+    if (!list.length) return
+    notes.replaceChildren(h('h3', null, 'Cảm nhận'), h('ul', { class: 'reviews' }, list.map(n => h('li', { class: 'review card' },
+      h('div', { class: 'review-head' }, h('b', null, n.by), h('span', { class: 'badge sample' }, 'Mẫu')),
+      h('p', null, h('span', { class: 'stars', role: 'img', 'aria-label': `${n.stars} trên 5 sao` }, '★'.repeat(n.stars) + '☆'.repeat(5 - n.stars))),
+      h('p', { class: 'comment' }, n.text)))))
+    notes.hidden = false
+  }, () => {})
   const d = dist(l)
   const dlg = h('dialog', { class: 'sheet-dialog landmark', 'aria-labelledby': 'lm-title', onclose: () => dlg.remove() },
     h('figure', { class: 'lm-photo' },
@@ -202,11 +333,12 @@ export function openLandmark(l) {
     h('h2', { id: 'lm-title' }, l.name),
     h('p', { class: 'muted' }, [desc, l.city, d != null && `cách ${formatDistance(d)}`].filter(Boolean).join(' · ')),
     l.extract && h('p', null, l.extract),
+    notes,
     near.length > 0 && h('section', null,
       h('h3', null, 'Ăn gì gần đây?'),
       h('ul', { class: 'near' }, near.map(({ p, d }) => h('li', null,
         h('a', { href: `quan/${p.id}`, onclick: () => dlg.close() }, h('b', null, p.name)),
-        ` · ${priceShort(p)} · ${formatDistance(d)}`)))),
+        ` · ${priceShort(p, DEMO)} · ${formatDistance(d)}`)))),
     h('p', { class: 'small muted credit' },
       'Ảnh: ', h('a', { href: ph.page, target: '_blank', rel: 'noopener' }, ph.author), ' · ',
       ph.licenseUrl ? h('a', { href: ph.licenseUrl, target: '_blank', rel: 'noopener' }, ph.license) : ph.license,

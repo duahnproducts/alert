@@ -1,6 +1,6 @@
-# Quán Quen: Phương án kỹ thuật
+# Hometown: Phương án kỹ thuật
 
-Viết ngày 05/10/2026, dựa trên [Quán Quen: Thiết kế sản phẩm](quan-quen-thiet-ke.md) (gọi tắt là "bản thiết kế", trích theo số mục). Tài liệu này trả lời câu "làm bằng gì, cụ thể ra sao" để nhóm 3 người code được ngay từ 06/10. Chỗ nào bổ sung hoặc khác bản thiết kế đều được ghi ở mục 10. Các con số về hạn mức, giá và hành vi của dịch vụ đã được kiểm ngày 05/10/2026; nguồn ở mục 12.
+Viết ngày 05/10/2026, dựa trên [Hometown: Thiết kế sản phẩm](quan-quen-thiet-ke.md) (gọi tắt là "bản thiết kế", trích theo số mục). Tài liệu này trả lời câu "làm bằng gì, cụ thể ra sao" để nhóm 3 người code được ngay từ 06/10. Chỗ nào bổ sung hoặc khác bản thiết kế đều được ghi ở mục 10. Các con số về hạn mức, giá và hành vi của dịch vụ đã được kiểm ngày 05/10/2026; nguồn ở mục 12.
 
 **Đã chốt 06/10/2026:** (1) không có thẻ để mở thanh toán Google Cloud, nên bản đồ dùng **Leaflet** (mục 11), không dùng Google Maps; (2) dùng **JavaScript thuần**. Google Cloud chỉ còn dùng để tạo OAuth client cho nút "Tiếp tục với Google" (miễn phí, không cần thẻ). Các mục bên dưới đã sửa theo quyết định này.
 
@@ -12,7 +12,8 @@ Viết ngày 05/10/2026, dựa trên [Quán Quen: Thiết kế sản phẩm](qua
 | Phụ thuộc chạy trên trình duyệt | `@supabase/supabase-js`, `leaflet`, `protomaps-leaflet` | Ba gói. Hai gói bản đồ tải sau khi trang đã hiện; gom cụm tự viết, không thêm `leaflet.markercluster` |
 | Điều hướng | History API (`/alert/quan/12`), đường dẫn tương đối theo thẻ `<base>`; `404.html` = `index.html` cho link sâu | Link chia sẻ đẹp, không đụng hash của OAuth |
 | Bản đồ | Leaflet 1.9 + `protomaps-leaflet` tự vẽ kiểu chibi từ OpenFreeMap (dữ liệu vector, miễn phí, không key, không giới hạn lượt) | Không dùng `openstreetmap.org`: không kết nối được từ Việt Nam |
-| Google Maps | Chỉ link Google Maps URLs: "Chỉ đường" và "Xem đánh giá trên Google Maps" | Không lấy điểm Google, không cần key |
+| Chỉ đường | Valhalla trên máy chủ miễn phí của FOSSGIS (`valhalla1.openstreetmap.de`), gọi thẳng từ trình duyệt | Không key, có chế độ xe máy và câu chỉ dẫn tiếng Việt; máy chủ demo nên giữ link Google Maps dự phòng |
+| Google Maps | Chỉ link Google Maps URLs: "Mở bằng Google Maps" và "Xem đánh giá trên Google Maps" | Không lấy điểm Google, không cần key |
 | Dữ liệu | Supabase Postgres, 6 bảng + 3 view + 4 hàm | Mọi quy tắc tin cậy nằm trong database |
 | Tài khoản | Supabase Auth: Google OAuth (PKCE) và mã 6 số qua email | **Bắt buộc** SMTP riêng (mục 5.4) |
 | Ảnh | Nén trên máy bằng canvas, 2 cỡ (1280 px và 400 px), WebP hoặc JPEG | Supabase Storage, bucket công khai |
@@ -53,7 +54,7 @@ quan-quen/
   src/
     main.js             router, trạng thái chung, bộ lọc, chế độ danh sách, ngăn kéo
     map.js              nạp Leaflet, nền bản đồ, ghim, gom cụm, chuyển sang danh sách khi lỗi
-    place.js            trang quán, link Google Maps, lưới ảnh, báo cáo
+    place.js            trang quán, trang chỉ đường, link Google Maps, lưới ảnh, báo cáo
     review.js           check-in, nén ảnh, gửi đánh giá, đề xuất quán
     auth.js             tấm đăng nhập, phát hiện trình duyệt trong app, trang Của tôi
     supabase.js         client và mọi truy vấn
@@ -61,7 +62,7 @@ quan-quen/
     util.test.js        test cho util.js (node --test)
     style.css
   public/
-    icons/              bộ icon tự vẽ (SVG): 7 biểu tượng món, 17 biểu tượng địa danh `lm-*.svg`, 4 biểu cảm Bé Bao
+    icons/              bộ icon tự vẽ (SVG): 7 biểu tượng món, 17 biểu tượng địa danh `lm-*.svg`, 4 biểu cảm Bao
     covers/             7 tranh minh họa quán theo loại món (SVG 640×320, mỗi tranh dưới 5 KB), làm ảnh bìa khi quán chưa có ảnh thật
     og.png              ảnh xem trước 1200×630 khi dán link
   supabase/
@@ -76,8 +77,9 @@ quan-quen/
 
 | Đường dẫn | Màn | Cần đăng nhập |
 | --- | --- | --- |
-| `/` | Bản đồ (có `?khu=2` để chọn cụm trường) | Không |
+| `/` | Bản đồ của thành phố đang chọn | Không |
 | `/quan/:id` | Chi tiết quán | Không |
+| `/quan/:id/chi-duong` | Chỉ đường tới quán | Không |
 | `/quan/:id/danh-gia` | Viết đánh giá | Có |
 | `/de-xuat` | Đề xuất quán | Có |
 | `/cua-toi` | Của tôi | Có |
@@ -93,8 +95,8 @@ GitHub Pages không cho đặt header, nên `Referrer-Policy` đặt bằng th�
 
 ### 3.3 Tải và lọc dữ liệu
 
-- Khi mở app: đọc bản lưu `localStorage['qq:places:v1']` (nếu có) và vẽ ngay, rồi gọi `places_public` (mục 4.3) một lần để lấy bản mới, khoảng 30 KB cho 50 quán. Lấy được thì lưu lại kèm `savedAt`. Không lấy được thì giữ bản cũ và hiện dòng "Dữ liệu lưu lúc 20:15". Không có cả hai thì hiện Bé Bao buồn và nút thử lại.
-- Mọi bộ lọc chạy trên mảng trong bộ nhớ: cụm trường (`area_id`), giá (dùng `price_median` nếu `price_count >= 3`, nếu không thì dùng `price_max`), loại món, "đang mở".
+- Khi mở app: đọc bản lưu `localStorage['qq:places:v1']` (nếu có) và vẽ ngay, rồi gọi `places_public` (mục 4.3) một lần để lấy bản mới, khoảng 30 KB cho 50 quán. Lấy được thì lưu lại kèm `savedAt`. Không lấy được thì giữ bản cũ và hiện dòng "Dữ liệu lưu lúc 20:15". Không có cả hai thì hiện Bao buồn và nút thử lại.
+- Mọi bộ lọc chạy trên mảng trong bộ nhớ: thành phố (quán nằm trong khung `CITIES`), giá (dùng `price_median` nếu `price_count >= 3`, nếu không thì dùng `price_max`), loại món, "đang mở".
 - Ô tìm kiếm so khớp không dấu trên tên quán, món được nhắc nhiều và tên loại món. Gõ "bun cha" vẫn ra "Bún chả":
 
 ```js
@@ -102,7 +104,8 @@ export const normalizeVi = s =>
   s.normalize('NFD').replace(/\p{Diacritic}/gu, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase()
 ```
 
-- Khoảng cách: công thức haversine trong `util.js`, chỉ tính khi người dùng đã bấm "Vị trí của tôi". Nếu chưa có vị trí thì dùng tâm cụm trường đang chọn.
+- Khoảng cách: công thức haversine trong `util.js`, tính từ vị trí người dùng nếu có (`state.userPos`, chỉ trong bộ nhớ), nếu chưa có thì từ trung tâm thành phố đang chọn (hồ Hoàn Kiếm, chợ Bến Thành).
+- Gợi ý quanh bạn (`main.js`, thẻ `#near` đầu ngăn kéo): lúc mở app hỏi `navigator.permissions.query({ name: 'geolocation' })`. `granted` thì gọi `getCurrentPosition` luôn; `prompt` (hoặc không có Permissions API, như Safari cũ và trình duyệt trong app) thì hiện thẻ mời, chỉ gọi khi người dùng bấm; `denied` thì không hiện thẻ. Không xin quyền ngay lúc mở trang: Lighthouse trừ điểm Best Practices và người dùng hay bấm chặn. Có vị trí thì `suggestNear` (`util.js`, có test) chọn 3 quán trong 2 km, `isOpenNow !== false`, xếp theo `số sao - km` (dưới 3 đánh giá tính 3,5 sao), chạy trên mảng đã lọc nên bộ lọc giá và loại món vẫn áp dụng. Thẻ "Ăn gì gần đây?" của địa danh dùng chung hàm này.
 
 ### 3.4 Giờ mở cửa
 
@@ -136,11 +139,11 @@ Trong Google Sheet, nhóm gõ JSON vào một ô. Khi xuất CSV, Sheets tự th
 
 - Leaflet 1.9 (bản ESM `leaflet/dist/leaflet-src.esm.js` và `leaflet.css`) và `protomaps-leaflet` nạp bằng `import()` động, chỉ sau khi khung trang và danh sách đã vẽ xong (`requestIdleCallback`). `protomaps-leaflet` dùng biến toàn cục `L`, nên gán `window.L` trước khi nạp nó.
 - Bản đồ kiểu chibi: lấy TileJSON `https://tiles.openfreemap.org/planet` (đường dẫn ô dữ liệu đổi theo mỗi bản cập nhật), rồi `protomaps-leaflet` vẽ từng ô lên canvas theo `paintRules` và `labelRules` trong `map.js`: nền kem, khuôn viên trường màu lavender, công viên xanh mint, nước xanh baby có viền, nhà màu đào (từ zoom 16), đường trắng dày bo tròn có viền màu theo cấp, tên đường và tên khu bằng font Be Vietnam Pro có viền trắng, tên trường đại học màu tím. Chế độ tối dùng bảng màu "ban đêm" riêng (`PALETTE.dark`), đổi ngay khi máy đổi chế độ. Không vẽ biểu tượng cửa hàng của bản đồ, để bản đồ không quảng cáo quán khác.
-- Ghi nguồn đặt ở góc trên bên trái (góc dưới bị ngăn kéo danh sách che). Nút zoom ở góc trên bên phải. Bản đồ chỉ xem được nội thành của thành phố đang chọn: `maxBounds` (`maxBoundsViscosity: 1`) là khung trong mảng `CITIES` của `util.js` (Hà Nội: các quận nội thành, không tới Hòa Lạc; TP.HCM: các quận cũ và Thủ Đức, không sang Bình Dương, Đồng Nai, Long An). `minZoom` tính theo cỡ màn hình (`getBoundsZoom(khung, true)`) để thu nhỏ hết cỡ vẫn nằm gọn trong khung, tính lại khi đổi cỡ; trên điện thoại khoảng zoom 13. Thêm thành phố thì thêm một dòng vào `CITIES`.
-- Chọn thành phố: lần đầu mở trang chủ, app hỏi "Bạn đang ở đâu?" (Hà Nội / TP. Hồ Chí Minh) trước khi vẽ bản đồ, lưu lựa chọn ở `localStorage['qq-city']`; chip thành phố đầu thanh lọc để đổi. Ô cụm trường, bản đồ và danh sách chỉ có cụm trường và quán trong khung thành phố đang chọn. Bấm "Vị trí của tôi" khi đang ở thành phố kia thì tự đổi sang; ở ngoài cả hai thì bản đồ đứng yên.
+- Ghi nguồn đặt ở góc trên bên trái (góc dưới bị ngăn kéo danh sách che). Nút zoom ở góc trên bên phải. Bản đồ chỉ xem được nội thành của thành phố đang chọn: `maxBounds` (`maxBoundsViscosity: 1`) là khung trong mảng `CITIES` của `util.js` (Hà Nội: các quận nội thành, không tới Hòa Lạc; TP.HCM: các quận cũ và Thủ Đức, không sang Bình Dương, Đồng Nai, Long An). `minZoom` tính theo cỡ màn hình (`getBoundsZoom(khung, true)`) để thu nhỏ hết cỡ vẫn nằm gọn trong khung, tính lại khi đổi cỡ; trên điện thoại khoảng zoom 13. Bản đồ mở ở đúng mức này, nội thành phủ kín màn hình. Thêm thành phố thì thêm một dòng vào `CITIES`.
+- Chọn thành phố: lần đầu mở trang chủ, app hỏi "Bạn đang ở đâu?" (Hà Nội / TP. Hồ Chí Minh) trước khi vẽ bản đồ, lưu lựa chọn ở `localStorage['qq-city']`; chip thành phố đầu thanh lọc để đổi. Trang chủ không có ô chọn cụm trường; bản đồ và danh sách chỉ có quán trong khung thành phố đang chọn. Bảng `areas` chỉ còn dùng cho ô "Gần cụm trường nào?" khi đề xuất quán. Bấm "Vị trí của tôi" khi đang ở thành phố kia thì tự đổi sang; ở ngoài cả hai thì bản đồ đứng yên.
 - Mỗi quán là một `L.marker` với `L.divIcon({ html: <div class="pin">…</div> })`, dựng bằng `createElement` (không dùng chuỗi HTML). `title` và `aria-label` là nhãn đọc màn hình ("Bún chả Hương, 35 nghìn, 4,6 sao, cách 300 mét"). Vương miện, trạng thái mờ và mặt trăng là class CSS. Hiệu ứng nảy dùng `@keyframes` và bị tắt trong `@media (prefers-reduced-motion: reduce)`.
 - Gom cụm tự viết, khoảng 25 dòng: ở mỗi mức zoom chia màn hình thành ô lưới 64 px, các quán cùng ô gộp thành một bong bóng mây có biểu tượng loại món nhiều nhất và số quán trong huy hiệu hồng. Bấm cụm thì phóng tới vừa các quán trong cụm. Từ zoom 18 trở lên không gộp nữa. Đủ cho vài trăm quán; nhiều hơn thì dùng `leaflet.markercluster`.
-- Ghim chibi: đầu tròn phồng màu theo loại món, viền trắng dày, đuôi nhỏ, bóng dưới chân, lắc lư nhẹ lệch nhịp nhau; quán điểm cao có vương miện, quán đang đóng nhạt màu kèm 💤; ghim được chọn nảy lên. Vị trí của bạn là Bé Bao nhỏ có vòng sóng. Mọi chuyển động tắt khi máy bật giảm chuyển động.
+- Ghim chibi: đầu tròn phồng màu theo loại món, viền trắng dày, đuôi nhỏ, bóng dưới chân, lắc lư nhẹ lệch nhịp nhau; quán điểm cao có vương miện, quán đang đóng nhạt màu kèm 💤; ghim được chọn nảy lên. Vị trí của bạn là Bao nhỏ có vòng sóng. Mọi chuyển động tắt khi máy bật giảm chuyển động.
 - Khi lọc: dùng lại marker đã tạo, chỉ tính lại cụm.
 - CSS của Leaflet ép `width: auto` cho ảnh trong lớp ghim, nên cỡ biểu tượng phải đặt bằng selector mạnh hơn (`.leaflet-container .qq-icon .pin img`). `#map` có `isolation: isolate` để các lớp của Leaflet (z-index 400 đến 1000) không đè lên ngăn kéo danh sách.
 - **Chuyển sang danh sách khi lỗi:** không tải được thư viện, hoặc sau 8 giây chưa tải được ô bản đồ nào trong khi khung bản đồ đang hiện. Gặp một trong hai trường hợp thì chuyển hẳn sang chế độ danh sách, kèm dòng "Bản đồ đang nghỉ, xem danh sách nhé".
@@ -148,8 +151,15 @@ Trong Google Sheet, nhóm gõ JSON vào một ô. Khi xuất CSV, Sheets tự th
 ### 3.6 Trang quán (`place.js`)
 
 - Dữ liệu chính lấy từ mảng đã tải. Chỉ đánh giá và ảnh cần gọi thêm: `reviews_public` và `photos` theo `place_id`, 20 dòng mới nhất.
-- Không lấy điểm Google. Dòng dưới điểm Quán Quen là link "Xem đánh giá trên Google Maps": `https://www.google.com/maps/search/?api=1&query=<tên quán>&query_place_id=<place_id>` (không có `place_id` thì dùng tọa độ).
-- Chỉ đường: `https://www.google.com/maps/dir/?api=1&destination=<lat>,<lng>&destination_place_id=<place_id>`.
+- Không lấy điểm Google. Dòng dưới điểm Hometown là link "Xem đánh giá trên Google Maps": `https://www.google.com/maps/search/?api=1&query=<tên quán>&query_place_id=<place_id>` (không có `place_id` thì dùng tọa độ).
+- Chỉ đường (`renderDirections`, đường dẫn `/quan/:id/chi-duong`), không rời app:
+  - `watchPosition` với `enableHighAccuracy`. Có vị trí lần đầu thì gọi `GET https://valhalla1.openstreetmap.de/route?json={locations, costing, directions_options: { language: 'vi-VN', units: 'kilometers' }}`; `costing` là `pedestrian` nếu cách quán dưới 1,5 km, ngược lại `motor_scooter`. Đổi chế độ thì gọi thêm một lần, kết quả giữ theo chế độ nên đổi qua lại không gọi lại. Quãng trên 30 km thì không gọi (vị trí máy tính đoán theo IP hay sai, và không làm nặng máy chủ miễn phí).
+  - Kết quả: `trip.summary` (km, giây) cho dòng tóm tắt, `maneuvers[].instruction` là câu tiếng Việt có sẵn, `legs[0].shape` là polyline 6 chữ số, giải mã bằng `decodePolyline` trong `util.js` (có test). `routeMap` trong `map.js` vẽ đường hai lớp (viền trắng, lõi cam đất), ghim quán và Bao.
+  - Các lần cập nhật vị trí sau: dời Bao; bản đồ gọi `panInside` (chỉ dời khi Bao sắp ra khỏi khung, chừa 60 px), trừ khi người dùng vừa chạm hoặc cuộn bản đồ trong 15 giây (`pointerdown`, `wheel`). Cách quán dưới 50 m thì hiện nút "Ăn xong viết đánh giá". Rời trang thì lần cập nhật kế tiếp tự `clearWatch`.
+  - Tìm lại đường: `distanceToPath` (`util.js`, có test) đo từ vị trí tới đường đang vẽ; lệch quá `max(40 m, accuracy)` thì gọi lại máy chủ từ vị trí mới, tối đa 30 giây một lần (giữ luật 1 yêu cầu/giây và tránh GPS nhảy trong phố). Bấm chế độ đi trước khi có vị trí thì chỉ ghi nhớ, có vị trí mới tìm đường theo chế độ đó.
+  - Điều kiện dùng máy chủ FOSSGIS: ghi nguồn OSM và link "Sửa bản đồ", Referer hợp lệ (đã có nhờ `Referrer-Policy`), tối đa 1 yêu cầu/giây, không dùng nặng. Trang ghi rõ vị trí được gửi tới FOSSGIS.
+  - Bản demo (`DEMO`, mục 3.12): trang quán ẩn nút "Chỉ đường", `renderDirections` báo "Bản demo chưa có chỉ đường" và không gọi máy chủ. Thẻ "Gợi ý quanh bạn" vẫn chạy trên quán minh họa, giá ghi "Giá mẫu".
+  - Dự phòng: nút "Mở bằng Google Maps" (`https://www.google.com/maps/dir/?api=1&destination=<lat>,<lng>&destination_place_id=<place_id>`) luôn có trên trang.
 - Chia sẻ: `navigator.share({ title, url })`, nếu trình duyệt không có thì sao chép link bằng `navigator.clipboard.writeText` và hiện thông báo "Đã chép link".
 - Ảnh: `<img loading="lazy" decoding="async" width height alt>`. Lưới ảnh dùng bản 400 px, bấm vào mới mở bản 1280 px.
 - Báo cáo: dùng `<dialog>` có sẵn của trình duyệt, chọn lý do, rồi `insert` vào `reports`.
@@ -222,6 +232,13 @@ Chạy Lighthouse ngay ngày 07/10 trên bản deploy đầu tiên, không đợ
 - App: sau khi bản đồ vẽ xong, `main.js` tải `/landmarks.json` và gọi `showLandmarks()` trong `map.js`: ghim vàng hình tòa nhà, không gộp cụm với quán, nằm dưới ghim quán. Chip "Địa danh" bật/tắt lớp này. Để bản đồ không rối, số địa danh hiện theo zoom: zoom 12 trở xuống 5 nơi đầu mỗi thành phố, zoom 13 là 12, zoom 14 là 25, từ zoom 15 hiện hết (`lmLimit` trong `map.js`). Lỗi tải file thì bản đồ vẫn chạy, chỉ thiếu địa danh.
 - Bấm ghim: `openLandmark()` trong `place.js` mở tấm trượt có ảnh thật (chỉ tải lúc này), chip loại địa danh có icon, tên, mô tả, khoảng cách, đoạn giới thiệu, tối đa 3 quán trong vòng 2 km, dòng ghi công "Ảnh: tác giả · giấy phép · Wikimedia Commons. Nội dung: Wikipedia (CC BY-SA 4.0)" có link, và nút "Chỉ đường".
 - Mọi chữ lấy từ Wikidata/Wikipedia đều gán qua `textContent` (hàm `h()`), không qua `innerHTML`; tên tác giả trên Commons là HTML nên script đã bóc thẻ trước khi ghi file.
+
+### 3.12 Bản demo (khi chưa nối Supabase)
+
+- `DEMO = !import.meta.env.VITE_SUPABASE_URL` trong `supabase.js`. Khi đó `fetchPlaces`, `fetchReviews` đọc `public/demo.json`, `fetchPhotos` trả rỗng, không đọc hay ghi bản lưu trong `localStorage` (để dữ liệu thật và demo không lẫn nhau).
+- `demo.json` tạo bằng `node scripts/demo-data.mjs` (số ngẫu nhiên có hạt giống, chạy lại ra đúng dữ liệu cũ): 4 cụm trường, 32 quán tên tự đặt rải trong bán kính khoảng 700 m quanh tâm cụm, 3–9 đánh giá mẫu mỗi quán (`is_sample: true`), điểm, trung vị và phân vị giá tính sẵn theo đúng cách của `place_stats`, cùng `landmarkNotes`: 1–2 câu cảm nhận mẫu cho mỗi địa danh theo loại.
+- Nhãn: `<html class="demo">` bật dải "Bản demo" (`.demo-only`) ở trang chủ, mọi trang con và trang Về dự án; `priceShort(p, true)` ghi "Giá mẫu"; trang quán ghi "đánh giá mẫu", ẩn nút "Chỉ đường" và link Google Maps của quán minh họa. `requireLogin()` và `openLogin()` hiện thông báo "bản demo chưa mở" thay cho đăng nhập.
+- Khai `VITE_SUPABASE_URL` (biến của workflow `pages.yml`) là app tự chuyển sang dữ liệu thật, không phải sửa code.
 
 ## 4. Database (Supabase)
 
@@ -548,7 +565,7 @@ Bổ sung cho ma trận thiết bị và buổi thử với sinh viên ở mục
 | 13 | Đặt `Referrer-Policy` rõ ràng | Key khóa theo domain cần header Referer |
 | 14 | Ảnh xem trước khi dán link chỉ có một ảnh chung cho cả app | Facebook không chạy JS khi lấy ảnh xem trước. Ảnh riêng cho từng quán cần render phía server, để sau cuộc thi |
 | 15 | Publishable key và secret key thay cho anon key và service_role key | Dự án Supabase tạo sau 11/2025 chỉ có key kiểu mới |
-| 16 | Bộ icon tự vẽ bằng SVG (món ăn và địa danh), thay cho Fluent Emoji | Có phong cách riêng đồng bộ với Bé Bao, nhẹ hơn, không phụ thuộc giấy phép bên ngoài |
+| 16 | Bộ icon tự vẽ bằng SVG (món ăn và địa danh), thay cho Fluent Emoji | Có phong cách riêng đồng bộ với Bao, nhẹ hơn, không phụ thuộc giấy phép bên ngoài |
 | 17 | (Bỏ từ 06/10) Ghi nguồn điểm Google | App không còn lấy điểm Google |
 | 18 | Trích Luật Bảo vệ dữ liệu cá nhân 2025 và Nghị định 356/2025/NĐ-CP | Nghị định 13/2023/NĐ-CP đã bị thay thế từ 01/01/2026 |
 | 19 | Nút mở Chrome bằng link `intent://` trên Android | Người dùng trong Facebook/Zalo vẫn đăng nhập Google được mà không phải tự sao chép link |
@@ -558,6 +575,7 @@ Bổ sung cho ma trận thiết bị và buổi thử với sinh viên ở mục
 | 23 | Gom cụm tự viết theo lưới thay cho `leaflet.markercluster` | Vài trăm quán thì 25 dòng là đủ, bớt một gói phụ thuộc |
 | 24 | Thêm địa danh nổi tiếng của Hà Nội và TP. Hồ Chí Minh, có ảnh thật; dữ liệu tĩnh từ Wikidata/Wikipedia/Commons (mục 3.11) | Người dùng yêu cầu; Google Places cần thẻ và cấm lưu dữ liệu |
 | 25 | Hosting bằng GitHub Pages thay cho Vercel; đường dẫn tương đối theo `<base>`, `404.html` cho link sâu, sao lưu mã hóa | Người dùng muốn truy cập qua GitHub như các dự án trước; repo công khai |
+| 26 | Bản demo có nhãn khi chưa nối Supabase: quán tên tự đặt, đánh giá mẫu (mục 3.12) | Chưa có người dùng thật; nội dung mẫu luôn có nhãn, không gắn cho quán có thật |
 
 ## 11. Phương án B: Leaflet (đang dùng từ 06/10/2026)
 
@@ -577,6 +595,7 @@ Kiểm ngày 05/10/2026. Nếu đọc tài liệu này sau ngày nộp bài, ki�
 
 | Điều đã kiểm | Kết quả | Nguồn |
 | --- | --- | --- |
+| Máy chủ tìm đường của FOSSGIS (kiểm 06/10/2026 từ mạng Việt Nam) | `valhalla1.openstreetmap.de` và `routing.openstreetmap.de` vào được, có CORS `*`. Valhalla trả câu chỉ dẫn tiếng Việt (`vi-VN`) cho cả `motor_scooter` và `pedestrian`. Điều kiện: ghi nguồn và link sửa bản đồ, Referer/User-Agent hợp lệ, tối đa 1 yêu cầu/giây, không dùng nặng; Valhalla công khai là máy chủ demo, không cam kết cho bản chạy thật | [routing.openstreetmap.de/about](https://routing.openstreetmap.de/about.html), [Valhalla trên apis.io](https://apis.io/plans/valhalla/open-source/) |
 | Hạn mức miễn phí Google Maps (từ 03/2025, tính riêng từng SKU) | Essentials 10.000, Pro 5.000, Enterprise 1.000 lượt/tháng; Dynamic Maps thuộc Essentials | [Pricing categories](https://developers.google.com/maps/billing-and-pricing/pricing-categories), [Billing FAQ](https://developers.google.com/maps/billing-and-pricing/faq) |
 | Place Details với `rating`, `userRatingCount` | Tính theo nhóm Enterprise; `googleMapsUri` thuộc Pro; request tính theo trường đắt nhất | [Place Details (New)](https://developers.google.com/maps/documentation/places/web-service/place-details) |
 | Ghi nguồn và lưu dữ liệu Places | Ngoài bản đồ Google phải có logo Google Maps, hoặc chữ "Google Maps" nếu chỗ hẹp; chỉ `place_id` được lưu không thời hạn | [Places API policies](https://developers.google.com/maps/documentation/places/web-service/policies) |

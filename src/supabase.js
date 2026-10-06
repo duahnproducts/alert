@@ -1,8 +1,13 @@
 // Client Supabase và mọi truy vấn. Bảng reviews có quyền theo cột: luôn liệt kê cột, không select=*.
 import { createClient } from '@supabase/supabase-js'
 
-// Chưa cấu hình Supabase (vd bản GitHub Pages đầu tiên) thì app vẫn mở được: bản đồ và địa danh chạy,
-// danh sách quán hiện thông báo không tải được
+// Chưa nối Supabase (không có VITE_SUPABASE_URL) thì app chạy BẢN DEMO: quán minh họa và đánh giá mẫu
+// lấy từ public/demo.json (tạo bằng scripts/demo-data.mjs), mọi chỗ đều ghi rõ là mẫu.
+// Đăng nhập, viết đánh giá, đề xuất quán tắt trong bản demo. Nối Supabase xong thì tự chuyển sang dữ liệu thật.
+export const DEMO = !import.meta.env.VITE_SUPABASE_URL
+let demo
+export const demoData = () => (demo ??= fetch('demo.json').then(r => r.json()))
+
 export const sb = createClient(
   import.meta.env.VITE_SUPABASE_URL || 'https://chua-cau-hinh.invalid',
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'chua-cau-hinh', {
@@ -18,11 +23,16 @@ const must = ({ data, error }) => {
 }
 
 export function readCache() {
+  if (DEMO) return null // không để bản lưu của dữ liệu thật lẫn với bản demo
   try { return JSON.parse(localStorage.getItem(CACHE)) } catch { return null }
 }
 
 // Lấy quán và cụm trường, lưu lại để lần sau vẽ ngay và để xem được khi Supabase lỗi.
 export async function fetchPlaces() {
+  if (DEMO) {
+    const { places, areas } = await demoData()
+    return { places, areas, savedAt: new Date().toISOString() }
+  }
   const [places, areas] = await Promise.all([
     sb.from('places_public').select(PLACE_COLS).then(must),
     sb.from('areas').select('id,name,center_lat,center_lng,radius_m').order('id').then(must),
@@ -32,13 +42,13 @@ export async function fetchPlaces() {
   return data
 }
 
-export const fetchReviews = placeId =>
+export const fetchReviews = placeId => DEMO ? demoData().then(d => d.reviews[placeId] ?? []) :
   sb.from('reviews_public')
     .select('id,stars,price_paid,dishes,comment,is_sample,review_date,created_at,display_name,author_review_count')
     .eq('place_id', placeId).order('created_at', { ascending: false }).limit(20).then(must)
 
 // RLS trả ảnh đang hiện và ảnh của chính mình (kể cả đang chờ duyệt)
-export const fetchPhotos = placeId =>
+export const fetchPhotos = placeId => DEMO ? Promise.resolve([]) :
   sb.from('photos').select('id,review_id,storage_path,width,height,status,created_at')
     .eq('place_id', placeId).neq('status', 'hidden')
     .order('created_at', { ascending: false }).limit(30).then(must)

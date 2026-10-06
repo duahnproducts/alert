@@ -1,20 +1,20 @@
-# Quán Quen: Thiết kế sản phẩm
+# Hometown: Thiết kế sản phẩm
 
 Bản trong repo là **bản chuẩn**, cập nhật ngày 05/10/2026: các con số về hạn mức, giá và quy định đã được kiểm trên trang chính thức (nguồn ở cuối tài liệu), và đã thống nhất với [phương án kỹ thuật](quan-quen-ky-thuat.md). Bản nháp đầu tiên (có sơ đồ vẽ) nằm trên Claude Docs, có thể cũ hơn bản này: https://claude.ai/code/artifact/eb3e82df-65aa-44b2-8470-35029f08e2e5
 
-**Cập nhật 06/10/2026: bản đồ chibi tự vẽ, không dùng Google Maps.** Không có thẻ để mở thanh toán Google Cloud, nên app làm theo phương án B (rủi ro đầu tiên ở mục 14). App tự vẽ bản đồ kiểu chibi (màu kẹo, đường to bo tròn, ghim tròn phồng) từ dữ liệu miễn phí của OpenFreeMap, không cần key. Máy chủ chính của OpenStreetMap (`openstreetmap.org`) không kết nối được từ mạng ở Việt Nam (kiểm ngày 06/10/2026), nên không dùng. Trang quán không còn dòng điểm Google; thay bằng link "Xem đánh giá trên Google Maps". Nút "Chỉ đường" vẫn mở Google Maps qua link (miễn phí, không cần key). Đăng nhập bằng Google vẫn giữ: OAuth của Google không cần thanh toán. Các mục dưới đây đã sửa theo quyết định này.
+**Cập nhật 06/10/2026: bản đồ chibi tự vẽ, không dùng Google Maps.** Không có thẻ để mở thanh toán Google Cloud, nên app làm theo phương án B (rủi ro đầu tiên ở mục 14). App tự vẽ bản đồ kiểu chibi (màu kẹo, đường to bo tròn, ghim tròn phồng) từ dữ liệu miễn phí của OpenFreeMap, không cần key. Máy chủ chính của OpenStreetMap (`openstreetmap.org`) không kết nối được từ mạng ở Việt Nam (kiểm ngày 06/10/2026), nên không dùng. Trang quán không còn dòng điểm Google; thay bằng link "Xem đánh giá trên Google Maps". Nút "Chỉ đường" ban đầu mở Google Maps qua link; nay mở trang chỉ đường ngay trong app (Màn 2), Google Maps còn làm nút dự phòng. Đăng nhập bằng Google vẫn giữ: OAuth của Google không cần thanh toán. Các mục dưới đây đã sửa theo quyết định này.
 
 Tài liệu này mô tả sản phẩm làm gì và vì sao. Cách làm cụ thể (SQL, cấu hình dịch vụ, cấu trúc code) nằm trong phương án kỹ thuật.
 
 ## 1. Tóm tắt
 
-Quán Quen (tên tạm) là bản đồ các quán ăn ngon dưới 50k quanh các trường đại học ở Hà Nội và TP. Hồ Chí Minh. Sinh viên và người dân địa phương chấm điểm, báo giá thật và chụp ảnh thật; mỗi quán hiện trên bản đồ bằng một biểu tượng dễ thương.
+Hometown là bản đồ các quán ăn ngon dưới 50k quanh các trường đại học ở Hà Nội và TP. Hồ Chí Minh. Sinh viên và người dân địa phương chấm điểm, báo giá thật và chụp ảnh thật; mỗi quán hiện trên bản đồ bằng một biểu tượng dễ thương.
 
 - **Cho ai:** sinh viên 18–24 tuổi, đặc biệt là tân sinh viên mới lên thành phố, chưa biết ăn ở đâu và phải tiêu tiền kỹ.
 - **Lời hứa:** quán ngon vì người ăn thật nói ngon, không phải vì được quảng cáo.
 - **Phạm vi dự thi:** hai thành phố (Hà Nội, TP. Hồ Chí Minh), 3–5 cụm trường, 30–50 quán do nhóm tự đi ăn và chụp.
 
-|  | Google Maps | Foody / ShopeeFood | Quán Quen |
+|  | Google Maps | Foody / ShopeeFood | Hometown |
 | --- | --- | --- | --- |
 | Ai chấm điểm | Bất kỳ ai, kể cả khách du lịch và đánh giá mua | Khách đặt món, quán có trả phí quảng cáo | Người đã check-in GPS tại quán |
 | Giá | Khoảng giá chung chung | Giá menu giao hàng, thường cao hơn ăn tại chỗ | "Giá thật": số tiền người ăn báo lại |
@@ -52,7 +52,7 @@ Bản dự thi là một web app chạy trên điện thoại, có bản đồ, 
 
 **Làm**
 
-- Bản đồ có biểu tượng theo loại món; lọc theo giá (dưới 30k, 30–50k), loại món, "đang mở cửa", cụm trường.
+- Bản đồ có biểu tượng theo loại món; lọc theo giá (dưới 30k, 30–50k), loại món, "đang mở cửa"; chọn thành phố (Hà Nội / TP. Hồ Chí Minh).
 - Chế độ danh sách, thay cho bản đồ khi bản đồ lỗi hoặc người dùng dùng trình đọc màn hình.
 - Trang quán: ảnh thật, giá thật, điểm của app, link xem đánh giá trên Google Maps, giờ mở cửa, chỉ đường, chia sẻ.
 - Đăng nhập Google, chỉ bắt buộc khi viết đánh giá.
@@ -77,6 +77,7 @@ Không cần dữ liệu lớn, nhưng không nên bịa đánh giá cho quán c
 - **Thông tin quán** (tên, vị trí, giờ mở cửa): lấy thật, gắn với `place_id` của Google.
 - **Đánh giá và ảnh:** chỉ do nhóm viết khi đã ăn thật. Ba người, mỗi người khoảng 10 quán trong tuần là đủ 30 quán.
 - **Chỗ nào cần lấp đầy để demo:** dùng đánh giá mẫu có nhãn "Mẫu" hiển thị rõ, và xóa hết trước khi đăng bài lên fanpage.
+- **Bản demo (chốt 06/10/2026):** trong lúc chưa có người dùng thật, app chạy bản demo có nhãn: khoảng 32 quán **tên tự đặt** (cố ý không trùng quán thật) quanh 4 cụm trường ở Hà Nội và TP.HCM, mỗi quán vài đánh giá mẫu, mỗi địa danh vài câu cảm nhận mẫu. Đầu mọi trang có dải "Bản demo: quán và đánh giá là minh họa", mỗi đánh giá có nhãn "Mẫu", giá ghi "Giá mẫu", điểm ghi "đánh giá mẫu"; quán minh họa không có nút chỉ đường. Đăng nhập, viết đánh giá, đề xuất quán hiện thông báo "bản demo chưa mở". Khi nối Supabase, app tự chuyển sang dữ liệu thật. Không tạo đánh giá giả trông như thật: như vậy là nói sai về quán có thật và đi ngược lời hứa "đánh giá thật" của app.
 
 ## 4. Màn hình và luồng
 
@@ -96,9 +97,13 @@ Bản đồ ──> Chi tiết quán ──> [Đã đăng nhập?] ──rồi�
 
 ### Màn 1: Bản đồ (trang chủ)
 
-- **Thanh trên:** logo và linh vật nhỏ; ô tìm theo tên quán hoặc tên món (tìm trong dữ liệu của app, không gọi API); chip thành phố ("Hà Nội ▾") rồi chip chọn cụm trường, ví dụ "Quanh: ĐH Bách khoa ▾". Lần đầu mở app hỏi "Bạn đang ở đâu?" (Hà Nội / TP. Hồ Chí Minh), chọn xong mới hiện bản đồ thành phố đó; bản đồ chỉ kéo trong nội thành, không ra tỉnh lân cận.
+- **Thanh trên:** logo và linh vật nhỏ; ô tìm theo tên quán hoặc tên món (tìm trong dữ liệu của app, không gọi API); chip thành phố ("Hà Nội ▾"), không có ô chọn cụm trường. Lần đầu mở app hỏi "Bạn đang ở đâu?" (Hà Nội / TP. Hồ Chí Minh), chọn xong mới hiện bản đồ thành phố đó, mở ra là nội thành phủ kín màn hình; bản đồ chỉ kéo trong nội thành, không ra tỉnh lân cận.
 - **Hàng bộ lọc cuộn ngang:** "Dưới 30k", "30–50k", "Đang mở", rồi các loại món có biểu tượng (mục 5).
 - **Bản đồ toàn màn:** mỗi quán là một biểu tượng theo loại món. Thu nhỏ bản đồ thì các quán gần nhau gộp thành một cụm có số. Nút "Vị trí của tôi" chỉ xin quyền GPS khi được bấm.
+- **Thẻ "Gợi ý quanh bạn"** (nổi trên mép ngăn kéo; laptop và chế độ danh sách thì nằm đầu danh sách):
+  - Chưa có vị trí: Bao mời "Đói chưa? Cho Bao biết bạn đang ở đâu nhé", ghi rõ vị trí chỉ dùng trên máy, không lưu, không gửi đi; nút "Chia sẻ vị trí". App chỉ xin quyền GPS khi người dùng bấm nút này hoặc nút "Vị trí của tôi". Đã cho phép từ lần trước thì app tự lấy vị trí, không hỏi lại; đã chặn thì không hiện thẻ.
+  - Có vị trí: chuyển chip cụm trường sang "Tất cả cụm trường" (quán gần bạn có thể thuộc cụm khác), xếp danh sách theo khoảng cách, và thẻ gợi ý 3 quán trong 2 km, không đang đóng cửa, theo các bộ lọc đang bật. Thứ tự: số sao trừ khoảng cách, mỗi km trừ 1 sao; quán dưới 3 đánh giá tính 3,5 sao. Không có quán nào thì nói rõ cần bỏ bớt bộ lọc hoặc kéo bản đồ.
+  - Chạm ghim thì thẻ xem nhanh thế chỗ; bấm × thì ẩn thẻ.
 - **Chạm vào biểu tượng:** hiện thẻ xem nhanh ở đáy gồm ảnh, tên, giá thật, điểm, khoảng cách và nút "Xem quán".
 - **Ngăn kéo từ đáy lên:** danh sách các quán đang hiện trên bản đồ, sắp theo khoảng cách hoặc theo điểm. Nút "Bản đồ / Danh sách" chuyển hẳn sang chế độ danh sách.
 - **Không có kết quả:** linh vật và câu "Chưa có quán nào khớp, thử bỏ bớt bộ lọc nhé".
@@ -107,11 +112,19 @@ Bản đồ ──> Chi tiết quán ──> [Đã đăng nhập?] ──rồi�
 
 - **Ảnh bìa:** ảnh thật mới nhất, nhãn "Ảnh thật · 3 ngày trước". Quán chưa có ảnh thật thì hiện tranh vẽ quán vỉa hè theo loại món, nhãn "Hình minh họa · chưa có ảnh thật". Không dùng ảnh do máy tạo trông như ảnh chụp, vì như vậy là bịa "ảnh thật".
 - **Thông tin:** tên, loại món, địa chỉ, khoảng cách, "Đang mở · đóng lúc 21:00".
-- **Khối điểm:** dòng lớn "Quán Quen 4,6★ (23 đánh giá)"; dòng nhỏ là link "Xem đánh giá trên Google Maps". App không lấy và không hiện điểm Google (mục 10).
+- **Khối điểm:** dòng lớn "Hometown 4,6★ (23 đánh giá)"; dòng nhỏ là link "Xem đánh giá trên Google Maps". App không lấy và không hiện điểm Google (mục 10).
 - **Giá thật:** "Thường 35k · từ 30k đến 45k · theo 18 người đã ăn".
 - **Món được nhắc nhiều:** các chip như "Bún chả (12)", "Nem (5)".
 - **Lưới ảnh thật,** rồi **danh sách đánh giá** mới nhất trước. Mỗi đánh giá gồm tên hiển thị, huy hiệu "Đã check-in", số sao, giá đã trả, món, một câu, ảnh, ngày và nút "Báo cáo".
-- **Thanh đáy cố định:** "Chỉ đường" (mở Google Maps), "Viết đánh giá", biểu tượng chia sẻ.
+- **Thanh đáy cố định:** "Chỉ đường", "Viết đánh giá", biểu tượng chia sẻ.
+- **Chỉ đường ngay trong app** (`/quan/:id/chi-duong`), không phải rời sang Google Maps:
+  - Chọn "🛵 Xe máy" hoặc "🚶 Đi bộ"; mặc định đi bộ nếu quán cách dưới 1,5 km. Dòng tóm tắt "1,2 km · khoảng 15 phút đi bộ", bản đồ có đường đi, ghim quán và Bao ở vị trí của bạn, rồi danh sách từng bước bằng tiếng Việt ("Rẽ phải vào Phố Giảng Võ · 230 m").
+  - Bao đi theo vị trí thật của bạn. Bản đồ giữ khung cả tuyến, chỉ dời khi Bao sắp ra khỏi khung; bạn tự kéo hoặc zoom thì bản đồ để yên 15 giây cho bạn xem.
+  - Đi lệch khỏi đường quá 40 m (hoặc quá sai số GPS lúc đó) thì Bao báo "Bạn đi khác đường rồi" và tự tìm đường mới từ chỗ bạn đứng, tối đa 30 giây một lần.
+  - Chọn xe máy hay đi bộ trước khi có vị trí thì app nhớ lựa chọn đó. Cách quán dưới 50 m thì hiện "Tới nơi rồi! Chúc bạn ăn ngon" và nút "Ăn xong viết đánh giá".
+  - Ghi rõ trên trang: để vẽ đường, vị trí của bạn và của quán được gửi tới máy chủ tìm đường của FOSSGIS (Đức); app không lưu vị trí. Kèm ghi nguồn OpenStreetMap và link "Sửa bản đồ" (điều kiện dùng máy chủ).
+  - Bản demo (quán minh họa) không có nút "Chỉ đường"; mở thẳng đường dẫn thì báo "Bản demo chưa có chỉ đường".
+  - Luôn có nút "Mở bằng Google Maps". Không lấy được vị trí, máy chủ tìm đường lỗi, hoặc bạn cách quán trên 30 km (thường là máy tính đoán sai vị trí) thì nói rõ lý do và chỉ sang nút này.
 
 ### Màn 3: Viết đánh giá
 
@@ -156,7 +169,7 @@ Bản đồ trông như một tấm bản đồ ẩm thực vẽ tay kiểu chib
 | Cà phê học bài | `ca_phe` | Tách cà phê có phin | Nâu #A47551 |
 | Chè, tráng miệng | `che` | Cốc chè ba lớp có đá | Xanh ngọc #6CC5C0 |
 
-Bộ biểu tượng do nhóm tự vẽ (cập nhật 06/10/2026, thay cho Fluent Emoji): 7 biểu tượng món và 17 biểu tượng địa danh, cùng một phong cách với Bé Bao. Viền nâu đậm #3A2A1F bo tròn, màu kẹo pastel, và mỗi hình có khuôn mặt chibi (mắt tròn có đốm sáng, má hồng, miệng cười). Mỗi hình là một file SVG 64 × 64 khoảng 1–2 KB trong `public/icons/`, nét ở mọi cỡ màn hình, không cần ghi nguồn hay giấy phép của bên ngoài.
+Bộ biểu tượng do nhóm tự vẽ (cập nhật 06/10/2026, thay cho Fluent Emoji): 7 biểu tượng món và 17 biểu tượng địa danh, cùng một phong cách với Bao. Viền nâu đậm #3A2A1F bo tròn, màu kẹo pastel, và mỗi hình có khuôn mặt chibi (mắt tròn có đốm sáng, má hồng, miệng cười). Mỗi hình là một file SVG 64 × 64 khoảng 1–2 KB trong `public/icons/`, nét ở mọi cỡ màn hình, không cần ghi nguồn hay giấy phép của bên ngoài.
 
 **Quy tắc vẽ ghim trên bản đồ**
 
@@ -166,7 +179,7 @@ Bộ biểu tượng do nhóm tự vẽ (cập nhật 06/10/2026, thay cho Fluen
 - Ghim đang được chọn phóng to 1,25 lần và nảy nhẹ trong 200 ms. Nếu máy bật chế độ giảm chuyển động thì không nảy.
 - Thu nhỏ bản đồ thì các quán gộp thành cụm: hình tròn màu kem, có số quán và biểu tượng của loại món nhiều nhất trong cụm.
 
-**Linh vật "Bé Bao"** (tên tạm) là một chiếc bánh bao có mặt, dùng 4 biểu cảm:
+**Linh vật "Bao"** là một chiếc bánh bao có mặt, dùng 4 biểu cảm:
 
 - **Vui:** khi gửi đánh giá thành công.
 - **Đói:** khi đang tải.
@@ -194,7 +207,7 @@ Mỗi biểu cảm là một file SVG dưới 10 KB.
 
 ## 6. Dữ liệu
 
-Toàn bộ dữ liệu của app nằm trong 6 bảng Postgres trên Supabase. Từ Google, app chỉ lưu `place_id` (không bắt buộc) để link "Chỉ đường" và "Xem đánh giá trên Google Maps" mở đúng quán; app không lấy điểm Google. Với khoảng 50 quán, app tải hết một lần (dưới 50 KB) rồi lọc ngay trên máy, không cần phân trang.
+Toàn bộ dữ liệu của app nằm trong 6 bảng Postgres trên Supabase. Từ Google, app chỉ lưu `place_id` (không bắt buộc) để link "Mở bằng Google Maps" (trang chỉ đường) và "Xem đánh giá trên Google Maps" mở đúng quán; app không lấy điểm Google. Với khoảng 50 quán, app tải hết một lần (dưới 50 KB) rồi lọc ngay trên máy, không cần phân trang.
 
 | Bảng | Trường chính | Ghi chú |
 | --- | --- | --- |
@@ -207,7 +220,7 @@ Toàn bộ dữ liệu của app nằm trong 6 bảng Postgres trên Supabase. T
 
 **Các con số hiển thị** được tính bằng một view SQL `place_stats`, không lưu riêng:
 
-- **Điểm Quán Quen:** trung bình số sao của các đánh giá đang hiện. Quán có dưới 3 đánh giá hiện chữ "Mới" thay cho điểm.
+- **Điểm Hometown:** trung bình số sao của các đánh giá đang hiện. Quán có dưới 3 đánh giá hiện chữ "Mới" thay cho điểm.
 - **Giá thật:** trung vị của `price_paid`, kèm khoảng từ phân vị 25 đến phân vị 75. Quán có dưới 3 lượt báo giá thì hiện khoảng giá của nhóm, ghi là "giá tham khảo".
 - **Bộ lọc "dưới 50k":** dùng giá thật nếu có, nếu chưa có thì dùng `price_max`.
 - **Món được nhắc nhiều:** 3 món xuất hiện nhiều nhất trong `dishes`.
@@ -216,7 +229,7 @@ Toàn bộ dữ liệu của app nằm trong 6 bảng Postgres trên Supabase. T
 
 |  | Dữ liệu của app | Nền bản đồ và Google Maps |
 | --- | --- | --- |
-| Gồm | Quán, giờ mở cửa, đánh giá, giá thật, ảnh | Dữ liệu bản đồ (OpenFreeMap, từ OpenStreetMap); link sang Google Maps |
+| Gồm | Quán, giờ mở cửa, đánh giá, giá thật, ảnh | Dữ liệu bản đồ (OpenFreeMap, từ OpenStreetMap); đường đi (Valhalla của FOSSGIS, từ OpenStreetMap); link sang Google Maps |
 | Lưu ở đâu | Supabase, lưu lâu dài | Không lưu; chỉ giữ `place_id` để dựng link |
 | Khi không lấy được | Hiện dữ liệu đã lưu trên máy kèm giờ lưu; không có thì hiện linh vật buồn và nút thử lại | Ô bản đồ không tải được trong 8 giây thì chuyển sang chế độ danh sách |
 
@@ -243,7 +256,7 @@ Sơ đồ kiến trúc (dạng chữ):
 
 ```text
 Điện thoại người dùng (Chrome, Safari, Facebook, Zalo)
-  └─ Web app Quán Quen (HTML, CSS, JS thuần; nén ảnh, check-in GPS; lưu tạm dữ liệu quán khi mất kết nối)
+  └─ Web app Hometown (HTML, CSS, JS thuần; nén ảnh, check-in GPS; lưu tạm dữ liệu quán khi mất kết nối)
        ├─ tải trang ─────────────> GitHub Pages (file tĩnh, tự deploy khi push lên nhánh mặc định)
        ├─ dữ liệu bản đồ ────────> OpenFreeMap (miễn phí, không key); app tự vẽ kiểu chibi, ghim và gom cụm ngay trên máy
        └─ publishable key + RLS ─> Supabase (Auth: Google, mã email qua SMTP riêng; Postgres + RLS, submit_review; Storage: ảnh đã nén)
@@ -259,7 +272,8 @@ Dự án Supabase tạo sau tháng 11/2025 không còn "anon key" và "service_r
 | --- | --- | --- |
 | Frontend | Vite + JavaScript thuần (nếu nhóm quen React thì dùng React, thiết kế không đổi) | Nhẹ, build ra file tĩnh |
 | Bản đồ | Leaflet 1.9 + `protomaps-leaflet`, tự vẽ kiểu chibi từ dữ liệu vector của OpenFreeMap; ghim `L.divIcon` bằng HTML, gom cụm tự viết theo lưới | Không cần thẻ, không cần key; tự chọn được màu, nét, chữ cho ra chất chibi |
-| Google Maps | Chỉ dùng link Google Maps URLs cho "Chỉ đường" và "Xem đánh giá trên Google Maps" | Miễn phí, không cần key |
+| Chỉ đường | Valhalla trên máy chủ miễn phí của FOSSGIS (`valhalla1.openstreetmap.de`), chế độ `motor_scooter` (xe máy) và `pedestrian` (đi bộ), câu chỉ dẫn `vi-VN` | Miễn phí, không cần key, có sẵn chế độ xe máy và tiếng Việt. Điều kiện: ghi nguồn OSM kèm link sửa bản đồ, tối đa 1 yêu cầu/giây, không dùng nặng. Là máy chủ demo nên luôn giữ nút Google Maps dự phòng |
+| Google Maps | Chỉ dùng link Google Maps URLs cho "Mở bằng Google Maps" và "Xem đánh giá trên Google Maps" | Miễn phí, không cần key |
 | Dữ liệu và tài khoản | Supabase: Postgres, Auth (Google và mã qua email), Storage | Miễn phí, có sẵn đăng nhập và phân quyền theo dòng |
 | Gửi đánh giá | Hàm Postgres `submit_review` gọi qua RPC | Kiểm tra khoảng cách check-in và giới hạn 1 đánh giá/ngày ngay trong database |
 | Ảnh | Nén trên máy bằng canvas thành 2 cỡ: cạnh dài 1280 px để xem lớn, 400 px cho lưới ảnh và danh sách; chất lượng 0,8. Dùng WebP, riêng Safari và mọi trình duyệt trên iOS dùng JPEG (các trình duyệt này không xuất được WebP) | Bản lớn khoảng 150–250 KB, bản nhỏ khoảng 30 KB. Vẽ lại qua canvas cũng xóa luôn thông tin EXIF (có GPS nhà riêng). Supabase gói miễn phí không tự đổi cỡ ảnh, nên app phải tự làm |
@@ -318,7 +332,7 @@ App giữ được chữ "thật" nhờ ba lớp. Thứ nhất, chỉ người �
 
 Bản 2023 của ISO/IEC 25010 có 9 đặc tính chất lượng sản phẩm: Functional suitability, Performance efficiency, Compatibility, Interaction capability, Reliability, Security, Maintainability, Flexibility và Safety (đã đối chiếu ngày 05/10/2026). So với bản 2011, Usability đổi thành Interaction capability, Portability đổi thành Flexibility, và Safety là đặc tính mới. Bảng dưới đây cho mỗi đặc tính một cách đáp ứng và một cách đo, để đưa thẳng vào trang Về dự án và caption.
 
-| Đặc tính | Quán Quen đáp ứng thế nào | Đo bằng gì, đạt khi nào |
+| Đặc tính | Hometown đáp ứng thế nào | Đo bằng gì, đạt khi nào |
 | --- | --- | --- |
 | Phù hợp chức năng | Đủ vòng tìm quán, xem, đi, đánh giá; giá thật là trung vị, không bị một giá bất thường kéo lệch | Chạy view `place_stats` trên bộ dữ liệu biết trước kết quả |
 | Hiệu năng | JS và CSS của app dưới 150 KB lúc mở (không tính thư viện bản đồ khoảng 86 KB, tải sau khi trang đã hiện); ảnh nén sẵn 2 cỡ, chỉ tải khi cuộn tới | Lighthouse mobile: LCP dưới 2,5 giây, điểm Performance từ 90 |
@@ -342,8 +356,9 @@ App chỉ thu những gì cần để hiện một đánh giá, và người dù
 | Tên hiển thị | Hiện cạnh đánh giá | Mọi người |
 | Đánh giá, ảnh (đã xóa EXIF) | Nội dung của app | Mọi người |
 | Khoảng cách lúc check-in | Hiện huy hiệu "Đã check-in" | Chỉ nhóm |
+| Vị trí lúc mở trang chỉ đường (không lưu) | Vẽ đường tới quán | Máy chủ tìm đường của FOSSGIS (Đức), ghi vào nhật ký máy chủ của họ; nhóm không nhận |
 
-Không thu: tọa độ của người dùng, lịch sử duyệt, danh bạ, và không có công cụ phân tích hay quảng cáo của bên thứ ba.
+Không thu: tọa độ của người dùng, lịch sử duyệt, danh bạ, và không có công cụ phân tích hay quảng cáo của bên thứ ba. Vị trí dùng cho "Gợi ý quanh bạn" chỉ nằm trong bộ nhớ của tab, tính ngay trên máy, không gửi đi; vị trí chỉ rời máy khi check-in (gửi một lần cho `submit_review`) và khi mở trang chỉ đường (gửi cho máy chủ tìm đường).
 
 - Tấm đăng nhập có một dòng đồng ý, kèm link tới trang chính sách quyền riêng tư viết bằng lời dễ hiểu.
 - Căn cứ pháp lý hiện hành: **Luật Bảo vệ dữ liệu cá nhân 2025** (hiệu lực từ 01/01/2026) và **Nghị định 356/2025/NĐ-CP** hướng dẫn thi hành luật này. Nghị định 356 thay thế Nghị định 13/2023/NĐ-CP, nên không trích Nghị định 13 nữa. Nhóm cần đọc phần về sự đồng ý của chủ thể dữ liệu trước khi viết trang chính sách. Hình ảnh được Nghị định 356 nhắc đến trong nhóm dữ liệu cần bảo vệ chặt hơn, nên trang chính sách phải nói rõ ảnh được dùng thế nào và xóa bằng cách nào.
@@ -363,7 +378,8 @@ Không thu: tọa độ của người dùng, lịch sử duyệt, danh bạ, v�
 
 - Ghi nguồn "OpenFreeMap © OpenMapTiles Data from OpenStreetMap" luôn hiện rõ ở góc trên bản đồ, có link tới trang bản quyền. Góc dưới bị ngăn kéo danh sách che nên không đặt ở đó.
 - Không tải trước hàng loạt ô bản đồ; chỉ tải phần người dùng đang xem. Mức zoom nhỏ nhất là 11 (cỡ một thành phố).
-- App không lấy, không lưu, không sao chép điểm hay đánh giá của Google. Nút chỉ đường và link xem đánh giá dùng Google Maps URLs (`https://www.google.com/maps/dir/?api=1&destination=...`), không tốn phí.
+- App không lấy, không lưu, không sao chép điểm hay đánh giá của Google. Nút "Mở bằng Google Maps" và link xem đánh giá dùng Google Maps URLs (`https://www.google.com/maps/dir/?api=1&destination=...`), không tốn phí.
+- Máy chủ tìm đường của FOSSGIS: trang chỉ đường ghi nguồn OpenStreetMap kèm link "Sửa bản đồ"; mỗi lần mở trang chỉ gửi 1 yêu cầu cho mỗi chế độ đi (đổi qua lại không hỏi lại), không tìm đường cho quãng trên 30 km.
 
 ## 11. Kiểm thử
 
@@ -380,7 +396,10 @@ Phần lớn người dùng sẽ mở app từ bài đăng trên fanpage, tức 
 **Kịch bản thử**
 
 - [ ] Mở app lần đầu trên mạng 4G yếu (giả lập "Slow 4G" trong DevTools): bản đồ hiện trong 3 giây.
-- [ ] Từ chối quyền vị trí: bản đồ vẫn hiện ở cụm trường mặc định, không báo lỗi đỏ.
+- [ ] Từ chối quyền vị trí: bản đồ vẫn hiện ở thành phố đã chọn, không báo lỗi đỏ.
+- [ ] Bấm "Chia sẻ vị trí" khi đang ở gần trường: thẻ gợi ý 3 quán đang mở, bấm vào mở đúng trang quán. Mở lại app: không hỏi lại, tự gợi ý. Thử cả trong trình duyệt của Facebook và Zalo.
+- [ ] Bấm "Chỉ đường" khi đang ở gần quán: có đường đi, các bước tiếng Việt, Bao đi theo khi bạn đi, cố ý rẽ sai một ngã thì app tự tìm đường mới, tới quán thì hiện "Tới nơi rồi!". Thử cả trong trình duyệt của Facebook và Zalo.
+- [ ] Chặn `valhalla1.openstreetmap.de` (DevTools → Network request blocking): trang chỉ đường báo lỗi kèm nút thử lại, nút "Mở bằng Google Maps" vẫn dùng được.
 - [ ] Đăng nhập bằng mã email ngay trong trình duyệt của Facebook.
 - [ ] Viết đánh giá khi đang ở quán thì gửi được; ở nhà thì bị từ chối kèm lời giải thích.
 - [ ] Tải ảnh 8 MB chụp từ iPhone: file lưu trên Storage dưới 300 KB và không còn EXIF.
@@ -404,7 +423,7 @@ Theo thể lệ: react +10, comment +20, share +50. Chỉ tính tương tác c�
 
 **Cơ chế trong app**
 
-- Nút "Chia sẻ Quán Quen" trong app trỏ về bài dự thi trên fanpage, không trỏ về link app, và có dòng nhắc "Nhớ follow fanpage nhé".
+- Nút "Chia sẻ Hometown" trong app trỏ về bài dự thi trên fanpage, không trỏ về link app, và có dòng nhắc "Nhớ follow fanpage nhé".
 - Nút chia sẻ từng quán vẫn gửi link quán, vì đây là tính năng thật người dùng cần khi rủ bạn đi ăn.
 - Trang quán do người xem gợi ý ghi "Gợi ý bởi \[tên\]". Đây là lý do để người đó khoe với bạn bè.
 
@@ -418,7 +437,7 @@ Theo thể lệ: react +10, comment +20, share +50. Chỉ tính tương tác c�
 
 > Ăn trưa quanh trường mà vẫn được dưới 50k? Có đấy, nhưng không nằm trong mấy bài quảng cáo đâu.
 >
-> Quán Quen là bản đồ ăn ngon giá sinh viên quanh \[cụm trường\], do chính sinh viên chấm điểm. Muốn đánh giá phải check-in tại quán. Giá hiển thị là giá người ăn thật đã trả. Ảnh là ảnh chụp tại bàn, không phải ảnh studio.
+> Hometown là bản đồ ăn ngon giá sinh viên quanh \[cụm trường\], do chính sinh viên chấm điểm. Muốn đánh giá phải check-in tại quán. Giá hiển thị là giá người ăn thật đã trả. Ảnh là ảnh chụp tại bàn, không phải ảnh studio.
 >
 > Nhóm tự đi ăn \[X\] quán trong 7 ngày để làm bản đồ đầu tiên. Giờ đến lượt bạn: Comment tên quán ruột của bạn, nhóm sẽ đến ăn thử và đưa lên bản đồ, ghi tên bạn là người gợi ý. Share về nhóm lớp để cả lớp có bản đồ ăn rẻ. (Nhớ follow fanpage để lượt tương tác được tính nhé.)
 
@@ -427,7 +446,7 @@ Theo thể lệ: react +10, comment +20, share +50. Chỉ tính tương tác c�
 1. Bản đồ đầy biểu tượng món ăn: ảnh chính, dùng để thu hút người xem.
 2. Trang quán có dòng "Giá thật: 35k" và hai điểm đặt cạnh nhau.
 3. Màn check-in "Bạn đang ở quán".
-4. Linh vật Bé Bao và bộ biểu tượng.
+4. Linh vật Bao và bộ biểu tượng.
 
 **Không làm**
 
@@ -469,6 +488,7 @@ Rủi ro lớn nhất là app ngừng chạy giữa mùa thi, vì theo thể l�
 | --- | --- | --- |
 | **Đã xảy ra (06/10):** không có thẻ để mở billing Google Cloud | Biết ngay ngày 05/10 | Đã đổi sang bản đồ tự vẽ kiểu chibi từ dữ liệu OpenFreeMap (miễn phí, không key). Ghim, biểu tượng và luồng giữ nguyên. Bỏ điểm Google, thay bằng link "Xem đánh giá trên Google Maps" |
 | Máy chủ bản đồ bị chặn hoặc quá tải khi bài được chia sẻ mạnh | Bản đồ trống, app tự chuyển sang danh sách | OpenFreeMap không giới hạn lượt; nếu bị chặn, đổi nguồn dữ liệu trong `map.js` |
+| Máy chủ tìm đường của FOSSGIS (bản demo) chậm, chặn hoặc ngừng | Trang chỉ đường báo "Máy chủ tìm đường chưa trả lời" | Người dùng vẫn có nút "Mở bằng Google Maps". Nếu kéo dài, đổi nút "Chỉ đường" ở trang quán về link Google Maps (`gmapsDir` trong `place.js`) |
 | Email mã đăng nhập không tới | Người ngoài nhóm báo không nhận được mã | Email mặc định của Supabase chỉ gửi tới thành viên nhóm (2 email/giờ), nên SMTP riêng qua Resend hoặc Brevo là việc **bắt buộc** của ngày 07/10, không phải dự phòng. Sau khi cấu hình, nâng giới hạn gửi email trong Supabase Auth và gửi thử tới Gmail, Outlook của người ngoài nhóm |
 | Supabase đổi hệ thống key | Hướng dẫn trên mạng nói "anon key" nhưng dashboard không có | Dùng publishable key (`sb_publishable_…`) ở mọi chỗ tài liệu cũ nói anon key |
 | Ảnh hoặc lời lẽ xấu lọt lên đúng lúc BTC chấm | Có báo cáo, hoặc phát hiện khi duyệt | Hàng chờ ảnh cho tài khoản mới, tự ẩn khi đủ 3 báo cáo, duyệt 2 lần mỗi ngày |
@@ -484,7 +504,7 @@ Rủi ro lớn nhất là app ngừng chạy giữa mùa thi, vì theo thể l�
 | Thành phố nào, những cụm trường nào? | Đã trả lời | Hà Nội và TP. Hồ Chí Minh (chốt 06/10/2026). Cụm trường: *cần ghi vào đây* |
 | Nhóm có thẻ để mở billing Google Cloud không? (quyết định dùng Google Maps hay Leaflet) | Đã trả lời | Không có thẻ (06/10/2026): dùng Leaflet, tự vẽ bản đồ chibi từ dữ liệu OpenFreeMap |
 | Nhóm quen React hay JavaScript thuần? | Đã trả lời | *Cần ghi vào đây.* Phương án kỹ thuật tạm giả định là JavaScript thuần |
-| Tên chính thức có giữ "Quán Quen" và linh vật "Bé Bao" không? | Chưa trả lời | |
+| Tên chính thức có giữ "Quán Quen" và linh vật "Bé Bao" không? | Đã trả lời | Đổi thành **Hometown**, linh vật **Bao** (chốt 06/10/2026). Tên file tài liệu `quan-quen-*.md` giữ nguyên để không gãy liên kết |
 | Giữ ngưỡng 50k, hay đổi theo mặt bằng giá của thành phố đã chọn? | Chưa trả lời | |
 | Gửi email đăng nhập qua Resend (cần tên miền riêng) hay Brevo? | Chưa trả lời | Xem mục 5.4 phương án kỹ thuật |
 

@@ -38,6 +38,12 @@ body {
   font: 400 16px/1.5 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 [hidden] { display: none !important; }
+/* Bản demo (chưa nối Supabase): dải nhãn "Bản demo" và ghi chú chỉ hiện khi <html class="demo"> */
+.demo-only { display: none; }
+.demo .demo-only { display: block; }
+.demo-banner { flex-basis: 100%; margin: 4px 0 0; padding: 6px 12px; border-radius: 999px; background: #FFF1BD; color: #6B4430; font-size: 13px; font-weight: 600; text-align: center; }
+.bar { flex-wrap: wrap; }
+@media (prefers-color-scheme: dark) { .demo-banner { background: #4A3F1F; color: #FFE9A8; } }
 a { color: var(--accent); }
 h1 { font-size: 26px; font-weight: 800; line-height: 1.25; margin: 12px 0 4px; }
 h2 { font-size: 19px; font-weight: 800; margin: 24px 0 8px; }
@@ -132,10 +138,9 @@ label, .label { display: block; font-weight: 600; margin-bottom: 6px; }
   scrollbar-width: none; background: var(--bg);
 }
 .filters::-webkit-scrollbar { display: none; }
-.filters select.chip { width: auto; min-height: 44px; padding: 0 12px; border-radius: 999px; font-weight: 600; }
 
 /* isolation: các lớp của Leaflet (z-index 400–1000) không đè lên danh sách và thẻ xem nhanh */
-#map, .pick-map { background: #FFFBF2; min-height: 0; isolation: isolate; font: inherit; }
+#map, .pick-map, .route-map { background: #FFFBF2; min-height: 0; isolation: isolate; font: inherit; }
 .qq-icon { background: none; border: 0; }
 /* Nút zoom kiểu kẹo tròn */
 .leaflet-touch .leaflet-bar, .leaflet-bar { border: 0; box-shadow: none; display: flex; flex-direction: column; gap: 8px; }
@@ -153,7 +158,7 @@ label, .label { display: block; font-weight: 600; margin-bottom: 6px; }
 }
 .leaflet-control-attribution a { color: #C2410C; }
 @media (prefers-color-scheme: dark) {
-  #map, .pick-map { background: #3A3358; }
+  #map, .pick-map, .route-map { background: #3A3358; }
   .leaflet-bar a, .leaflet-touch .leaflet-bar a { background: #3D3356; color: #FFD4D4; border-color: #5A4B7C; box-shadow: 0 4px 0 #1C172C; }
   .leaflet-control-attribution { background: rgb(58 51 88 / .85) !important; color: var(--muted); }
   .leaflet-control-attribution a { color: var(--accent); }
@@ -212,6 +217,29 @@ label, .label { display: block; font-weight: 600; margin-bottom: 6px; }
 .thumb.icon { display: grid; place-items: center; background: color-mix(in srgb, var(--c) 35%, var(--card)); }
 .price { color: var(--accent); }
 .open { color: var(--ok); font-weight: 600; }
+
+/* Thẻ "Gợi ý quanh bạn": đầu ngăn kéo danh sách. Điện thoại đang xem bản đồ, ngăn kéo đóng: nổi ngay trên mép ngăn kéo */
+.near-card {
+  position: relative; flex: none; margin: 12px 12px 0; padding: 12px 14px;
+  background: var(--card); border-radius: 24px; border: 3px solid #CDEFC4; box-shadow: 0 5px 0 #9ED39A;
+}
+.near-card .row { align-items: flex-start; padding-right: 32px; }
+.near-card p { margin: 4px 0 10px; font-size: 15px; }
+.near-head { display: flex; align-items: center; gap: 8px; padding-right: 36px; }
+.near-head .link { margin-left: auto; font-size: 15px; }
+.near-card ul { list-style: none; margin: 0; padding: 0; }
+.near-card li a { display: flex; gap: 10px; align-items: center; min-height: 52px; color: var(--text); text-decoration: none; }
+.near-card .thumb { width: 40px; height: 40px; }
+.near-card .info { display: flex; flex-direction: column; min-width: 0; }
+.near-card .info > * { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.near-card .info .muted { font-size: 14px; }
+@media (max-width: 899px) {
+  #home:not(.listmode) .sheet:not(.open) > .near-card {
+    position: absolute; left: 0; right: 0; bottom: 100%; margin: 0 12px 12px; animation: pop .25s ease-out;
+  }
+  /* Thẻ đã có nút lấy vị trí nên ẩn nút ◎ cho khỏi đè; chạm ghim thì thẻ xem nhanh thế chỗ */
+  #home:has(.near-card:not([hidden])) .fab, #home:has(#quick:not([hidden])) .near-card { display: none; }
+}
 
 /* Chế độ danh sách: bản đồ ẩn, danh sách chiếm hết màn */
 .listmode #map, .listmode .quick { display: none; }
@@ -285,7 +313,7 @@ label, .label { display: block; font-weight: 600; margin-bottom: 6px; }
   background: #FF8FB1; color: #FFFFFF; border: 3px solid #FFFFFF; font: 800 14px/20px 'Be Vietnam Pro', system-ui, sans-serif; text-align: center;
 }
 
-/* Vị trí của bạn: Bé Bao nhỏ có vòng sóng */
+/* Vị trí của bạn: Bao nhỏ có vòng sóng */
 .me { position: relative; width: 36px; height: 36px; display: grid; place-items: center; background: #FFFFFF; border-radius: 50%; border: 3px solid #7BC67E; }
 .me::before { content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 3px solid #7BC67E; animation: ripple 1.8s ease-out infinite; }
 @keyframes ripple { from { transform: scale(1); opacity: .8 } to { transform: scale(2.2); opacity: 0 } }
@@ -361,6 +389,14 @@ input[type=file]:focus-visible + .file-btn { outline: 3px solid var(--accent); o
 .pick-map { height: 280px; border-radius: var(--radius); overflow: hidden; }
 .pick-map > p { padding: 16px; text-align: center; margin: 0; }
 .checkin p { margin: 0 0 12px; }
+
+/* Chỉ đường trong app */
+.route-sum { font-size: 18px; font-weight: 800; margin: 4px 0 8px; }
+.route-map { height: min(50vh, 420px); border-radius: var(--radius); overflow: hidden; }
+.route-map > p { padding: 16px; text-align: center; margin: 0; }
+.steps { padding-left: 28px; margin: 12px 0; }
+.steps li { padding: 8px 0; border-bottom: 1px solid var(--line); }
+.steps li.empty { list-style: none; margin-left: -28px; }
 
 /* Của tôi */
 .mine { list-style: none; padding: 0; margin: 0; }

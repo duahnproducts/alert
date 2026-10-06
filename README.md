@@ -1,4 +1,4 @@
-# Quán Quen
+# Hometown
 
 Bản đồ quán ăn ngon dưới 50k quanh trường, do sinh viên chấm điểm. Phải check-in GPS tại quán mới được đánh giá; giá là giá người ăn thật đã trả; ảnh là ảnh chụp tại quán.
 
@@ -40,7 +40,7 @@ Mọi biến `VITE_*` đều lộ ra trình duyệt. **Không bao giờ** đặt
 4. **Auth → URL Configuration:** Site URL là domain thật; Redirect URLs gồm domain thật và `http://localhost:5173`.
 5. **Auth → Email Templates:** sửa cả mẫu **Magic Link** và **Confirm signup** để gửi mã thay cho link (người mới đăng ký nhận mẫu Confirm signup):
    ```html
-   <h2>Mã đăng nhập Quán Quen</h2>
+   <h2>Mã đăng nhập Hometown</h2>
    <p>Mã của bạn là: <b style="font-size:24px">{{ .Token }}</b></p>
    <p>Gõ mã này vào app để đăng nhập. Mã hết hạn sau 1 giờ. Nếu bạn không yêu cầu, cứ bỏ qua email này.</p>
    ```
@@ -77,6 +77,16 @@ name,category,lat,lng,address,area_id,price_min,price_max,opening_hours,google_p
 - `status`: `visible` để hiện ngay.
 
 Đánh giá và ảnh: nhóm gửi qua chính app khi đến ăn. Đánh giá mẫu tạo trong Table Editor với `is_sample = true`, và xóa trước ngày 11/10 bằng `delete from reviews where is_sample;`.
+
+## Bản demo
+
+Chưa khai `VITE_SUPABASE_URL` thì app chạy **bản demo có nhãn**: quán tên tự đặt và đánh giá mẫu lấy từ `public/demo.json`, đầu trang có dải "Bản demo", mỗi đánh giá có nhãn "Mẫu", giá ghi "Giá mẫu". Đăng nhập và viết đánh giá tắt. Muốn đổi nội dung demo thì sửa và chạy:
+
+```bash
+node scripts/demo-data.mjs
+```
+
+Nối Supabase (khai biến ở GitHub) là app tự chuyển sang dữ liệu thật.
 
 ## Địa danh nổi tiếng
 
@@ -142,7 +152,7 @@ src/supabase.js       client và mọi truy vấn
 src/util.js           hàm thuần (giờ mở cửa, khoảng cách, tìm không dấu…) + test
 supabase/schema.sql   bảng, view, RLS, hàm, trigger, bucket ảnh
 supabase/test.sql     kiểm tra RLS, place_stats và các hàm
-public/icons/         bộ icon tự vẽ (SVG): 7 biểu tượng món, 17 biểu tượng địa danh, 4 biểu cảm Bé Bao
+public/icons/         bộ icon tự vẽ (SVG): 7 biểu tượng món, 17 biểu tượng địa danh, 4 biểu cảm Bao
 public/covers/        7 tranh minh họa quán theo loại món, làm ảnh bìa khi quán chưa có ảnh thật
 public/og.png         ảnh xem trước khi dán link
 public/landmarks.json địa danh nổi tiếng kèm ảnh thật (tạo bằng scripts/landmarks.mjs)

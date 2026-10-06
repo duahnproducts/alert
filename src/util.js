@@ -28,6 +28,20 @@ export function distanceM(a, b) {
   return 2 * 6371000 * Math.asin(Math.sqrt(h))
 }
 
+// Khoảng cách (m) từ một điểm tới đường gấp khúc [[lat, lng], ...]: chiếu phẳng quanh điểm đó, đủ chính xác trong vài km
+export function distanceToPath(pos, pts) {
+  const ky = 111195, kx = ky * Math.cos((pos.lat * Math.PI) / 180) // m mỗi độ, cùng bán kính Trái Đất với distanceM
+  const xy = ([lat, lng]) => [(lng - pos.lng) * kx, (lat - pos.lat) * ky] // điểm cần đo nằm ở gốc tọa độ
+  let best = Infinity
+  for (let i = 0; i < pts.length; i++) {
+    const [ax, ay] = xy(pts[i]), [bx, by] = xy(pts[i + 1] ?? pts[i])
+    const dx = bx - ax, dy = by - ay, len = dx * dx + dy * dy
+    const t = len ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / len)) : 0
+    best = Math.min(best, Math.hypot(ax + t * dx, ay + t * dy))
+  }
+  return best
+}
+
 const vnNow = now => new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }))
 const toMin = t => +t.slice(0, 2) * 60 + +t.slice(3)
 const rangesOf = (hours, d) => hours[d] ?? hours.all ?? []
@@ -71,14 +85,37 @@ export const formatPrice = v => (v / 1000).toLocaleString('vi-VN', { maximumFrac
 
 export const formatStars = v => Number(v).toLocaleString('vi-VN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
+// 840 giây -> "14 phút", 3900 -> "1 giờ 5 phút"
+export function formatDuration(s) {
+  const m = Math.max(1, Math.round(s / 60))
+  return m < 60 ? `${m} phút` : `${Math.floor(m / 60)} giờ${m % 60 ? ` ${m % 60} phút` : ''}`
+}
+
+// Giải mã đường đi dạng polyline (Valhalla dùng 6 chữ số thập phân) thành [[lat, lng], ...]
+export function decodePolyline(s, precision = 6) {
+  const pts = [], k = 10 ** precision
+  let i = 0, lat = 0, lng = 0
+  const next = () => {
+    let b, shift = 0, v = 0
+    do { b = s.charCodeAt(i++) - 63; v |= (b & 31) << shift; shift += 5 } while (b >= 32)
+    return v & 1 ? ~(v >> 1) : v >> 1
+  }
+  while (i < s.length) {
+    lat += next()
+    lng += next()
+    pts.push([lat / k, lng / k])
+  }
+  return pts
+}
+
 export const formatDistance = m => (m < 1000 ? `${Math.round(m / 10) * 10} m` : `${(m / 1000).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} km`)
 
 // Giá dùng để lọc và sắp xếp: giá thật nếu có từ 3 lượt báo giá, nếu không thì giá cao nhất nhóm ghi lúc khảo sát.
 export const filterPrice = p => (p.price_count >= 3 ? p.price_median : p.price_max)
 
-// Dòng giá ngắn cho thẻ và danh sách
-export function priceShort(p) {
-  if (p.price_count >= 3) return `Giá thật ${formatPrice(p.price_median)}`
+// Dòng giá ngắn cho thẻ và danh sách. sample: bản demo, giá là giá mẫu chứ không phải giá thật
+export function priceShort(p, sample = false) {
+  if (p.price_count >= 3) return `${sample ? 'Giá mẫu' : 'Giá thật'} ${formatPrice(p.price_median)}`
   if (p.price_min && p.price_max) return `${formatPrice(p.price_min)}–${formatPrice(p.price_max)} (tham khảo)`
   return 'Chưa rõ giá'
 }
@@ -87,6 +124,17 @@ export function priceShort(p) {
 export const scoreShort = p => (p.review_count >= 3 ? `${formatStars(p.avg_stars)}★` : 'Mới')
 
 export const isTopPlace = p => p.review_count >= 5 && p.avg_stars >= 4.5
+
+// Gợi ý quán quanh một điểm: trong bán kính, không đang đóng cửa, xếp theo điểm trừ khoảng cách. Trả [{ p, d }].
+// ponytail: 1 km đường chim bay trừ 1 sao, quán dưới 3 đánh giá tính 3,5 sao; chỉnh trọng số theo phản hồi buổi thử 10/10.
+export function suggestNear(places, pos, { radius = 2000, n = 3, now = new Date() } = {}) {
+  const rank = ({ p, d }) => (p.review_count >= 3 ? p.avg_stars : 3.5) - d / 1000
+  return places
+    .map(p => ({ p, d: distanceM(pos, p) }))
+    .filter(x => x.d <= radius && isOpenNow(x.p.opening_hours, now) !== false)
+    .sort((a, b) => rank(b) - rank(a))
+    .slice(0, n)
+}
 
 export const badgeFor = n => (n >= 15 ? 'Thổ địa' : n >= 5 ? 'Hàng xóm' : 'Mới đến')
 

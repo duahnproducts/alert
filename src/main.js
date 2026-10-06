@@ -1,11 +1,11 @@
 // Router, trạng thái chung, bộ lọc, ngăn kéo danh sách, thẻ xem nhanh, trang Về dự án.
 import './style.css'
-import { readCache, fetchPlaces, photoUrl, thumbPath } from './supabase.js'
+import { DEMO, readCache, fetchPlaces, photoUrl, thumbPath } from './supabase.js'
 import { initMap, showPlaces, select as selectPin, moveTo, showUser, showLandmarks, toggleLandmarks } from './map.js'
 import {
-  CATEGORIES, CITIES, cityOf, h, normalizeVi, distanceM, isOpenNow, filterPrice, priceShort, scoreShort, formatDistance, placeLabel,
+  CATEGORIES, CITIES, cityOf, h, normalizeVi, distanceM, isOpenNow, filterPrice, priceShort, scoreShort, formatDistance, placeLabel, suggestNear,
 } from './util.js'
-import { renderPlace, openLandmark } from './place.js'
+import { renderPlace, renderDirections, openLandmark } from './place.js'
 import { renderReview, renderSuggest } from './review.js'
 import { initAuth, requireLogin, renderMine } from './auth.js'
 
@@ -18,7 +18,7 @@ const savedCity = () => {
 export const state = {
   city: savedCity(),
   places: [], areas: [], savedAt: null,
-  area: null, q: '', price: null, open: false, cats: new Set(), sort: 'dist',
+  q: '', price: null, open: false, cats: new Set(), sort: 'dist',
   userPos: null, // chỉ giữ trong bộ nhớ, không lưu
   inBounds: null, listMode: false, mapFailed: false, user: null, loading: false,
   landmarks: true, // hiện địa danh nổi tiếng trên bản đồ
@@ -47,11 +47,12 @@ const placeIcon = (p, size = 40) =>
 
 // Hiện một trang con (mọi màn trừ bản đồ). Bản đồ vẫn giữ nguyên phía sau để quay lại không phải vẽ lại.
 export function page(title, nodes, back = { href: './', label: 'Bản đồ' }) {
-  document.title = `${title} · Quán Quen`
+  document.title = `${title} · Hometown`
   $('home').hidden = true
   const main = $('page')
   main.hidden = false
-  main.replaceChildren(h('a', { href: back.href, class: 'back' }, `‹ ${back.label}`), h('div', null, nodes))
+  main.replaceChildren(h('a', { href: back.href, class: 'back' }, `‹ ${back.label}`),
+    DEMO && h('p', { class: 'demo-banner' }, '🧪 Bản demo: quán và đánh giá là minh họa, không phải quán thật'), h('div', null, nodes))
   scrollTo(0, 0)
   main.querySelector('h1')?.focus({ preventScroll: true })
 }
@@ -72,7 +73,6 @@ function setData(d) {
   state.places = d.places.filter(p => CATEGORIES[p.category])
   state.areas = d.areas
   state.savedAt = d.savedAt
-  fillAreas()
 }
 
 export function loadData() {
@@ -97,13 +97,9 @@ export function loadData() {
   return ready
 }
 
-export function currentArea() {
-  return state.areas.find(a => a.id === state.area)
-}
-
+// Chưa có vị trí của bạn thì tính khoảng cách từ trung tâm thành phố
 export function origin() {
-  const a = currentArea()
-  return state.userPos ?? (a ? { lat: a.center_lat, lng: a.center_lng } : state.city?.center ?? null)
+  return state.userPos ?? state.city?.center ?? null
 }
 
 export function dist(p) {
@@ -111,26 +107,10 @@ export function dist(p) {
   return o ? distanceM(o, p) : null
 }
 
-// Ô chọn cụm trường chỉ có các cụm của thành phố đang chọn
-function fillAreas() {
-  const sel = $('area')
-  const areas = state.areas.filter(a => cityOf({ lat: a.center_lat, lng: a.center_lng }) === state.city)
-  const fromUrl = +new URLSearchParams(location.search).get('khu')
-  if (state.area === null || (state.area && !areas.some(a => a.id === state.area))) {
-    state.area = areas.some(a => a.id === fromUrl) ? fromUrl : (areas[0]?.id ?? 0)
-  }
-  sel.replaceChildren(
-    h('option', { value: '0' }, 'Tất cả cụm trường'),
-    ...areas.map(a => h('option', { value: String(a.id) }, `Quanh: ${a.name}`)),
-  )
-  sel.value = String(state.area)
-}
-
 function filtered() {
   const q = normalizeVi(state.q.trim())
   return state.places.filter(p => {
     if (state.city && cityOf(p) !== state.city) return false
-    if (state.area && p.area_id !== state.area) return false
     if (state.cats.size && !state.cats.has(p.category)) return false
     const price = filterPrice(p)
     if (state.price === 'u30' && !(price < 30000)) return false
@@ -157,6 +137,86 @@ function renderHome() {
   const list = filtered()
   showPlaces(list, p => placeLabel(p, dist(p)))
   renderList(list)
+  renderNear(list)
+}
+
+// ───────── Gợi ý quanh bạn ─────────
+// Thẻ mời chia sẻ vị trí, có vị trí thì gợi ý quán đang mở gần bạn. Vị trí chỉ nằm trong bộ nhớ của tab, tính ngay trên máy.
+
+let near = 'off' // 'off' | 'ask' | 'wait' | 'show'
+
+function renderNear(list = filtered()) {
+  const box = $('near')
+  box.hidden = near === 'off'
+  if (box.hidden) return
+  const close = h('button', {
+    type: 'button', class: 'close', 'aria-label': near === 'show' ? 'Đóng gợi ý' : 'Để sau',
+    onclick: () => { near = 'off'; renderNear() },
+  }, '×')
+  if (near !== 'show') {
+    box.replaceChildren(close,
+      h('div', { class: 'row' }, mascot('doi', 56), h('div', null,
+        h('strong', null, 'Đói chưa? Cho Bao biết bạn đang ở đâu nhé'),
+        h('p', { class: 'muted' }, 'Bao gợi ý quán ngon đang mở gần bạn. Vị trí chỉ dùng ngay trên máy, không lưu, không gửi đi đâu.'))),
+      h('button', { type: 'button', class: 'btn btn-sm', onclick: locate, disabled: near === 'wait' },
+        near === 'wait' ? 'Bao đang tìm bạn…' : '📍 Chia sẻ vị trí'))
+    return
+  }
+  const picks = suggestNear(list, state.userPos)
+  box.replaceChildren(close,
+    h('div', { class: 'near-head' }, h('strong', null, 'Gợi ý quanh bạn'),
+      h('button', { type: 'button', class: 'link', onclick: locate }, 'Cập nhật vị trí')),
+    picks.length
+      ? h('ul', null, picks.map(({ p, d }) => h('li', null, h('a', { href: `quan/${p.id}` },
+        placeIcon(p, 28),
+        h('span', { class: 'info' }, h('b', null, p.name),
+          h('span', { class: 'muted' },
+            [formatDistance(d), priceShort(p, DEMO), scoreShort(p), isOpenNow(p.opening_hours) && 'Đang mở'].filter(Boolean).join(' · ')))))))
+      : h('p', { class: 'muted' }, 'Trong 2 km quanh bạn chưa có quán đang mở nào khớp. Thử bỏ bớt bộ lọc hoặc kéo bản đồ xem quán xa hơn nhé.'))
+}
+
+function locate() {
+  if (!navigator.geolocation) {
+    near = 'off'
+    renderNear()
+    return toast('Máy bạn không lấy được vị trí. App tính khoảng cách từ trung tâm thành phố nhé')
+  }
+  if (state.userPos) toast('Đang lấy vị trí…')
+  else { near = 'wait'; renderNear() }
+  navigator.geolocation.getCurrentPosition(g => {
+    state.userPos = { lat: g.coords.latitude, lng: g.coords.longitude }
+    const c = cityOf(state.userPos)
+    if (c && c !== state.city) setCity(c) // đang đứng ở thành phố kia thì đổi sang luôn
+    state.sort = 'dist'
+    $('sort').value = 'dist'
+    near = 'show'
+    renderHome()
+    showUser(state.userPos, coveredBottom()) // sau renderHome: thẻ đã đổi cỡ
+    toast('Đã xếp quán theo khoảng cách tới bạn')
+  }, e => {
+    near = state.userPos ? 'show' : e.code === 1 ? 'off' : 'ask'
+    renderNear()
+    toast(e.code === 1
+      ? 'Bạn chưa cho phép vị trí. Muốn bật lại thì vào cài đặt trình duyệt, cho phép vị trí cho trang này nhé'
+      : 'Chưa lấy được vị trí. Ra chỗ thoáng hơn rồi bấm thử lại nhé')
+  }, { timeout: 10000, maximumAge: 60000 })
+}
+
+// Số px ở đáy bản đồ bị ngăn kéo hoặc thẻ gợi ý che (điện thoại). Laptop: hai thứ này nằm cột bên trái, không che.
+function coveredBottom() {
+  const m = $('map').getBoundingClientRect()
+  const over = ['sheet', 'near'].map(id => $(id).getBoundingClientRect()).filter(r => r.height && r.left < m.right && r.right > m.left)
+  return Math.max(0, m.bottom - Math.min(m.bottom, ...over.map(r => r.top)))
+}
+
+// Đã cho phép từ trước thì lấy luôn (trình duyệt không hỏi lại). Chưa thì mời bằng thẻ, chỉ xin quyền khi người dùng bấm
+// (xin ngay lúc mở trang thì Lighthouse trừ điểm và người dùng hay bấm chặn). Đã chặn thì không làm phiền.
+async function initNear() {
+  if (!navigator.geolocation) return
+  let s = 'prompt'
+  try { s = (await navigator.permissions.query({ name: 'geolocation' })).state } catch {} // Safari cũ, trình duyệt trong app
+  if (s === 'granted') locate()
+  else if (s === 'prompt') { near = 'ask'; renderNear() }
 }
 
 function placeItem(p) {
@@ -170,7 +230,7 @@ function placeItem(p) {
       h('strong', null, p.name),
       h('span', { class: 'muted' }, [CATEGORIES[p.category].label, d != null && formatDistance(d)].filter(Boolean).join(' · ')),
       h('span', null,
-        h('b', { class: 'price' }, priceShort(p)), ' · ', scoreShort(p),
+        h('b', { class: 'price' }, priceShort(p, DEMO)), ' · ', scoreShort(p),
         open !== null && ' · ', open !== null && h('span', { class: open ? 'open' : 'muted' }, open ? 'Đang mở' : 'Đã đóng')),
     ),
   ))
@@ -183,7 +243,7 @@ function renderList(list = filtered()) {
   if (!state.places.length) {
     if (state.loading) {
       title.textContent = 'Đang tìm quán ngon…'
-      ul.replaceChildren(h('li', { class: 'empty' }, mascot('doi', 72), h('p', null, 'Bé Bao đang đi tìm quán…')))
+      ul.replaceChildren(h('li', { class: 'empty' }, mascot('doi', 72), h('p', null, 'Bao đang đi tìm quán…')))
     } else {
       title.textContent = 'Chưa tải được quán'
       ul.replaceChildren(h('li', null, errorBox('Không tải được danh sách quán. Kiểm tra mạng rồi bấm thử lại nhé.', loadData)))
@@ -196,7 +256,7 @@ function renderList(list = filtered()) {
   if (!shown.length) {
     const hasFilter = state.q || state.price || state.open || state.cats.size
     ul.replaceChildren(h('li', { class: 'empty' }, mascot('buon', 72),
-      h('p', null, hasFilter ? 'Chưa có quán nào khớp, thử bỏ bớt bộ lọc nhé.' : 'Vùng này chưa có quán. Kéo bản đồ hoặc chọn cụm trường khác nhé.'),
+      h('p', null, hasFilter ? 'Chưa có quán nào khớp, thử bỏ bớt bộ lọc nhé.' : 'Vùng này chưa có quán. Kéo bản đồ sang chỗ khác nhé.'),
       hasFilter && h('button', { type: 'button', class: 'btn-ghost', onclick: clearFilters }, 'Bỏ lọc')))
     return
   }
@@ -224,7 +284,7 @@ function showQuick(id) {
       : placeIcon(p, 44),
     h('div', { class: 'info' },
       h('strong', null, p.name),
-      h('span', null, h('b', { class: 'price' }, priceShort(p)), ' · ', scoreShort(p), d != null && ` · ${formatDistance(d)}`),
+      h('span', null, h('b', { class: 'price' }, priceShort(p, DEMO)), ' · ', scoreShort(p), d != null && ` · ${formatDistance(d)}`),
       h('a', { href: `quan/${p.id}`, class: 'btn btn-sm' }, 'Xem quán')),
     h('button', { type: 'button', class: 'close', 'aria-label': 'Đóng', onclick: close }, '×'),
   )
@@ -260,6 +320,7 @@ function startMap() {
     },
   }).then(() => {
     renderHome()
+    if (state.userPos) showUser(state.userPos, coveredBottom()) // vị trí lấy xong trước khi bản đồ kịp vẽ
     // Địa danh: dữ liệu tĩnh lấy từ Wikidata/Wikipedia bằng scripts/landmarks.mjs. Lỗi thì bản đồ vẫn chạy, chỉ thiếu địa danh
     fetch('landmarks.json').then(r => r.json()).then(list => {
       showLandmarks(list, openLandmark)
@@ -284,7 +345,7 @@ function askCity() {
   }, h('form', { method: 'dialog' },
     mascot('vui', 72),
     h('h2', { id: 'city-title' }, 'Bạn đang ở đâu?'),
-    h('p', { class: 'muted' }, 'Chọn thành phố để Bé Bao tìm quán quanh trường cho bạn nhé.'),
+    h('p', { class: 'muted' }, 'Chọn thành phố để Bao tìm quán quanh trường cho bạn nhé.'),
     CITIES.map((c, i) => h('button', { class: 'btn btn-block', value: String(i) }, c.name)),
   ))
   document.body.append(dlg)
@@ -295,12 +356,8 @@ function setCity(c) {
   state.city = c
   try { localStorage.setItem(CITY_KEY, c.name) } catch {}
   $('city').textContent = `${c.name} ▾`
-  state.area = null
-  fillAreas()
-  history.replaceState(null, '', state.area ? `./?khu=${state.area}` : './')
   renderHome()
-  const a = currentArea()
-  if (mapStarted) moveTo(a ? { lat: a.center_lat, lng: a.center_lng } : c.center, 15)
+  if (mapStarted) moveTo(c.center, 0) // 0: thu nhỏ nhất cho phép, nội thành phủ kín màn hình
   else startMap()
 }
 
@@ -334,17 +391,9 @@ function setupHome() {
   }, 'icons/lm-museum.svg')
   lmChip.classList.add('lm-chip')
   lmChip.setAttribute('aria-pressed', 'true')
-  filters.append(u30, p3050, openChip, lmChip, ...cats)
-  $('area').before(h('button', { type: 'button', id: 'city', class: 'chip', title: 'Đổi thành phố', onclick: askCity },
-    `${state.city?.name ?? 'Thành phố'} ▾`))
-
-  $('area').onchange = e => {
-    state.area = +e.target.value
-    history.replaceState(null, '', state.area ? `./?khu=${state.area}` : './')
-    const a = currentArea()
-    if (a) moveTo({ lat: a.center_lat, lng: a.center_lng }, 15)
-    renderHome()
-  }
+  const cityChip = h('button', { type: 'button', id: 'city', class: 'chip', title: 'Đổi thành phố', onclick: askCity },
+    `${state.city?.name ?? 'Thành phố'} ▾`)
+  filters.append(cityChip, u30, p3050, openChip, lmChip, ...cats)
   $('q').oninput = e => { state.q = e.target.value; renderHome() }
   $('sort').onchange = e => { state.sort = e.target.value; renderList() }
   $('view-toggle').onclick = () => setListMode(!state.listMode)
@@ -352,22 +401,7 @@ function setupHome() {
     const open = $('sheet').classList.toggle('open')
     e.currentTarget.setAttribute('aria-expanded', String(open))
   }
-  $('locate').onclick = () => {
-    if (!navigator.geolocation) return toast('Máy bạn không lấy được vị trí. App tính khoảng cách từ tâm cụm trường nhé')
-    toast('Đang lấy vị trí…')
-    navigator.geolocation.getCurrentPosition(g => {
-      state.userPos = { lat: g.coords.latitude, lng: g.coords.longitude }
-      const c = cityOf(state.userPos)
-      if (c && c !== state.city) setCity(c) // đang đứng ở thành phố kia thì đổi sang luôn
-      showUser(state.userPos)
-      state.sort = 'dist'
-      $('sort').value = 'dist'
-      renderHome()
-      toast('Đã xếp quán theo khoảng cách tới bạn')
-    }, e => toast(e.code === 1
-      ? 'Bạn chưa cho phép vị trí. App vẫn tính khoảng cách từ tâm cụm trường nhé'
-      : 'Chưa lấy được vị trí, thử lại sau nhé'), { timeout: 10000, maximumAge: 60000 })
-  }
+  $('locate').onclick = locate
 }
 
 // ───────── Router ─────────
@@ -389,6 +423,7 @@ function renderAbout() {
 const routes = [
   [/^\/$/, showHome],
   [/^\/quan\/(\d+)\/?$/, id => renderPlace(+id)],
+  [/^\/quan\/(\d+)\/chi-duong\/?$/, id => renderDirections(+id)],
   [/^\/quan\/(\d+)\/danh-gia\/?$/, id => requireLogin('viết đánh giá', () => renderReview(+id))],
   [/^\/de-xuat\/?$/, () => requireLogin('đề xuất quán mới', renderSuggest)],
   [/^\/cua-toi\/?$/, () => requireLogin('xem đánh giá của bạn', renderMine)],
@@ -427,10 +462,13 @@ addEventListener('popstate', route)
 
 // ───────── Khởi động ─────────
 
+// Bản demo: hiện dòng "Bản demo" và các ghi chú chỉ dành cho bản demo (class .demo-only trong index.html)
+document.documentElement.classList.toggle('demo', DEMO)
 setupHome()
 const cached = readCache()
 if (cached) setData(cached)
 initAuth()
+loadData() // trước route(): mở thẳng link quán (vd /quan/12) lần đầu thì trang quán chờ được dữ liệu
 route()
 if (cached) startMap()
-loadData()
+initNear()

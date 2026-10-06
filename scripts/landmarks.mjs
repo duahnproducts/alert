@@ -39,7 +39,7 @@ const TYPES = [
 ]
 const typeOf = (name, classes) =>
   TYPES.find(([, byName]) => byName.test(name))?.[0] ?? TYPES.find(([, , byClass]) => byClass.test(classes))?.[0] ?? 'museum'
-const UA = { 'User-Agent': 'QuanQuen-landmarks/1.0 (student contest project; https://github.com/duahnproducts/alert)' }
+const UA = { 'User-Agent': 'Hometown-landmarks/1.0 (student contest project; https://github.com/duahnproducts/alert)' }
 const sleep = ms => new Promise(r => setTimeout(r, ms))
 
 async function json(url, opts = {}) {
