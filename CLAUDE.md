@@ -24,6 +24,7 @@ Bản thiết kế là nguồn gốc về sản phẩm; bản kỹ thuật là n
 - Không lấy điểm Google. `place_id` của Google (không bắt buộc) chỉ dùng để link "Mở bằng Google Maps" và "Xem đánh giá trên Google Maps" mở đúng quán.
 - Chỉ đường ngay trong app (`/quan/:id/chi-duong`): Valhalla trên máy chủ miễn phí của FOSSGIS (`valhalla1.openstreetmap.de`, không key, có xe máy và câu tiếng Việt). Bắt buộc ghi nguồn OSM kèm link "Sửa bản đồ", tối đa 1 yêu cầu/giây, không dùng nặng. Là máy chủ demo nên luôn giữ nút "Mở bằng Google Maps" dự phòng. Mở trang là xin vị trí ngay và vẽ lộ trình từ vị trí người dùng (chốt 06/10/2026). Chỉ khi bị từ chối, không lấy được vị trí, hoặc cách quán trên 30 km thì dự phòng xuất phát từ ĐH Kinh tế Quốc dân (Hà Nội) hoặc ĐH Kinh tế TP.HCM (`CITIES[].start` trong `util.js`) và ghi rõ lý do; lấy được vị trí gần quán thì vẽ lại từ đó. Vị trí người dùng được gửi tới FOSSGIS khi mở trang này; trang và chính sách quyền riêng tư phải nói rõ.
 - Không lưu tọa độ người dùng; xóa EXIF ảnh bằng cách vẽ lại qua canvas.
+- Vị trí mặc định khi người dùng chưa chia sẻ hoặc chặn vị trí (chốt 06/10/2026): ĐH Kinh tế Quốc dân nếu đang chọn Hà Nội, ĐH Kinh tế TP.HCM (UEH) nếu đang chọn TP.HCM (`CITIES[].start` trong `util.js`). Dùng cho khoảng cách, xếp "gần nhất", thẻ "Gợi ý quanh…" và điểm xuất phát dự phòng của trang chỉ đường.
 
 Google Cloud chỉ còn dùng cho nút "Tiếp tục với Google" (OAuth, miễn phí, không cần thẻ).
 

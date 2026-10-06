@@ -14,7 +14,8 @@ export const normalizeVi = s =>
   s.normalize('NFD').replace(/\p{Diacritic}/gu, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase()
 
 // Hai thành phố của app. box = [[nam, tây], [bắc, đông]] ôm các quận nội thành: bản đồ chỉ kéo được trong khung này.
-// start: điểm xuất phát dự phòng của trang chỉ đường khi không dùng được vị trí người dùng
+// start: vị trí mặc định khi người dùng chưa chia sẻ hoặc chặn vị trí (khoảng cách, gợi ý quanh bạn),
+// và điểm xuất phát dự phòng của trang chỉ đường
 // (tọa độ đối chiếu Wikidata và OpenStreetMap, kiểm 06/10/2026)
 export const CITIES = [
   { name: 'Hà Nội', box: [[20.94, 105.72], [21.12, 105.96]], center: { lat: 21.0285, lng: 105.8542 }, // tâm: hồ Hoàn Kiếm
