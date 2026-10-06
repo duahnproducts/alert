@@ -97,9 +97,12 @@ export function loadData() {
   return ready
 }
 
-// Chưa có vị trí của bạn thì tính khoảng cách từ trung tâm thành phố
+// Vị trí mặc định khi chưa chia sẻ hoặc chặn vị trí: trường của thành phố đang chọn (Hà Nội: KTQD, TP.HCM: UEH)
+export const defaultSpot = () => (state.city ?? CITIES[0]).start
+
+// Khoảng cách tính từ vị trí của bạn, chưa có thì từ vị trí mặc định
 export function origin() {
-  return state.userPos ?? state.city?.center ?? null
+  return state.userPos ?? (state.city ? defaultSpot() : null)
 }
 
 export function dist(p) {
@@ -143,17 +146,18 @@ function renderHome() {
 // ───────── Gợi ý quanh bạn ─────────
 // Thẻ mời chia sẻ vị trí, có vị trí thì gợi ý quán đang mở gần bạn. Vị trí chỉ nằm trong bộ nhớ của tab, tính ngay trên máy.
 
-let near = 'off' // 'off' | 'ask' | 'wait' | 'show'
+let near = 'off' // 'off' | 'ask' | 'wait' | 'show' (quanh vị trí của bạn) | 'default' (quanh vị trí mặc định)
 
 function renderNear(list = filtered()) {
   const box = $('near')
   box.hidden = near === 'off'
   if (box.hidden) return
+  // "Để sau" ở thẻ mời nghĩa là không chia sẻ: chuyển sang gợi ý quanh vị trí mặc định. Đóng thẻ gợi ý thì ẩn hẳn.
   const close = h('button', {
-    type: 'button', class: 'close', 'aria-label': near === 'show' ? 'Đóng gợi ý' : 'Để sau',
-    onclick: () => { near = 'off'; renderNear() },
+    type: 'button', class: 'close', 'aria-label': near === 'ask' ? 'Để sau' : 'Đóng gợi ý',
+    onclick: () => { near = near === 'ask' ? 'default' : 'off'; renderNear() },
   }, '×')
-  if (near !== 'show') {
+  if (near === 'ask' || near === 'wait') {
     box.replaceChildren(close,
       h('div', { class: 'row' }, mascot('doi', 56), h('div', null,
         h('strong', null, 'Đói chưa? Cho Bao biết bạn đang ở đâu nhé'),
@@ -162,24 +166,29 @@ function renderNear(list = filtered()) {
         near === 'wait' ? 'Bao đang tìm bạn…' : '📍 Chia sẻ vị trí'))
     return
   }
-  const picks = suggestNear(list, state.userPos)
+  const mine = near === 'show'
+  const spot = mine ? null : defaultSpot()
+  // Vị trí mặc định chỉ là ước lượng (và quán demo ở TP.HCM cách UEH khoảng 4 km) nên tìm rộng hơn
+  const radius = mine ? 2000 : 5000
+  const picks = suggestNear(list, mine ? state.userPos : spot, { radius })
   box.replaceChildren(close,
-    h('div', { class: 'near-head' }, h('strong', null, 'Gợi ý quanh bạn'),
-      h('button', { type: 'button', class: 'link', onclick: locate }, 'Cập nhật vị trí')),
+    h('div', { class: 'near-head' }, h('strong', null, mine ? 'Gợi ý quanh bạn' : `Gợi ý quanh ${spot.name}`),
+      h('button', { type: 'button', class: 'link', onclick: locate }, mine ? 'Cập nhật vị trí' : '📍 Dùng vị trí của tôi')),
+    !mine && h('p', { class: 'muted' }, 'Bạn chưa chia sẻ vị trí nên Bao tạm tính khoảng cách từ đây.'),
     picks.length
       ? h('ul', null, picks.map(({ p, d }) => h('li', null, h('a', { href: `quan/${p.id}` },
         placeIcon(p, 28),
         h('span', { class: 'info' }, h('b', null, p.name),
           h('span', { class: 'muted' },
             [formatDistance(d), priceShort(p, DEMO), scoreShort(p), isOpenNow(p.opening_hours) && 'Đang mở'].filter(Boolean).join(' · ')))))))
-      : h('p', { class: 'muted' }, 'Trong 2 km quanh bạn chưa có quán đang mở nào khớp. Thử bỏ bớt bộ lọc hoặc kéo bản đồ xem quán xa hơn nhé.'))
+      : h('p', { class: 'muted' }, `Trong ${radius / 1000} km quanh ${mine ? 'bạn' : spot.name} chưa có quán đang mở nào khớp. Thử bỏ bớt bộ lọc hoặc kéo bản đồ xem quán xa hơn nhé.`))
 }
 
 function locate() {
   if (!navigator.geolocation) {
-    near = 'off'
+    near = 'default'
     renderNear()
-    return toast('Máy bạn không lấy được vị trí. App tính khoảng cách từ trung tâm thành phố nhé')
+    return toast(`Máy bạn không lấy được vị trí. Bao tính khoảng cách từ ${defaultSpot().name} nhé`)
   }
   if (state.userPos) toast('Đang lấy vị trí…')
   else { near = 'wait'; renderNear() }
@@ -194,10 +203,10 @@ function locate() {
     showUser(state.userPos, coveredBottom()) // sau renderHome: thẻ đã đổi cỡ
     toast('Đã xếp quán theo khoảng cách tới bạn')
   }, e => {
-    near = state.userPos ? 'show' : e.code === 1 ? 'off' : 'ask'
+    near = state.userPos ? 'show' : e.code === 1 ? 'default' : 'ask'
     renderNear()
     toast(e.code === 1
-      ? 'Bạn chưa cho phép vị trí. Muốn bật lại thì vào cài đặt trình duyệt, cho phép vị trí cho trang này nhé'
+      ? `Bạn chưa cho phép vị trí nên Bao tính từ ${defaultSpot().name}. Muốn bật lại thì vào cài đặt trình duyệt, cho phép vị trí cho trang này nhé`
       : 'Chưa lấy được vị trí. Ra chỗ thoáng hơn rồi bấm thử lại nhé')
   }, { timeout: 10000, maximumAge: 60000 })
 }
@@ -210,13 +219,13 @@ function coveredBottom() {
 }
 
 // Đã cho phép từ trước thì lấy luôn (trình duyệt không hỏi lại). Chưa thì mời bằng thẻ, chỉ xin quyền khi người dùng bấm
-// (xin ngay lúc mở trang thì Lighthouse trừ điểm và người dùng hay bấm chặn). Đã chặn thì không làm phiền.
+// (xin ngay lúc mở trang thì Lighthouse trừ điểm và người dùng hay bấm chặn). Đã chặn thì không hỏi, gợi ý quanh vị trí mặc định.
 async function initNear() {
-  if (!navigator.geolocation) return
-  let s = 'prompt'
+  let s = navigator.geolocation ? 'prompt' : 'denied'
   try { s = (await navigator.permissions.query({ name: 'geolocation' })).state } catch {} // Safari cũ, trình duyệt trong app
-  if (s === 'granted') locate()
-  else if (s === 'prompt') { near = 'ask'; renderNear() }
+  if (s === 'granted') return locate()
+  near = s === 'denied' ? 'default' : 'ask'
+  renderNear()
 }
 
 function placeItem(p) {
@@ -307,7 +316,7 @@ function startMap() {
   if (mapStarted || appPath() !== '/') return
   if (!state.city) return askCity() // lần đầu mở app: hỏi thành phố trước, chọn xong mới vẽ bản đồ
   mapStarted = true
-  const o = origin()
+  const o = state.userPos ?? state.city.center
   const go = () => initMap($('map'), {
     center: { lat: o.lat, lng: o.lng },
     onSelect: showQuick,
