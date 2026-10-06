@@ -96,7 +96,7 @@ Bản đồ ──> Chi tiết quán ──> [Đã đăng nhập?] ──rồi�
 
 ### Màn 1: Bản đồ (trang chủ)
 
-- **Thanh trên:** logo và linh vật nhỏ; ô tìm theo tên quán hoặc tên món (tìm trong dữ liệu của app, không gọi API); chip chọn cụm trường, ví dụ "Quanh: ĐH Bách khoa ▾".
+- **Thanh trên:** logo và linh vật nhỏ; ô tìm theo tên quán hoặc tên món (tìm trong dữ liệu của app, không gọi API); chip thành phố ("Hà Nội ▾") rồi chip chọn cụm trường, ví dụ "Quanh: ĐH Bách khoa ▾". Lần đầu mở app hỏi "Bạn đang ở đâu?" (Hà Nội / TP. Hồ Chí Minh), chọn xong mới hiện bản đồ thành phố đó; bản đồ chỉ kéo trong nội thành, không ra tỉnh lân cận.
 - **Hàng bộ lọc cuộn ngang:** "Dưới 30k", "30–50k", "Đang mở", rồi các loại món có biểu tượng (mục 5).
 - **Bản đồ toàn màn:** mỗi quán là một biểu tượng theo loại món. Thu nhỏ bản đồ thì các quán gần nhau gộp thành một cụm có số. Nút "Vị trí của tôi" chỉ xin quyền GPS khi được bấm.
 - **Chạm vào biểu tượng:** hiện thẻ xem nhanh ở đáy gồm ảnh, tên, giá thật, điểm, khoảng cách và nút "Xem quán".
@@ -327,7 +327,7 @@ Bản 2023 của ISO/IEC 25010 có 9 đặc tính chất lượng sản phẩm: 
 | Tin cậy | Nền bản đồ lỗi thì chuyển sang danh sách; Supabase lỗi thì hiện dữ liệu đã lưu trên máy kèm giờ lưu | UptimeRobot không ghi nhận lần sập nào trong mùa thi |
 | Bảo mật | Row Level Security trên mọi bảng; không đưa secret key ra frontend | Dùng publishable key thử sửa đánh giá của người khác: phải bị từ chối |
 | Bảo trì | Khoảng 6 file JS, toàn bộ cấu trúc database trong `schema.sql`, tự deploy từ GitHub | Người ngoài nhóm đọc README và chạy được app trong 15 phút |
-| Linh hoạt (trước đây gọi là khả chuyển) | Thêm cụm trường chỉ cần thêm dòng vào `areas` và `places`, không sửa code; thêm thành phố thì thêm một dòng khung bản đồ trong `map.js` | Demo thêm một cụm trường mới trong 5 phút |
+| Linh hoạt (trước đây gọi là khả chuyển) | Thêm cụm trường chỉ cần thêm dòng vào `areas` và `places`, không sửa code; thêm thành phố thì thêm một dòng khung bản đồ trong `util.js` | Demo thêm một cụm trường mới trong 5 phút |
 | An toàn | Không lưu vị trí người dùng; xóa EXIF trong ảnh; ẩn nội dung khi bị báo cáo; không đánh giá vệ sinh an toàn thực phẩm thay cơ quan chức năng | Thả một ảnh có GPS vào app rồi kiểm tra file đã lưu không còn EXIF |
 
 ## 10. Quyền riêng tư, bảo mật, điều khoản Google

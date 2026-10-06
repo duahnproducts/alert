@@ -3,13 +3,20 @@ import './style.css'
 import { readCache, fetchPlaces, photoUrl, thumbPath } from './supabase.js'
 import { initMap, showPlaces, select as selectPin, moveTo, showUser, showLandmarks, toggleLandmarks } from './map.js'
 import {
-  CATEGORIES, h, normalizeVi, distanceM, isOpenNow, filterPrice, priceShort, scoreShort, formatDistance, placeLabel,
+  CATEGORIES, CITIES, cityOf, h, normalizeVi, distanceM, isOpenNow, filterPrice, priceShort, scoreShort, formatDistance, placeLabel,
 } from './util.js'
 import { renderPlace, openLandmark } from './place.js'
 import { renderReview, renderSuggest } from './review.js'
 import { initAuth, requireLogin, renderMine } from './auth.js'
 
+// Thành phố người dùng chọn, lưu trên máy để lần sau không hỏi lại
+const CITY_KEY = 'qq-city'
+const savedCity = () => {
+  try { return CITIES.find(c => c.name === localStorage.getItem(CITY_KEY)) } catch { return undefined }
+}
+
 export const state = {
+  city: savedCity(),
   places: [], areas: [], savedAt: null,
   area: null, q: '', price: null, open: false, cats: new Set(), sort: 'dist',
   userPos: null, // chỉ giữ trong bộ nhớ, không lưu
@@ -95,8 +102,8 @@ export function currentArea() {
 }
 
 export function origin() {
-  const a = currentArea() ?? state.areas[0]
-  return state.userPos ?? (a ? { lat: a.center_lat, lng: a.center_lng } : null)
+  const a = currentArea()
+  return state.userPos ?? (a ? { lat: a.center_lat, lng: a.center_lng } : state.city?.center ?? null)
 }
 
 export function dist(p) {
@@ -104,13 +111,17 @@ export function dist(p) {
   return o ? distanceM(o, p) : null
 }
 
+// Ô chọn cụm trường chỉ có các cụm của thành phố đang chọn
 function fillAreas() {
   const sel = $('area')
+  const areas = state.areas.filter(a => cityOf({ lat: a.center_lat, lng: a.center_lng }) === state.city)
   const fromUrl = +new URLSearchParams(location.search).get('khu')
-  if (state.area === null) state.area = state.areas.some(a => a.id === fromUrl) ? fromUrl : (state.areas[0]?.id ?? 0)
+  if (state.area === null || (state.area && !areas.some(a => a.id === state.area))) {
+    state.area = areas.some(a => a.id === fromUrl) ? fromUrl : (areas[0]?.id ?? 0)
+  }
   sel.replaceChildren(
     h('option', { value: '0' }, 'Tất cả cụm trường'),
-    ...state.areas.map(a => h('option', { value: String(a.id) }, `Quanh: ${a.name}`)),
+    ...areas.map(a => h('option', { value: String(a.id) }, `Quanh: ${a.name}`)),
   )
   sel.value = String(state.area)
 }
@@ -118,6 +129,7 @@ function fillAreas() {
 function filtered() {
   const q = normalizeVi(state.q.trim())
   return state.places.filter(p => {
+    if (state.city && cityOf(p) !== state.city) return false
     if (state.area && p.area_id !== state.area) return false
     if (state.cats.size && !state.cats.has(p.category)) return false
     const price = filterPrice(p)
@@ -233,8 +245,9 @@ function startMap() {
   // Bản đồ cần khung đang hiện để đo kích thước; trang khác (vd /de-xuat) chưa cần tới.
   // Chưa có quán (Supabase lỗi hoặc chưa cấu hình) vẫn vẽ bản đồ để xem địa danh.
   if (mapStarted || appPath() !== '/') return
+  if (!state.city) return askCity() // lần đầu mở app: hỏi thành phố trước, chọn xong mới vẽ bản đồ
   mapStarted = true
-  const o = origin() ?? state.places[0] ?? { lat: 21.0285, lng: 105.8542 } // mặc định: hồ Hoàn Kiếm
+  const o = origin()
   const go = () => initMap($('map'), {
     center: { lat: o.lat, lng: o.lng },
     onSelect: showQuick,
@@ -255,6 +268,40 @@ function startMap() {
   })
   // Bản đồ nặng nhất: vẽ khung trang và danh sách trước, nạp Maps JS sau
   ;(window.requestIdleCallback ?? (f => setTimeout(f, 200)))(go)
+}
+
+// Hỏi thành phố: lần đầu mở app, hoặc khi bấm nút thành phố trên thanh lọc.
+// Bấm Esc lần đầu thì mở Hà Nội; đổi lại được bằng nút thành phố.
+function askCity() {
+  if (document.querySelector('.city-pick')) return
+  const dlg = h('dialog', {
+    class: 'sheet-dialog city-pick', 'aria-labelledby': 'city-title',
+    onclose: () => {
+      dlg.remove()
+      const c = CITIES[dlg.returnValue] ?? state.city ?? CITIES[0]
+      if (c !== state.city) setCity(c)
+    },
+  }, h('form', { method: 'dialog' },
+    mascot('vui', 72),
+    h('h2', { id: 'city-title' }, 'Bạn đang ở đâu?'),
+    h('p', { class: 'muted' }, 'Chọn thành phố để Bé Bao tìm quán quanh trường cho bạn nhé.'),
+    CITIES.map((c, i) => h('button', { class: 'btn btn-block', value: String(i) }, c.name)),
+  ))
+  document.body.append(dlg)
+  dlg.showModal()
+}
+
+function setCity(c) {
+  state.city = c
+  try { localStorage.setItem(CITY_KEY, c.name) } catch {}
+  $('city').textContent = `${c.name} ▾`
+  state.area = null
+  fillAreas()
+  history.replaceState(null, '', state.area ? `./?khu=${state.area}` : './')
+  renderHome()
+  const a = currentArea()
+  if (mapStarted) moveTo(a ? { lat: a.center_lat, lng: a.center_lng } : c.center, 15)
+  else startMap()
 }
 
 function setupHome() {
@@ -288,6 +335,8 @@ function setupHome() {
   lmChip.classList.add('lm-chip')
   lmChip.setAttribute('aria-pressed', 'true')
   filters.append(u30, p3050, openChip, lmChip, ...cats)
+  $('area').before(h('button', { type: 'button', id: 'city', class: 'chip', title: 'Đổi thành phố', onclick: askCity },
+    `${state.city?.name ?? 'Thành phố'} ▾`))
 
   $('area').onchange = e => {
     state.area = +e.target.value
@@ -308,6 +357,8 @@ function setupHome() {
     toast('Đang lấy vị trí…')
     navigator.geolocation.getCurrentPosition(g => {
       state.userPos = { lat: g.coords.latitude, lng: g.coords.longitude }
+      const c = cityOf(state.userPos)
+      if (c && c !== state.city) setCity(c) // đang đứng ở thành phố kia thì đổi sang luôn
       showUser(state.userPos)
       state.sort = 'dist'
       $('sort').value = 'dist'

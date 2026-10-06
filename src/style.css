@@ -375,6 +375,9 @@ dialog::backdrop { background: rgb(0 0 0 / .5); }
 }
 @media (min-width: 600px) { .sheet-dialog { margin: auto; border-radius: 20px; } }
 .sheet-dialog h2 { margin-top: 0; }
+.city-pick { text-align: center; }
+.city-pick .mascot { display: block; margin: 0 auto 4px; }
+.city-pick .btn + .btn { margin-top: 10px; }
 .google { margin-top: 8px; }
 .divider { text-align: center; color: var(--muted); font-size: 14px; margin: 16px 0 8px; }
 .note { background: var(--cream); border-radius: 12px; padding: 12px; margin-bottom: 12px; }

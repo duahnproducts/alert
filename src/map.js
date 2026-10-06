@@ -1,19 +1,24 @@
 // File duy nhất biết đến thư viện bản đồ. Leaflet + protomaps-leaflet tự vẽ bản đồ kiểu chibi từ dữ liệu
 // vector của OpenFreeMap (miễn phí, không key, không giới hạn lượt; kiểm 06/10/2026, vào được từ Việt Nam).
 // Không dùng openstreetmap.org: không kết nối được từ mạng ở Việt Nam.
-import { CATEGORIES, isOpenNow, isTopPlace } from './util.js'
+import { CATEGORIES, CITIES, cityOf, isOpenNow, isTopPlace } from './util.js'
 
 const TILEJSON = 'https://tiles.openfreemap.org/planet'
 const ATTRIBUTION = '<a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> © <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'
 const CELL = 64 // px: các quán gần nhau hơn khoảng này trên màn hình thì gộp thành cụm
 const FONT = '"Be Vietnam Pro", system-ui, sans-serif'
 const dark = matchMedia('(prefers-color-scheme: dark)')
-// Bản đồ chỉ kéo được trong một thành phố, [[nam, tây], [bắc, đông]]. Hà Nội tính tới Hòa Lạc (ĐH FPT, ĐHQG), TP.HCM tính cả Thủ Đức.
-const CITIES = [
-  [[20.9, 105.48], [21.2, 106.0]],
-  [[10.65, 106.55], [10.95, 106.9]],
-]
-const cityOf = (L, p) => CITIES.map(c => L.latLngBounds(c)).find(b => b.contains(p))
+// Khung nội thành chứa điểm p, ngoài cả hai thành phố thì undefined
+const boxOf = (L, p) => {
+  const c = cityOf(L.latLng(p))
+  return c && L.latLngBounds(c.box)
+}
+// Thu nhỏ hết cỡ vẫn nằm gọn trong khung nội thành, không lộ ra tỉnh lân cận. Tính lại khi đổi thành phố hay đổi cỡ khung.
+function fitCity(m) {
+  if (!m.getSize().x) return // khung đang ẩn: chưa đo được
+  m.options.minZoom = 0 // getBoundsZoom không trả về mức nhỏ hơn minZoom hiện tại
+  m.setMinZoom(m.getBoundsZoom(m.options.maxBounds, true))
+}
 
 let lib // Promise<{ L, pm, tiles }>
 let map, layer, lmLayer, userMarker, selectedId, onSelectCb
@@ -96,9 +101,11 @@ function rules(pm, c) {
 }
 
 function newMap({ L, pm, tiles }, el, center, zoom) {
-  const city = cityOf(L, center) ?? L.latLngBounds(CITIES[0]) // ở ngoài cả hai thành phố thì mở Hà Nội
-  const m = L.map(el, { zoomControl: false, attributionControl: false, maxZoom: 19, minZoom: 11, maxBounds: city, maxBoundsViscosity: 1 })
+  const city = boxOf(L, center) ?? L.latLngBounds(CITIES[0].box) // ở ngoài cả hai thành phố thì mở Hà Nội
+  const m = L.map(el, { zoomControl: false, attributionControl: false, maxZoom: 19, maxBounds: city, maxBoundsViscosity: 1 })
     .setView(city.contains(center) ? center : city.getCenter(), zoom)
+  fitCity(m)
+  m.on('resize', () => fitCity(m))
   L.control.zoom({ position: 'topright', zoomInTitle: 'Phóng to', zoomOutTitle: 'Thu nhỏ' }).addTo(m)
   // Ghi nguồn ở góc trên: góc dưới bị ngăn kéo danh sách che, mà điều khoản bắt buộc ghi nguồn
   L.control.attribution({ prefix: false, position: 'topleft' }).addTo(m)
@@ -276,9 +283,12 @@ export function toggleLandmarks(on) {
 
 // Dời bản đồ tới điểm p; điểm ở thành phố kia thì đổi khung giới hạn trước, ngoài cả hai thành phố thì để yên
 function goTo(m, p, zoom) {
-  const city = cityOf(m.qqL, p)
+  const city = boxOf(m.qqL, p)
   if (!city) return
-  if (!city.equals(m.options.maxBounds)) m.setMaxBounds(city)
+  if (!city.equals(m.options.maxBounds)) {
+    m.setMaxBounds(city)
+    fitCity(m)
+  }
   m.setView(p, zoom ?? m.getZoom())
 }
 
