@@ -1,6 +1,6 @@
 // Trang chi tiết quán: ảnh, giá thật, điểm của app, link sang Google Maps, đánh giá, báo cáo; trang chỉ đường trong app.
 import { DEMO, demoData, fetchReviews, fetchPhotos, photoUrl, thumbPath, report } from './supabase.js'
-import { CATEGORIES, h, hoursText, isOpenNow, formatPrice, formatStars, formatDistance, badgeFor, timeAgo, formatDate, priceShort, suggestNear, distanceM, decodePolyline, formatDuration, distanceToPath } from './util.js'
+import { CATEGORIES, h, hoursText, isOpenNow, formatPrice, formatStars, formatDistance, badgeFor, timeAgo, formatDate, priceShort, suggestNear, distanceM, decodePolyline, formatDuration, distanceToPath, CITIES, cityOf } from './util.js'
 import { routeMap } from './map.js'
 import { state, page, toast, mascot, errorBox, dataReady, dist } from './main.js'
 import { openLogin } from './auth.js'
@@ -115,8 +115,13 @@ export async function renderDirections(id) {
   if (!p) return page('Không thấy quán', errorBox('Không thấy quán này. Có thể quán đang chờ duyệt, đã bị ẩn, hoặc bạn đang mất mạng.'))
 
   const here = () => location.pathname === path
+  // Mặc định xuất phát từ trường của thành phố (Hà Nội: KTQD, TP.HCM: UEH): không cần GPS, giám khảo mở trên laptop vẫn xem được.
+  // Lấy theo thành phố của quán (trùng thành phố đang chọn, vì danh sách đã lọc theo thành phố) để mở thẳng link quán ở thành phố kia vẫn đúng.
+  const start = (cityOf(p) ?? state.city ?? CITIES[0]).start
+  const fromText = h('span', null, `Xuất phát: ${start.name}`)
+  const gpsBtn = h('button', { type: 'button', class: 'link', disabled: true, onclick: useGps }, '📍 Đi từ chỗ tôi đang đứng')
   const mapEl = h('div', { class: 'route-map' })
-  const sum = h('p', { class: 'route-sum', role: 'status' }, 'Bao đang tìm bạn…')
+  const sum = h('p', { class: 'route-sum', role: 'status' }, 'Bao đang tìm đường…')
   const steps = h('ol', { class: 'steps' })
   const arrived = h('div', { class: 'card ok-box', hidden: true }, mascot('vui', 48),
     h('div', { class: 'stack' }, h('strong', null, 'Tới nơi rồi! Chúc bạn ăn ngon'),
@@ -125,15 +130,15 @@ export async function renderDirections(id) {
     Object.entries(MODES).map(([key, label]) =>
       h('button', { type: 'button', class: 'chip', 'aria-pressed': 'false', 'data-mode': key, onclick: () => draw(key) }, label)))
   const routes = {} // theo chế độ đi, để đổi qua lại không phải hỏi lại máy chủ
-  let from = null, mode = null, ctl = null, reroutedAt = 0
+  let from = start, gps = false, mode = null, ctl = null, reroutedAt = 0
 
   page(`Đường tới ${p.name}`, [
     h('h1', { tabindex: -1 }, `Đường tới ${p.name}`),
     // Bản demo là bài dự thi, chưa có người dùng thật: vẫn chỉ đường tới quán minh họa để xem thử, nhưng ghi rõ
     DEMO && h('p', { class: 'note' }, 'Quán minh họa, không có thật ở vị trí này: đường đi chỉ để xem thử tính năng.'),
-    modes, sum, mapEl, arrived, steps,
+    modes, h('p', { class: 'route-from' }, fromText, gpsBtn), sum, mapEl, arrived, steps,
     h('p', { class: 'small muted' },
-      'Để vẽ đường, vị trí của bạn và của quán được gửi tới máy chủ tìm đường miễn phí của FOSSGIS (Đức). App không lưu vị trí của bạn.'),
+      'Để vẽ đường, điểm xuất phát và vị trí quán được gửi tới máy chủ tìm đường miễn phí của FOSSGIS (Đức). Vị trí của bạn chỉ được gửi khi bạn bấm “Đi từ chỗ tôi đang đứng”, và app không lưu lại.'),
     h('p', { class: 'small muted' }, 'Đường đi: Valhalla, máy chủ FOSSGIS · Dữ liệu © ',
       h('a', { href: 'https://www.openstreetmap.org/copyright', target: '_blank', rel: 'noopener' }, 'OpenStreetMap'), ' · Thấy đường sai? ',
       h('a', { href: 'https://www.openstreetmap.org/fixthemap', target: '_blank', rel: 'noopener' }, 'Sửa bản đồ')),
@@ -143,7 +148,6 @@ export async function renderDirections(id) {
   async function draw(key) {
     mode = key
     for (const b of modes.children) b.setAttribute('aria-pressed', String(b.dataset.mode === key))
-    if (!from) return // chưa có vị trí: nhớ chế độ đã chọn, có vị trí thì tìm đường theo chế độ này
     const far = distanceM(from, p)
     if (far > MAX_ROUTE_M) {
       sum.textContent = `Bạn đang cách quán ${formatDistance(far)}, xa quá nên Bao không vẽ đường. Nếu vị trí sai, bật GPS rồi tải lại trang, hoặc mở bằng Google Maps nhé.`
@@ -166,15 +170,19 @@ export async function renderDirections(id) {
     }
   }
 
-  // Có vị trí lần đầu thì tìm đường (gần thì mặc định đi bộ). Sau đó dời Bao theo bạn; đi lệch khỏi đường thì tìm lại.
+  // Sau khi bấm "Đi từ chỗ tôi": vị trí đầu tiên thay cho điểm xuất phát mặc định. Sau đó dời Bao theo bạn; đi lệch khỏi đường thì tìm lại.
   const onPos = (pos, acc = 0) => {
     state.userPos = pos
     ctl?.user(pos)
     const left = distanceM(pos, p)
     arrived.hidden = left > 50
-    if (!from) {
+    if (!gps) {
+      gps = true
       from = pos
-      return draw(mode ?? (left <= 1500 ? 'pedestrian' : 'motor_scooter'))
+      for (const k in routes) delete routes[k]
+      fromText.textContent = 'Xuất phát: chỗ bạn đang đứng, Bao đi theo bạn'
+      gpsBtn.hidden = true
+      return draw(mode)
     }
     // Lệch quá 40 m (hoặc quá sai số GPS lúc đó) thì tìm đường mới từ chỗ đang đứng.
     // Tối đa 30 giây một lần: máy chủ miễn phí chỉ cho 1 yêu cầu/giây, và GPS trong phố hay nhảy.
@@ -190,20 +198,33 @@ export async function renderDirections(id) {
   ctl = await routeMap(mapEl, p)
   if (!here()) return
   if (!ctl) mapEl.replaceChildren(h('p', { class: 'muted' }, 'Bản đồ đang nghỉ, bạn đi theo các bước bên dưới nhé.'))
-  if (state.userPos) onPos(state.userPos)
-  if (!navigator.geolocation) {
-    if (!from) sum.textContent = 'Máy bạn không lấy được vị trí nên Bao chưa tìm được đường. Mở bằng Google Maps nhé.'
-    return
+  ctl?.user(start) // Bao đứng ở điểm xuất phát
+  gpsBtn.disabled = false // bật sau khi có bản đồ, để vị trí đầu tiên không về trước khi bản đồ sẵn sàng
+  draw(mode ?? (distanceM(start, p) <= 1500 ? 'pedestrian' : 'motor_scooter'))
+
+  function useGps() {
+    if (!navigator.geolocation) return toast(`Máy bạn không lấy được vị trí, Bao chỉ đường từ ${start.name} nhé`)
+    gpsBtn.disabled = true
+    toast('Bao đang tìm bạn…')
+    const keepStart = msg => {
+      navigator.geolocation.clearWatch(watch)
+      gpsBtn.disabled = false
+      toast(msg)
+    }
+    const watch = navigator.geolocation.watchPosition(g => {
+      if (!here()) return navigator.geolocation.clearWatch(watch) // đã rời trang chỉ đường
+      const pos = { lat: g.coords.latitude, lng: g.coords.longitude }
+      const far = distanceM(pos, p)
+      // Xa quá (thường là máy tính đoán vị trí theo IP): giữ điểm xuất phát mặc định, không làm nặng máy chủ miễn phí
+      if (!gps && far > MAX_ROUTE_M) return keepStart(`Bạn đang cách quán ${formatDistance(far)}, xa quá nên Bao vẫn chỉ đường từ ${start.name} nhé`)
+      onPos(pos, g.coords.accuracy)
+    }, e => {
+      if (gps || !here()) return
+      keepStart(e.code === 1
+        ? `Bạn chưa cho phép vị trí nên Bao vẫn chỉ đường từ ${start.name}. Muốn đi từ chỗ bạn thì cho phép vị trí cho trang này rồi bấm lại nhé`
+        : `Chưa lấy được vị trí nên Bao vẫn chỉ đường từ ${start.name}. Ra chỗ thoáng rồi bấm lại nhé`)
+    }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 })
   }
-  const watch = navigator.geolocation.watchPosition(g => {
-    if (!here()) return navigator.geolocation.clearWatch(watch) // đã rời trang chỉ đường
-    onPos({ lat: g.coords.latitude, lng: g.coords.longitude }, g.coords.accuracy)
-  }, e => {
-    if (from || !here()) return
-    sum.textContent = e.code === 1
-      ? 'Bạn chưa cho phép vị trí nên Bao chưa tìm được đường. Cho phép vị trí cho trang này rồi tải lại, hoặc mở bằng Google Maps nhé.'
-      : 'Chưa lấy được vị trí. Ra chỗ thoáng hơn chờ chút nhé, hoặc mở bằng Google Maps.'
-  }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 })
 }
 
 function photoAlt(p, photo, reviews) {
