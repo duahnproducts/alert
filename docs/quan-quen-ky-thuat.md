@@ -96,7 +96,7 @@ GitHub Pages không cho đặt header, nên `Referrer-Policy` đặt bằng th�
 ### 3.3 Tải và lọc dữ liệu
 
 - Khi mở app: đọc bản lưu `localStorage['qq:places:v1']` (nếu có) và vẽ ngay, rồi gọi `places_public` (mục 4.3) một lần để lấy bản mới, khoảng 30 KB cho 50 quán. Lấy được thì lưu lại kèm `savedAt`. Không lấy được thì giữ bản cũ và hiện dòng "Dữ liệu lưu lúc 20:15". Không có cả hai thì hiện Bao buồn và nút thử lại.
-- Mọi bộ lọc chạy trên mảng trong bộ nhớ: thành phố (quán nằm trong khung `CITIES`), giá (dùng `price_median` nếu `price_count >= 3`, nếu không thì dùng `price_max`), loại món, "đang mở".
+- Mọi bộ lọc chạy trên mảng trong bộ nhớ: thành phố (quán nằm trong khung `CITIES`), loại món, "đang mở". Không lọc theo giá (bỏ ngày 06/10/2026); xếp "rẻ nhất" dùng `filterPrice`: `price_median` nếu `price_count >= 3`, nếu không thì `price_max`.
 - Ô tìm kiếm so khớp không dấu trên tên quán, món được nhắc nhiều và tên loại món. Gõ "bun cha" vẫn ra "Bún chả":
 
 ```js
@@ -105,7 +105,7 @@ export const normalizeVi = s =>
 ```
 
 - Khoảng cách: công thức haversine trong `util.js`, tính từ vị trí người dùng nếu có (`state.userPos`, chỉ trong bộ nhớ), nếu chưa chia sẻ hoặc chặn vị trí thì từ vị trí mặc định `defaultSpot()` = `start` của thành phố đang chọn (`CITIES` trong `util.js`: ĐH Kinh tế Quốc dân, ĐH Kinh tế TP.HCM). `origin()` trả về điểm này; riêng tâm bản đồ lúc mở vẫn là `center` của thành phố để nội thành phủ kín màn hình.
-- Gợi ý quanh bạn (`main.js`, thẻ `#near` đầu ngăn kéo): lúc mở app hỏi `navigator.permissions.query({ name: 'geolocation' })`. `granted` thì gọi `getCurrentPosition` luôn; `prompt` (hoặc không có Permissions API, như Safari cũ và trình duyệt trong app) thì hiện thẻ mời, chỉ gọi khi người dùng bấm; `denied`, không có Geolocation, bấm × ("Để sau") ở thẻ mời, hoặc `getCurrentPosition` báo `code 1` thì thẻ chuyển sang trạng thái `default`: gợi ý quanh `defaultSpot()` với bán kính 5 km, kèm nút "Dùng vị trí của tôi". Không xin quyền ngay lúc mở trang: Lighthouse trừ điểm Best Practices và người dùng hay bấm chặn. Có vị trí thì `suggestNear` (`util.js`, có test) chọn 3 quán trong 2 km, `isOpenNow !== false`, xếp theo `số sao - km` (dưới 3 đánh giá tính 3,5 sao), chạy trên mảng đã lọc nên bộ lọc giá và loại món vẫn áp dụng. Thẻ "Ăn gì gần đây?" của địa danh dùng chung hàm này.
+- Gợi ý quanh bạn (`main.js`, thẻ `#near` đầu ngăn kéo): lúc mở app hỏi `navigator.permissions.query({ name: 'geolocation' })`. `granted` thì gọi `getCurrentPosition` luôn; `prompt` (hoặc không có Permissions API, như Safari cũ và trình duyệt trong app) thì hiện thẻ mời, chỉ gọi khi người dùng bấm; `denied`, không có Geolocation, bấm × ("Để sau") ở thẻ mời, hoặc `getCurrentPosition` báo `code 1` thì thẻ chuyển sang trạng thái `default`: gợi ý quanh `defaultSpot()` với bán kính 5 km, kèm nút "Dùng vị trí của tôi". Không xin quyền ngay lúc mở trang: Lighthouse trừ điểm Best Practices và người dùng hay bấm chặn. Có vị trí thì `suggestNear` (`util.js`, có test) chọn 3 quán trong 2 km, `isOpenNow !== false`, xếp theo `số sao - km` (dưới 3 đánh giá tính 3,5 sao), chạy trên mảng đã lọc nên bộ lọc loại món và "Đang mở" vẫn áp dụng. Thẻ "Ăn gì gần đây?" của địa danh dùng chung hàm này.
 
 ### 3.4 Giờ mở cửa
 

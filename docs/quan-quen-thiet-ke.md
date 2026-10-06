@@ -42,7 +42,7 @@ Người dùng cần trả lời nhanh câu "gần đây ăn gì ngon mà rẻ" 
 
 **Ba tình huống dùng chính**
 
-1. **11:30, giữa hai ca học, có 15 phút.** Mở app ở cổng trường, lọc "đang mở cửa" và "dưới 30k", chọn quán gần nhất.
+1. **11:30, giữa hai ca học, có 15 phút.** Mở app ở cổng trường, lọc "đang mở cửa", xếp theo gần nhất hoặc rẻ nhất, chọn quán.
 2. **21:00, đi làm thêm về.** Tìm quán còn mở trên đường về trọ.
 3. **Cuối tuần rủ bạn đi ăn.** Lướt bản đồ tìm quán có ảnh đẹp, gửi link quán vào nhóm chat; ăn xong thì viết đánh giá ngay tại bàn.
 
@@ -52,7 +52,7 @@ Bản dự thi là một web app chạy trên điện thoại, có bản đồ, 
 
 **Làm**
 
-- Bản đồ có biểu tượng theo loại món; lọc theo giá (dưới 30k, 30–50k), loại món, "đang mở cửa"; chọn thành phố (Hà Nội / TP. Hồ Chí Minh).
+- Bản đồ có biểu tượng theo loại món; lọc theo loại món, "đang mở cửa"; xếp theo gần nhất, điểm cao hoặc rẻ nhất; chọn thành phố (Hà Nội / TP. Hồ Chí Minh).
 - Chế độ danh sách, thay cho bản đồ khi bản đồ lỗi hoặc người dùng dùng trình đọc màn hình.
 - Trang quán: ảnh thật, giá thật, điểm của app, link xem đánh giá trên Google Maps, giờ mở cửa, chỉ đường, chia sẻ.
 - Đăng nhập Google, chỉ bắt buộc khi viết đánh giá.
@@ -98,7 +98,7 @@ Bản đồ ──> Chi tiết quán ──> [Đã đăng nhập?] ──rồi�
 ### Màn 1: Bản đồ (trang chủ)
 
 - **Thanh trên:** logo và linh vật nhỏ; ô tìm theo tên quán hoặc tên món (tìm trong dữ liệu của app, không gọi API); chip thành phố ("Hà Nội ▾"), không có ô chọn cụm trường. Lần đầu mở app hỏi "Bạn đang ở đâu?" (Hà Nội / TP. Hồ Chí Minh), chọn xong mới hiện bản đồ thành phố đó, mở ra là nội thành phủ kín màn hình; bản đồ chỉ kéo trong nội thành, không ra tỉnh lân cận.
-- **Hàng bộ lọc cuộn ngang:** "Dưới 30k", "30–50k", "Đang mở", rồi các loại món có biểu tượng (mục 5).
+- **Hàng bộ lọc cuộn ngang:** chọn thành phố, "Đang mở", "Địa danh", rồi các loại món có biểu tượng (mục 5). Không có nút lọc giá (bỏ ngày 06/10/2026); muốn tìm quán rẻ thì xếp theo "rẻ nhất" trong ngăn kéo danh sách.
 - **Bản đồ toàn màn:** mỗi quán là một biểu tượng theo loại món. Thu nhỏ bản đồ thì các quán gần nhau gộp thành một cụm có số. Nút "Vị trí của tôi" chỉ xin quyền GPS khi được bấm.
 - **Thẻ "Gợi ý quanh bạn"** (nổi trên mép ngăn kéo; laptop và chế độ danh sách thì nằm đầu danh sách):
   - Chưa có vị trí: Bao mời "Đói chưa? Cho Bao biết bạn đang ở đâu nhé", ghi rõ vị trí chỉ dùng trên máy, không lưu, không gửi đi; nút "Chia sẻ vị trí". App chỉ xin quyền GPS khi người dùng bấm nút này hoặc nút "Vị trí của tôi". Đã cho phép từ lần trước thì app tự lấy vị trí, không hỏi lại.
@@ -224,7 +224,7 @@ Toàn bộ dữ liệu của app nằm trong 6 bảng Postgres trên Supabase. T
 
 - **Điểm Hometown:** trung bình số sao của các đánh giá đang hiện. Quán có dưới 3 đánh giá hiện chữ "Mới" thay cho điểm.
 - **Giá thật:** trung vị của `price_paid`, kèm khoảng từ phân vị 25 đến phân vị 75. Quán có dưới 3 lượt báo giá thì hiện khoảng giá của nhóm, ghi là "giá tham khảo".
-- **Bộ lọc "dưới 50k":** dùng giá thật nếu có, nếu chưa có thì dùng `price_max`.
+- **Xếp theo "rẻ nhất":** dùng giá thật nếu có, nếu chưa có thì dùng `price_max`.
 - **Món được nhắc nhiều:** 3 món xuất hiện nhiều nhất trong `dishes`.
 
 **Hai nguồn dữ liệu luôn tách riêng**
