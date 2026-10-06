@@ -12,7 +12,8 @@ Viết ngày 05/10/2026, dựa trên [Hometown: Thiết kế sản phẩm](quan-
 | Phụ thuộc chạy trên trình duyệt | `@supabase/supabase-js`, `leaflet`, `protomaps-leaflet` | Ba gói. Hai gói bản đồ tải sau khi trang đã hiện; gom cụm tự viết, không thêm `leaflet.markercluster` |
 | Điều hướng | History API (`/alert/quan/12`), đường dẫn tương đối theo thẻ `<base>`; `404.html` = `index.html` cho link sâu | Link chia sẻ đẹp, không đụng hash của OAuth |
 | Bản đồ | Leaflet 1.9 + `protomaps-leaflet` tự vẽ kiểu chibi từ OpenFreeMap (dữ liệu vector, miễn phí, không key, không giới hạn lượt) | Không dùng `openstreetmap.org`: không kết nối được từ Việt Nam |
-| Google Maps | Chỉ link Google Maps URLs: "Chỉ đường" và "Xem đánh giá trên Google Maps" | Không lấy điểm Google, không cần key |
+| Chỉ đường | Valhalla trên máy chủ miễn phí của FOSSGIS (`valhalla1.openstreetmap.de`), gọi thẳng từ trình duyệt | Không key, có chế độ xe máy và câu chỉ dẫn tiếng Việt; máy chủ demo nên giữ link Google Maps dự phòng |
+| Google Maps | Chỉ link Google Maps URLs: "Mở bằng Google Maps" và "Xem đánh giá trên Google Maps" | Không lấy điểm Google, không cần key |
 | Dữ liệu | Supabase Postgres, 6 bảng + 3 view + 4 hàm | Mọi quy tắc tin cậy nằm trong database |
 | Tài khoản | Supabase Auth: Google OAuth (PKCE) và mã 6 số qua email | **Bắt buộc** SMTP riêng (mục 5.4) |
 | Ảnh | Nén trên máy bằng canvas, 2 cỡ (1280 px và 400 px), WebP hoặc JPEG | Supabase Storage, bucket công khai |
@@ -53,7 +54,7 @@ quan-quen/
   src/
     main.js             router, trạng thái chung, bộ lọc, chế độ danh sách, ngăn kéo
     map.js              nạp Leaflet, nền bản đồ, ghim, gom cụm, chuyển sang danh sách khi lỗi
-    place.js            trang quán, link Google Maps, lưới ảnh, báo cáo
+    place.js            trang quán, trang chỉ đường, link Google Maps, lưới ảnh, báo cáo
     review.js           check-in, nén ảnh, gửi đánh giá, đề xuất quán
     auth.js             tấm đăng nhập, phát hiện trình duyệt trong app, trang Của tôi
     supabase.js         client và mọi truy vấn
@@ -78,6 +79,7 @@ quan-quen/
 | --- | --- | --- |
 | `/` | Bản đồ (có `?khu=2` để chọn cụm trường) | Không |
 | `/quan/:id` | Chi tiết quán | Không |
+| `/quan/:id/chi-duong` | Chỉ đường tới quán | Không |
 | `/quan/:id/danh-gia` | Viết đánh giá | Có |
 | `/de-xuat` | Đề xuất quán | Có |
 | `/cua-toi` | Của tôi | Có |
@@ -102,7 +104,8 @@ export const normalizeVi = s =>
   s.normalize('NFD').replace(/\p{Diacritic}/gu, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase()
 ```
 
-- Khoảng cách: công thức haversine trong `util.js`, chỉ tính khi người dùng đã bấm "Vị trí của tôi". Nếu chưa có vị trí thì dùng tâm cụm trường đang chọn.
+- Khoảng cách: công thức haversine trong `util.js`, tính từ vị trí người dùng nếu có (`state.userPos`, chỉ trong bộ nhớ), nếu chưa có thì từ tâm cụm trường đang chọn.
+- Gợi ý quanh bạn (`main.js`, thẻ `#near` đầu ngăn kéo): lúc mở app hỏi `navigator.permissions.query({ name: 'geolocation' })`. `granted` thì gọi `getCurrentPosition` luôn; `prompt` (hoặc không có Permissions API, như Safari cũ và trình duyệt trong app) thì hiện thẻ mời, chỉ gọi khi người dùng bấm; `denied` thì không hiện thẻ. Không xin quyền ngay lúc mở trang: Lighthouse trừ điểm Best Practices và người dùng hay bấm chặn. Có vị trí thì `suggestNear` (`util.js`, có test) chọn 3 quán trong 2 km, `isOpenNow !== false`, xếp theo `số sao - km` (dưới 3 đánh giá tính 3,5 sao), chạy trên mảng đã lọc nên bộ lọc giá và loại món vẫn áp dụng. Thẻ "Ăn gì gần đây?" của địa danh dùng chung hàm này.
 
 ### 3.4 Giờ mở cửa
 
@@ -148,7 +151,14 @@ Trong Google Sheet, nhóm gõ JSON vào một ô. Khi xuất CSV, Sheets tự th
 
 - Dữ liệu chính lấy từ mảng đã tải. Chỉ đánh giá và ảnh cần gọi thêm: `reviews_public` và `photos` theo `place_id`, 20 dòng mới nhất.
 - Không lấy điểm Google. Dòng dưới điểm Hometown là link "Xem đánh giá trên Google Maps": `https://www.google.com/maps/search/?api=1&query=<tên quán>&query_place_id=<place_id>` (không có `place_id` thì dùng tọa độ).
-- Chỉ đường: `https://www.google.com/maps/dir/?api=1&destination=<lat>,<lng>&destination_place_id=<place_id>`.
+- Chỉ đường (`renderDirections`, đường dẫn `/quan/:id/chi-duong`), không rời app:
+  - `watchPosition` với `enableHighAccuracy`. Có vị trí lần đầu thì gọi `GET https://valhalla1.openstreetmap.de/route?json={locations, costing, directions_options: { language: 'vi-VN', units: 'kilometers' }}`; `costing` là `pedestrian` nếu cách quán dưới 1,5 km, ngược lại `motor_scooter`. Đổi chế độ thì gọi thêm một lần, kết quả giữ theo chế độ nên đổi qua lại không gọi lại. Quãng trên 30 km thì không gọi (vị trí máy tính đoán theo IP hay sai, và không làm nặng máy chủ miễn phí).
+  - Kết quả: `trip.summary` (km, giây) cho dòng tóm tắt, `maneuvers[].instruction` là câu tiếng Việt có sẵn, `legs[0].shape` là polyline 6 chữ số, giải mã bằng `decodePolyline` trong `util.js` (có test). `routeMap` trong `map.js` vẽ đường hai lớp (viền trắng, lõi cam đất), ghim quán và Bao.
+  - Các lần cập nhật vị trí sau: dời Bao; bản đồ gọi `panInside` (chỉ dời khi Bao sắp ra khỏi khung, chừa 60 px), trừ khi người dùng vừa chạm hoặc cuộn bản đồ trong 15 giây (`pointerdown`, `wheel`). Cách quán dưới 50 m thì hiện nút "Ăn xong viết đánh giá". Rời trang thì lần cập nhật kế tiếp tự `clearWatch`.
+  - Tìm lại đường: `distanceToPath` (`util.js`, có test) đo từ vị trí tới đường đang vẽ; lệch quá `max(40 m, accuracy)` thì gọi lại máy chủ từ vị trí mới, tối đa 30 giây một lần (giữ luật 1 yêu cầu/giây và tránh GPS nhảy trong phố). Bấm chế độ đi trước khi có vị trí thì chỉ ghi nhớ, có vị trí mới tìm đường theo chế độ đó.
+  - Điều kiện dùng máy chủ FOSSGIS: ghi nguồn OSM và link "Sửa bản đồ", Referer hợp lệ (đã có nhờ `Referrer-Policy`), tối đa 1 yêu cầu/giây, không dùng nặng. Trang ghi rõ vị trí được gửi tới FOSSGIS.
+  - Bản demo (`DEMO`, mục 3.12): trang quán ẩn nút "Chỉ đường", `renderDirections` báo "Bản demo chưa có chỉ đường" và không gọi máy chủ. Thẻ "Gợi ý quanh bạn" vẫn chạy trên quán minh họa, giá ghi "Giá mẫu".
+  - Dự phòng: nút "Mở bằng Google Maps" (`https://www.google.com/maps/dir/?api=1&destination=<lat>,<lng>&destination_place_id=<place_id>`) luôn có trên trang.
 - Chia sẻ: `navigator.share({ title, url })`, nếu trình duyệt không có thì sao chép link bằng `navigator.clipboard.writeText` và hiện thông báo "Đã chép link".
 - Ảnh: `<img loading="lazy" decoding="async" width height alt>`. Lưới ảnh dùng bản 400 px, bấm vào mới mở bản 1280 px.
 - Báo cáo: dùng `<dialog>` có sẵn của trình duyệt, chọn lý do, rồi `insert` vào `reports`.
@@ -584,6 +594,7 @@ Kiểm ngày 05/10/2026. Nếu đọc tài liệu này sau ngày nộp bài, ki�
 
 | Điều đã kiểm | Kết quả | Nguồn |
 | --- | --- | --- |
+| Máy chủ tìm đường của FOSSGIS (kiểm 06/10/2026 từ mạng Việt Nam) | `valhalla1.openstreetmap.de` và `routing.openstreetmap.de` vào được, có CORS `*`. Valhalla trả câu chỉ dẫn tiếng Việt (`vi-VN`) cho cả `motor_scooter` và `pedestrian`. Điều kiện: ghi nguồn và link sửa bản đồ, Referer/User-Agent hợp lệ, tối đa 1 yêu cầu/giây, không dùng nặng; Valhalla công khai là máy chủ demo, không cam kết cho bản chạy thật | [routing.openstreetmap.de/about](https://routing.openstreetmap.de/about.html), [Valhalla trên apis.io](https://apis.io/plans/valhalla/open-source/) |
 | Hạn mức miễn phí Google Maps (từ 03/2025, tính riêng từng SKU) | Essentials 10.000, Pro 5.000, Enterprise 1.000 lượt/tháng; Dynamic Maps thuộc Essentials | [Pricing categories](https://developers.google.com/maps/billing-and-pricing/pricing-categories), [Billing FAQ](https://developers.google.com/maps/billing-and-pricing/faq) |
 | Place Details với `rating`, `userRatingCount` | Tính theo nhóm Enterprise; `googleMapsUri` thuộc Pro; request tính theo trường đắt nhất | [Place Details (New)](https://developers.google.com/maps/documentation/places/web-service/place-details) |
 | Ghi nguồn và lưu dữ liệu Places | Ngoài bản đồ Google phải có logo Google Maps, hoặc chữ "Google Maps" nếu chỗ hẹp; chỉ `place_id` được lưu không thời hạn | [Places API policies](https://developers.google.com/maps/documentation/places/web-service/policies) |

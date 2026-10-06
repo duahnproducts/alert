@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { isOpenNow, hoursText, distanceM, normalizeVi, isInAppBrowser, filterPrice, priceShort, scoreShort, badgeFor, formatPrice, placeLabel } from './util.js'
+import { isOpenNow, hoursText, distanceM, normalizeVi, isInAppBrowser, filterPrice, priceShort, scoreShort, badgeFor, formatPrice, placeLabel, suggestNear, decodePolyline, formatDuration, distanceToPath } from './util.js'
 
 // Giờ Việt Nam = UTC+7. 05/10/2026 là thứ Hai, 04/10/2026 là Chủ nhật.
 const vn = (date, time) => new Date(`${date}T${time}:00+07:00`)
@@ -80,6 +80,43 @@ test('huy hiệu', () => {
   assert.equal(badgeFor(1), 'Mới đến')
   assert.equal(badgeFor(5), 'Hàng xóm')
   assert.equal(badgeFor(15), 'Thổ địa')
+})
+
+test('suggestNear: quán ngon hơn xa hơn chút vẫn lên trước, bỏ quán đóng cửa và quán ngoài 2 km', () => {
+  const me = { lat: 21, lng: 105.8 }
+  const at = (m, extra) => ({ lat: 21 + m / 111195, lng: 105.8, review_count: 0, ...extra }) // cách me m mét về phía bắc
+  const good = at(800, { id: 'good', review_count: 10, avg_stars: 4.8 }) // 4,8 - 0,8 = 4,0
+  const close = at(100, { id: 'close' }) // quán mới: 3,5 - 0,1 = 3,4
+  const shut = at(50, { id: 'shut', opening_hours: { all: [] } })
+  const far = at(2500, { id: 'far', review_count: 10, avg_stars: 5 })
+  const got = suggestNear([close, shut, far, good], me, { now: vn('2026-10-05', '11:30') })
+  assert.deepEqual(got.map(x => x.p.id), ['good', 'close'])
+  assert.ok(Math.abs(got[0].d - 800) < 1)
+  assert.equal(suggestNear([good, close], me, { n: 1 }).length, 1)
+})
+
+test('decodePolyline: ví dụ chuẩn của Google (5 chữ số) và chuỗi Valhalla (6 chữ số)', () => {
+  assert.deepEqual(decodePolyline('_p~iF~ps|U_ulLnnqC_mqNvxq`@', 5), [[38.5, -120.2], [40.7, -120.95], [43.252, -126.453]])
+  assert.deepEqual(decodePolyline('ok`ag@orc{hEfEw|A'), [[21.005, 105.843], [21.0049, 105.8445]])
+  assert.deepEqual(decodePolyline(''), [])
+})
+
+test('distanceToPath: tới giữa đoạn, tới đầu mút, đường một điểm', () => {
+  const m = 1 / 111195 // 1 mét theo vĩ độ
+  const path = [[21, 105.8], [21, 105.81]] // đoạn ngang dài khoảng 1 km
+  const near = (a, b) => Math.abs(a - b) < 0.5
+  assert.ok(near(distanceToPath({ lat: 21 + 100 * m, lng: 105.805 }, path), 100), 'cách giữa đoạn 100 m')
+  assert.ok(near(distanceToPath({ lat: 21, lng: 105.805 }, path), 0), 'nằm trên đường')
+  const beyond = { lat: 21 + 30 * m, lng: 105.8 - 40 * m / Math.cos(21 * Math.PI / 180) } // lùi khỏi đầu đoạn 40 m, lệch 30 m
+  assert.ok(near(distanceToPath(beyond, path), 50), 'ngoài đầu mút thì đo tới đầu mút')
+  assert.ok(near(distanceToPath({ lat: 21 + 20 * m, lng: 105.8 }, [[21, 105.8]]), 20), 'đường chỉ có một điểm')
+})
+
+test('formatDuration', () => {
+  assert.equal(formatDuration(10), '1 phút')
+  assert.equal(formatDuration(840), '14 phút')
+  assert.equal(formatDuration(3600), '1 giờ')
+  assert.equal(formatDuration(3900), '1 giờ 5 phút')
 })
 
 test('nhãn đọc màn hình của ghim', () => {
