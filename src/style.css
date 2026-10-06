@@ -288,6 +288,12 @@ label, .label { display: block; font-weight: 600; margin-bottom: 6px; }
 .leaflet-container .qq-icon .pin img { width: 30px; height: 30px; }
 .leaflet-container .qq-icon .cluster img { width: 30px; height: 30px; }
 .leaflet-container .qq-icon .me img { width: 30px; height: 30px; }
+/* Phương tiện chạy dọc tuyến khi vẽ đường (routeMap): quay đầu theo hướng đi, nhún nhẹ, tới nơi thì mờ dần */
+.ride { width: 48px; height: 48px; display: grid; place-items: end center; transition: opacity .5s; }
+.ride.left { transform: scaleX(-1); }
+.ride.done { opacity: 0; }
+.leaflet-container .qq-icon .ride img { width: 44px; height: 44px; filter: drop-shadow(0 0 2px #fff); animation: ride-bob .28s ease-in-out infinite alternate; }
+@keyframes ride-bob { to { transform: translateY(-3px) rotate(-3deg); } }
 .pin.top .pin-head { border-color: #FFE27A; }
 .pin.top::before { content: '👑'; position: absolute; top: -14px; left: 14px; z-index: 1; font-size: 18px; transform: rotate(-12deg); }
 .pin.closed .pin-head { filter: saturate(.35) brightness(.95); animation: none; }

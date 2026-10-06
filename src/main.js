@@ -1,7 +1,7 @@
 // Router, trạng thái chung, bộ lọc, ngăn kéo danh sách, thẻ xem nhanh, trang Về dự án.
 import './style.css'
 import { DEMO, readCache, fetchPlaces, photoUrl, thumbPath } from './supabase.js'
-import { initMap, showPlaces, select as selectPin, moveTo, showUser, showLandmarks, toggleLandmarks } from './map.js'
+import { initMap, showPlaces, select as selectPin, moveTo, showUser, moveUser, showLandmarks, toggleLandmarks } from './map.js'
 import {
   CATEGORIES, CITIES, cityOf, h, normalizeVi, distanceM, isOpenNow, filterPrice, priceShort, scoreShort, formatDistance, placeLabel, suggestNear,
 } from './util.js'
@@ -199,6 +199,7 @@ function locate() {
     renderHome()
     showUser(state.userPos, coveredBottom()) // sau renderHome: thẻ đã đổi cỡ
     toast('Đã xếp quán theo khoảng cách tới bạn')
+    track()
   }, e => {
     near = state.userPos ? 'show' : e.code === 1 ? 'default' : 'ask'
     renderNear()
@@ -206,6 +207,25 @@ function locate() {
       ? `Bạn chưa cho phép vị trí nên Bao tính từ ${defaultSpot().name}. Muốn bật lại thì vào cài đặt trình duyệt, cho phép vị trí cho trang này nhé`
       : 'Chưa lấy được vị trí. Ra chỗ thoáng hơn rồi bấm thử lại nhé')
   }, { timeout: 10000, maximumAge: 60000 })
+}
+
+// Có vị trí lần đầu thì theo dõi liên tục: Bao trên bản đồ đi theo bạn theo thời gian thực.
+// Danh sách, khoảng cách và gợi ý chỉ tính lại khi bạn đi thêm 30 m, để không vẽ lại liên tục vì GPS nhảy.
+let tracking = null // id của watchPosition
+function track() {
+  if (tracking !== null) return
+  let last = state.userPos
+  tracking = navigator.geolocation.watchPosition(g => {
+    state.userPos = { lat: g.coords.latitude, lng: g.coords.longitude }
+    moveUser(state.userPos)
+    if (distanceM(last, state.userPos) < 30) return
+    last = state.userPos
+    if (appPath() === '/') renderHome()
+  }, e => {
+    if (e.code !== 1) return // mất sóng tạm thời: chờ lần sau
+    navigator.geolocation.clearWatch(tracking) // bị thu hồi quyền vị trí
+    tracking = null
+  }, { enableHighAccuracy: true, maximumAge: 5000 })
 }
 
 // Số px ở đáy bản đồ bị ngăn kéo hoặc thẻ gợi ý che (điện thoại). Laptop: hai thứ này nằm cột bên trái, không che.

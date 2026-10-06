@@ -329,6 +329,9 @@ export function showUser(pos, padBottom = 0) {
   if (map.options.maxBounds.contains(pos)) map.panTo(map.unproject(map.project(pos).add([0, padBottom / 2])))
 }
 
+// Theo dõi liên tục: chỉ dời Bao, không kéo bản đồ (người dùng có thể đang xem chỗ khác)
+export const moveUser = pos => userMarker?.setLatLng(pos)
+
 // Bản đồ chỉ đường: ghim quán, vị trí của bạn, đường đi kiểu nét kẹo viền trắng.
 // Trả về { user(pos), route([[lat, lng], ...]) } hoặc null nếu không tải được bản đồ.
 export async function routeMap(el, place) {
@@ -343,6 +346,7 @@ export async function routeMap(el, place) {
     const me = meMarker(L, [place.lat, place.lng])
     const line = L.layerGroup().addTo(m)
     new ResizeObserver(() => m.invalidateSize()).observe(el)
+    let raf = 0 // khung hình đang chạy của phương tiện
     let touchedAt = 0 // lần cuối người dùng tự kéo hoặc zoom bản đồ
     for (const ev of ['pointerdown', 'wheel']) el.addEventListener(ev, () => { touchedAt = Date.now() }, { passive: true })
     return {
@@ -353,12 +357,54 @@ export async function routeMap(el, place) {
         if (!m.hasLayer(me)) me.addTo(m)
         if (Date.now() - touchedAt > 15000) m.panInside(pos, { padding: [60, 60] })
       },
-      route: pts => {
+      // Vẽ đường. Có mode thì phương tiện chạy dọc tuyến từ điểm đi tới quán, nét đường mọc dần phía sau, quay đầu theo
+      // hướng đi (kiểu máy bay bay trên bản đồ); đoạn chưa tới là chấm mờ. Vẫn chạy khi máy bật giảm chuyển động: chỉ chạy khi
+      // người dùng chọn cách đi, tối đa 5 giây, bản đồ đứng yên; khi đó CSS tắt hiệu ứng nhún.
+      route: (pts, mode) => {
+        cancelAnimationFrame(raf)
         line.clearLayers()
-        const style = { lineCap: 'round', lineJoin: 'round', interactive: false }
-        line.addLayer(L.polyline(pts, { ...style, color: '#FFFFFF', weight: 11 }))
-        line.addLayer(L.polyline(pts, { ...style, color: '#C2410C', weight: 6 }))
         m.fitBounds(L.latLngBounds(pts), { padding: [48, 48] })
+        const style = { lineCap: 'round', lineJoin: 'round', interactive: false }
+        const ride = mode && pts.length > 1
+        if (ride) line.addLayer(L.polyline(pts, { ...style, color: '#C2410C', weight: 4, opacity: 0.45, dashArray: '1 10' }))
+        const casing = L.polyline(ride ? [pts[0]] : pts, { ...style, color: '#FFFFFF', weight: 11 }).addTo(line)
+        const core = L.polyline(ride ? [pts[0]] : pts, { ...style, color: '#C2410C', weight: 6 }).addTo(line)
+        if (!ride) return
+        const cum = [0] // quãng đường cộng dồn tới từng điểm (m): xe chạy đều dù các điểm cách nhau không đều
+        for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + m.distance(pts[i - 1], pts[i]))
+        const total = cum.at(-1) || 1
+        // Điểm trên tuyến cách điểm đầu d mét, kèm chỉ số điểm kế tiếp
+        const at = d => {
+          let i = 1
+          while (i < pts.length - 1 && cum[i] < d) i++
+          const k = cum[i] > cum[i - 1] ? Math.min(1, (d - cum[i - 1]) / (cum[i] - cum[i - 1])) : 1
+          return [[pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * k, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * k], i]
+        }
+        const icon = document.createElement('div')
+        icon.className = 'ride'
+        icon.append(img(`icons/mode-${mode}.svg`, 44))
+        const car = L.marker(pts[0], {
+          icon: L.divIcon({ html: icon, className: 'qq-icon', iconSize: [48, 48], iconAnchor: [24, 42] }),
+          keyboard: false, interactive: false, zIndexOffset: 1500,
+        }).addTo(line)
+        const t0 = performance.now(), dur = Math.min(5000, 2000 + total / 2) // 1 km chạy 2,5 giây, tối đa 5 giây
+        const step = now => {
+          const f = Math.min(1, (now - t0) / dur)
+          const e = f < 0.5 ? 2 * f * f : 1 - (2 - 2 * f) ** 2 / 2 // chậm lúc xuất phát và lúc tới, nhanh ở giữa
+          const [head, i] = at(total * e)
+          const [ahead] = at(total * (e + 0.04)) // nhìn trước một đoạn để xe không lật qua lật lại ở ngõ ngoằn ngoèo
+          if (Math.abs(ahead[1] - head[1]) > 1e-6) icon.classList.toggle('left', ahead[1] < head[1])
+          const done = [...pts.slice(0, i), head]
+          casing.setLatLngs(done)
+          core.setLatLngs(done)
+          car.setLatLng(head)
+          if (f < 1) raf = requestAnimationFrame(step)
+          else {
+            icon.classList.add('done') // tới quán: mờ dần, nhường chỗ cho ghim quán
+            setTimeout(() => line.removeLayer(car), 600)
+          }
+        }
+        raf = requestAnimationFrame(step)
       },
     }
   } catch (err) {
