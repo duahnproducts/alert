@@ -158,7 +158,7 @@ Trong Google Sheet, nhóm gõ JSON vào một ô. Khi xuất CSV, Sheets tự th
   - Các lần cập nhật vị trí sau: dời Bao; bản đồ gọi `panInside` (chỉ dời khi Bao sắp ra khỏi khung, chừa 60 px), trừ khi người dùng vừa chạm hoặc cuộn bản đồ trong 15 giây (`pointerdown`, `wheel`). Cách quán dưới 50 m thì hiện nút "Ăn xong viết đánh giá". Rời trang thì lần cập nhật kế tiếp tự `clearWatch`.
   - Tìm lại đường: `distanceToPath` (`util.js`, có test) đo từ vị trí tới đường đang vẽ; lệch quá `max(40 m, accuracy)` thì gọi lại máy chủ từ vị trí mới, tối đa 30 giây một lần (giữ luật 1 yêu cầu/giây và tránh GPS nhảy trong phố). Bấm chế độ đi trước khi có vị trí thì chỉ ghi nhớ, có vị trí mới tìm đường theo chế độ đó.
   - Điều kiện dùng máy chủ FOSSGIS: ghi nguồn OSM và link "Sửa bản đồ", Referer hợp lệ (đã có nhờ `Referrer-Policy`), tối đa 1 yêu cầu/giây, không dùng nặng. Trang ghi rõ vị trí được gửi tới FOSSGIS.
-  - Bản demo (`DEMO`, mục 3.12): trang quán ẩn nút "Chỉ đường", `renderDirections` báo "Bản demo chưa có chỉ đường" và không gọi máy chủ. Thẻ "Gợi ý quanh bạn" vẫn chạy trên quán minh họa, giá ghi "Giá mẫu".
+  - Bản demo (`DEMO`, mục 3.12): chỉ đường chạy như bản thật tới tọa độ của quán minh họa, đầu trang có ghi chú `.note` "Quán minh họa, không có thật ở vị trí này" (bài dự thi, chưa có người dùng thật nên chấp nhận). Thẻ "Gợi ý quanh bạn" cũng chạy trên quán minh họa, giá ghi "Giá mẫu".
   - Dự phòng: nút "Mở bằng Google Maps" (`https://www.google.com/maps/dir/?api=1&destination=<lat>,<lng>&destination_place_id=<place_id>`) luôn có trên trang.
 - Chia sẻ: `navigator.share({ title, url })`, nếu trình duyệt không có thì sao chép link bằng `navigator.clipboard.writeText` và hiện thông báo "Đã chép link".
 - Ảnh: `<img loading="lazy" decoding="async" width height alt>`. Lưới ảnh dùng bản 400 px, bấm vào mới mở bản 1280 px.
@@ -237,7 +237,7 @@ Chạy Lighthouse ngay ngày 07/10 trên bản deploy đầu tiên, không đợ
 
 - `DEMO = !import.meta.env.VITE_SUPABASE_URL` trong `supabase.js`. Khi đó `fetchPlaces`, `fetchReviews` đọc `public/demo.json`, `fetchPhotos` trả rỗng, không đọc hay ghi bản lưu trong `localStorage` (để dữ liệu thật và demo không lẫn nhau).
 - `demo.json` tạo bằng `node scripts/demo-data.mjs` (số ngẫu nhiên có hạt giống, chạy lại ra đúng dữ liệu cũ): 4 cụm trường, 32 quán tên tự đặt rải trong bán kính khoảng 700 m quanh tâm cụm, 3–9 đánh giá mẫu mỗi quán (`is_sample: true`), điểm, trung vị và phân vị giá tính sẵn theo đúng cách của `place_stats`, cùng `landmarkNotes`: 1–2 câu cảm nhận mẫu cho mỗi địa danh theo loại.
-- Nhãn: `<html class="demo">` bật dải "Bản demo" (`.demo-only`) ở trang chủ, mọi trang con và trang Về dự án; `priceShort(p, true)` ghi "Giá mẫu"; trang quán ghi "đánh giá mẫu", ẩn nút "Chỉ đường" và link Google Maps của quán minh họa. `requireLogin()` và `openLogin()` hiện thông báo "bản demo chưa mở" thay cho đăng nhập.
+- Nhãn: `<html class="demo">` bật dải "Bản demo" (`.demo-only`) ở trang chủ, mọi trang con và trang Về dự án; `priceShort(p, true)` ghi "Giá mẫu"; trang quán ghi "đánh giá mẫu", ẩn link "Xem đánh giá trên Google Maps" của quán minh họa; nút "Chỉ đường" vẫn có (trang chỉ đường ghi rõ quán minh họa). `requireLogin()` và `openLogin()` hiện thông báo "bản demo chưa mở" thay cho đăng nhập.
 - Khai `VITE_SUPABASE_URL` (biến của workflow `pages.yml`) là app tự chuyển sang dữ liệu thật, không phải sửa code.
 
 ## 4. Database (Supabase)
