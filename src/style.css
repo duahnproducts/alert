@@ -391,6 +391,7 @@ input[type=file]:focus-visible + .file-btn { outline: 3px solid var(--accent); o
 .checkin p { margin: 0 0 12px; }
 
 /* Chỉ đường trong app */
+.route-from { display: flex; flex-wrap: wrap; align-items: center; gap: 0 8px; margin: 0; }
 .route-sum { font-size: 18px; font-weight: 800; margin: 4px 0 8px; }
 .route-map { height: min(50vh, 420px); border-radius: var(--radius); overflow: hidden; }
 .route-map > p { padding: 16px; text-align: center; margin: 0; }
