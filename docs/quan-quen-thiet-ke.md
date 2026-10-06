@@ -42,7 +42,7 @@ Người dùng cần trả lời nhanh câu "gần đây ăn gì ngon mà rẻ" 
 
 **Ba tình huống dùng chính**
 
-1. **11:30, giữa hai ca học, có 15 phút.** Mở app ở cổng trường, lọc "đang mở cửa" và "dưới 30k", chọn quán gần nhất.
+1. **11:30, giữa hai ca học, có 15 phút.** Mở app ở cổng trường, lọc "đang mở cửa", xếp theo gần nhất hoặc rẻ nhất, chọn quán.
 2. **21:00, đi làm thêm về.** Tìm quán còn mở trên đường về trọ.
 3. **Cuối tuần rủ bạn đi ăn.** Lướt bản đồ tìm quán có ảnh đẹp, gửi link quán vào nhóm chat; ăn xong thì viết đánh giá ngay tại bàn.
 
@@ -52,7 +52,7 @@ Bản dự thi là một web app chạy trên điện thoại, có bản đồ, 
 
 **Làm**
 
-- Bản đồ có biểu tượng theo loại món; lọc theo giá (dưới 30k, 30–50k), loại món, "đang mở cửa"; chọn thành phố (Hà Nội / TP. Hồ Chí Minh).
+- Bản đồ có biểu tượng theo loại món; lọc theo loại món, "đang mở cửa"; xếp theo gần nhất, điểm cao hoặc rẻ nhất; chọn thành phố (Hà Nội / TP. Hồ Chí Minh).
 - Chế độ danh sách, thay cho bản đồ khi bản đồ lỗi hoặc người dùng dùng trình đọc màn hình.
 - Trang quán: ảnh thật, giá thật, điểm của app, link xem đánh giá trên Google Maps, giờ mở cửa, chỉ đường, chia sẻ.
 - Đăng nhập Google, chỉ bắt buộc khi viết đánh giá.
@@ -98,12 +98,13 @@ Bản đồ ──> Chi tiết quán ──> [Đã đăng nhập?] ──rồi�
 ### Màn 1: Bản đồ (trang chủ)
 
 - **Thanh trên:** logo và linh vật nhỏ; ô tìm theo tên quán hoặc tên món (tìm trong dữ liệu của app, không gọi API); chip thành phố ("Hà Nội ▾"), không có ô chọn cụm trường. Lần đầu mở app hỏi "Bạn đang ở đâu?" (Hà Nội / TP. Hồ Chí Minh), chọn xong mới hiện bản đồ thành phố đó, mở ra là nội thành phủ kín màn hình; bản đồ chỉ kéo trong nội thành, không ra tỉnh lân cận.
-- **Hàng bộ lọc cuộn ngang:** "Dưới 30k", "30–50k", "Đang mở", rồi các loại món có biểu tượng (mục 5).
+- **Hàng bộ lọc cuộn ngang:** chọn thành phố, "Đang mở", "Địa danh", rồi các loại món có biểu tượng (mục 5). Không có nút lọc giá (bỏ ngày 06/10/2026); muốn tìm quán rẻ thì xếp theo "rẻ nhất" trong ngăn kéo danh sách.
 - **Bản đồ toàn màn:** mỗi quán là một biểu tượng theo loại món. Thu nhỏ bản đồ thì các quán gần nhau gộp thành một cụm có số. Nút "Vị trí của tôi" chỉ xin quyền GPS khi được bấm.
 - **Thẻ "Gợi ý quanh bạn"** (nổi trên mép ngăn kéo; laptop và chế độ danh sách thì nằm đầu danh sách):
-  - Chưa có vị trí: Bao mời "Đói chưa? Cho Bao biết bạn đang ở đâu nhé", ghi rõ vị trí chỉ dùng trên máy, không lưu, không gửi đi; nút "Chia sẻ vị trí". App chỉ xin quyền GPS khi người dùng bấm nút này hoặc nút "Vị trí của tôi". Đã cho phép từ lần trước thì app tự lấy vị trí, không hỏi lại; đã chặn thì không hiện thẻ.
-  - Có vị trí: Bao trên bản đồ đi theo bạn theo thời gian thực (bản đồ không tự kéo theo; bấm "Vị trí của tôi" để về chỗ bạn), xếp danh sách theo khoảng cách (tính lại mỗi khi bạn đi thêm 30 m), và thẻ gợi ý 3 quán trong 2 km, không đang đóng cửa, theo các bộ lọc đang bật. Thứ tự: số sao trừ khoảng cách, mỗi km trừ 1 sao; quán dưới 3 đánh giá tính 3,5 sao. Không có quán nào thì nói rõ cần bỏ bớt bộ lọc hoặc kéo bản đồ.
-  - Chạm ghim thì thẻ xem nhanh thế chỗ; bấm × thì ẩn thẻ.
+  - Chưa có vị trí: Bao mời "Đói chưa? Cho Bao biết bạn đang ở đâu nhé", ghi rõ vị trí chỉ dùng trên máy, không lưu, không gửi đi; nút "Chia sẻ vị trí". App chỉ xin quyền GPS khi người dùng bấm nút này hoặc nút "Vị trí của tôi". Đã cho phép từ lần trước thì app tự lấy vị trí, không hỏi lại.
+  - **Vị trí mặc định** (chốt 06/10/2026): chưa chia sẻ (bấm "Để sau" ở thẻ mời) hoặc đã chặn vị trí thì app coi như bạn đang ở ĐH Kinh tế Quốc dân (đang chọn Hà Nội) hoặc ĐH Kinh tế TP.HCM (đang chọn TP.HCM). Khoảng cách trong danh sách, thẻ xem nhanh, trang quán ("Cách 450 m từ ĐH Kinh tế Quốc dân") và cách xếp "gần nhất" đều tính từ đó. Thẻ đổi thành "Gợi ý quanh ĐH Kinh tế Quốc dân" kèm dòng "Bạn chưa chia sẻ vị trí nên Bao tạm tính khoảng cách từ đây" và nút "Dùng vị trí của tôi"; tìm trong 5 km (vị trí mặc định chỉ là ước lượng, và quán demo ở TP.HCM cách UEH khoảng 4 km). Bản đồ vẫn mở ra phủ kín nội thành như cũ.
+  - Có vị trí: đang đứng ở thành phố kia thì đổi thành phố; Bao trên bản đồ đi theo bạn theo thời gian thực (bản đồ không tự kéo theo; bấm "Vị trí của tôi" để về chỗ bạn); xếp danh sách theo khoảng cách (tính lại mỗi khi bạn đi thêm 30 m), và thẻ gợi ý 3 quán trong 2 km, không đang đóng cửa, theo các bộ lọc đang bật. Thứ tự: số sao trừ khoảng cách, mỗi km trừ 1 sao; quán dưới 3 đánh giá tính 3,5 sao. Không có quán nào thì nói rõ cần bỏ bớt bộ lọc hoặc kéo bản đồ.
+  - Chạm ghim thì thẻ xem nhanh thế chỗ; bấm × ở thẻ mời là "Để sau" (chuyển sang gợi ý quanh vị trí mặc định), bấm × ở thẻ gợi ý thì ẩn thẻ.
 - **Chạm vào biểu tượng:** hiện thẻ xem nhanh ở đáy gồm ảnh, tên, giá thật, điểm, khoảng cách và nút "Xem quán".
 - **Ngăn kéo từ đáy lên:** danh sách các quán đang hiện trên bản đồ, sắp theo khoảng cách hoặc theo điểm. Nút "Bản đồ / Danh sách" chuyển hẳn sang chế độ danh sách.
 - **Không có kết quả:** linh vật và câu "Chưa có quán nào khớp, thử bỏ bớt bộ lọc nhé".
@@ -223,7 +224,7 @@ Toàn bộ dữ liệu của app nằm trong 6 bảng Postgres trên Supabase. T
 
 - **Điểm Hometown:** trung bình số sao của các đánh giá đang hiện. Quán có dưới 3 đánh giá hiện chữ "Mới" thay cho điểm.
 - **Giá thật:** trung vị của `price_paid`, kèm khoảng từ phân vị 25 đến phân vị 75. Quán có dưới 3 lượt báo giá thì hiện khoảng giá của nhóm, ghi là "giá tham khảo".
-- **Bộ lọc "dưới 50k":** dùng giá thật nếu có, nếu chưa có thì dùng `price_max`.
+- **Xếp theo "rẻ nhất":** dùng giá thật nếu có, nếu chưa có thì dùng `price_max`.
 - **Món được nhắc nhiều:** 3 món xuất hiện nhiều nhất trong `dishes`.
 
 **Hai nguồn dữ liệu luôn tách riêng**
@@ -397,7 +398,7 @@ Phần lớn người dùng sẽ mở app từ bài đăng trên fanpage, tức 
 **Kịch bản thử**
 
 - [ ] Mở app lần đầu trên mạng 4G yếu (giả lập "Slow 4G" trong DevTools): bản đồ hiện trong 3 giây.
-- [ ] Từ chối quyền vị trí: bản đồ vẫn hiện ở thành phố đã chọn, không báo lỗi đỏ.
+- [ ] Từ chối quyền vị trí: bản đồ vẫn hiện ở thành phố đã chọn, không báo lỗi đỏ; thẻ đổi thành "Gợi ý quanh ĐH Kinh tế Quốc dân" (Hà Nội) hoặc "… UEH" (TP.HCM), khoảng cách trong danh sách và trang quán tính từ trường đó.
 - [ ] Từ chối quyền vị trí rồi bấm "Chỉ đường" ở một quán Hà Nội và một quán TP.HCM: đường vẽ từ ĐH Kinh tế Quốc dân và từ UEH, có dòng nói rõ lý do.
 - [ ] Bấm "Chia sẻ vị trí" khi đang ở gần trường: thẻ gợi ý 3 quán đang mở, bấm vào mở đúng trang quán. Mở lại app: không hỏi lại, tự gợi ý. Thử cả trong trình duyệt của Facebook và Zalo.
 - [ ] Bấm "Chỉ đường" khi đang ở gần quán: có đường đi, các bước tiếng Việt, Bao đi theo khi bạn đi, cố ý rẽ sai một ngã thì app tự tìm đường mới, tới quán thì hiện "Tới nơi rồi!". Thử cả trong trình duyệt của Facebook và Zalo.
