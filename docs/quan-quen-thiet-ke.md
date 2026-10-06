@@ -121,10 +121,11 @@ Bản đồ ──> Chi tiết quán ──> [Đã đăng nhập?] ──rồi�
   - Chọn "🛵 Xe máy" hoặc "🚶 Đi bộ"; mặc định đi bộ nếu quán cách dưới 1,5 km. Dòng tóm tắt "1,2 km · khoảng 15 phút đi bộ", bản đồ có đường đi, ghim quán và Bao ở vị trí của bạn, rồi danh sách từng bước bằng tiếng Việt ("Rẽ phải vào Phố Giảng Võ · 230 m").
   - Bao đi theo vị trí thật của bạn. Bản đồ giữ khung cả tuyến, chỉ dời khi Bao sắp ra khỏi khung; bạn tự kéo hoặc zoom thì bản đồ để yên 15 giây cho bạn xem.
   - Đi lệch khỏi đường quá 40 m (hoặc quá sai số GPS lúc đó) thì Bao báo "Bạn đi khác đường rồi" và tự tìm đường mới từ chỗ bạn đứng, tối đa 30 giây một lần.
-  - Chọn xe máy hay đi bộ trước khi có vị trí thì app nhớ lựa chọn đó. Cách quán dưới 50 m thì hiện "Tới nơi rồi! Chúc bạn ăn ngon" và nút "Ăn xong viết đánh giá".
+  - Người dùng đã tự chọn xe máy hay đi bộ thì app giữ lựa chọn đó khi vẽ lại đường; chưa chọn thì app tự chọn theo quãng đường (dưới 1,5 km là đi bộ). Cách quán dưới 50 m thì hiện "Tới nơi rồi! Chúc bạn ăn ngon" và nút "Ăn xong viết đánh giá".
   - Ghi rõ trên trang: để vẽ đường, vị trí của bạn và của quán được gửi tới máy chủ tìm đường của FOSSGIS (Đức); app không lưu vị trí. Kèm ghi nguồn OpenStreetMap và link "Sửa bản đồ" (điều kiện dùng máy chủ).
   - Bản demo: quán minh họa vẫn có "Chỉ đường" để xem thử tính năng; đầu trang ghi "Quán minh họa, không có thật ở vị trí này: đường đi chỉ để xem thử tính năng".
-  - Luôn có nút "Mở bằng Google Maps". Không lấy được vị trí, máy chủ tìm đường lỗi, hoặc bạn cách quán trên 30 km (thường là máy tính đoán sai vị trí) thì nói rõ lý do và chỉ sang nút này.
+  - **Điểm xuất phát dự phòng** (chốt 06/10/2026): bị từ chối vị trí, không lấy được vị trí, hoặc bạn cách quán trên 30 km (thường là máy tính đoán sai vị trí) thì đường vẽ từ ĐH Kinh tế Quốc dân (quán ở Hà Nội) hoặc ĐH Kinh tế TP.HCM (quán ở TP.HCM), kèm một dòng nói rõ lý do, ví dụ "Bạn chưa cho phép vị trí nên Bao chỉ đường từ ĐH Kinh tế Quốc dân. Muốn đi từ chỗ bạn thì cho phép vị trí cho trang này rồi tải lại nhé". Nhờ vậy trang luôn có đường, giám khảo mở trên laptop hay ở xa vẫn xem được. Sau đó lấy được vị trí gần quán thì vẽ lại từ chỗ bạn.
+  - Luôn có nút "Mở bằng Google Maps". Máy chủ tìm đường lỗi thì nói rõ và chỉ sang nút này.
 
 ### Màn 3: Viết đánh giá
 
@@ -397,6 +398,7 @@ Phần lớn người dùng sẽ mở app từ bài đăng trên fanpage, tức 
 
 - [ ] Mở app lần đầu trên mạng 4G yếu (giả lập "Slow 4G" trong DevTools): bản đồ hiện trong 3 giây.
 - [ ] Từ chối quyền vị trí: bản đồ vẫn hiện ở thành phố đã chọn, không báo lỗi đỏ.
+- [ ] Từ chối quyền vị trí rồi bấm "Chỉ đường" ở một quán Hà Nội và một quán TP.HCM: đường vẽ từ ĐH Kinh tế Quốc dân và từ UEH, có dòng nói rõ lý do.
 - [ ] Bấm "Chia sẻ vị trí" khi đang ở gần trường: thẻ gợi ý 3 quán đang mở, bấm vào mở đúng trang quán. Mở lại app: không hỏi lại, tự gợi ý. Thử cả trong trình duyệt của Facebook và Zalo.
 - [ ] Bấm "Chỉ đường" khi đang ở gần quán: có đường đi, các bước tiếng Việt, Bao đi theo khi bạn đi, cố ý rẽ sai một ngã thì app tự tìm đường mới, tới quán thì hiện "Tới nơi rồi!". Thử cả trong trình duyệt của Facebook và Zalo.
 - [ ] Chặn `valhalla1.openstreetmap.de` (DevTools → Network request blocking): trang chỉ đường báo lỗi kèm nút thử lại, nút "Mở bằng Google Maps" vẫn dùng được.
