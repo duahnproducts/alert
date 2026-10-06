@@ -77,6 +77,7 @@ Không cần dữ liệu lớn, nhưng không nên bịa đánh giá cho quán c
 - **Thông tin quán** (tên, vị trí, giờ mở cửa): lấy thật, gắn với `place_id` của Google.
 - **Đánh giá và ảnh:** chỉ do nhóm viết khi đã ăn thật. Ba người, mỗi người khoảng 10 quán trong tuần là đủ 30 quán.
 - **Chỗ nào cần lấp đầy để demo:** dùng đánh giá mẫu có nhãn "Mẫu" hiển thị rõ, và xóa hết trước khi đăng bài lên fanpage.
+- **Bản demo (chốt 06/10/2026):** trong lúc chưa có người dùng thật, app chạy bản demo có nhãn: khoảng 32 quán **tên tự đặt** (cố ý không trùng quán thật) quanh 4 cụm trường ở Hà Nội và TP.HCM, mỗi quán vài đánh giá mẫu, mỗi địa danh vài câu cảm nhận mẫu. Đầu mọi trang có dải "Bản demo: quán và đánh giá là minh họa", mỗi đánh giá có nhãn "Mẫu", giá ghi "Giá mẫu", điểm ghi "đánh giá mẫu"; quán minh họa không có nút chỉ đường. Đăng nhập, viết đánh giá, đề xuất quán hiện thông báo "bản demo chưa mở". Khi nối Supabase, app tự chuyển sang dữ liệu thật. Không tạo đánh giá giả trông như thật: như vậy là nói sai về quán có thật và đi ngược lời hứa "đánh giá thật" của app.
 
 ## 4. Màn hình và luồng
 

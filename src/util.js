@@ -68,9 +68,9 @@ export const formatDistance = m => (m < 1000 ? `${Math.round(m / 10) * 10} m` : 
 // Giá dùng để lọc và sắp xếp: giá thật nếu có từ 3 lượt báo giá, nếu không thì giá cao nhất nhóm ghi lúc khảo sát.
 export const filterPrice = p => (p.price_count >= 3 ? p.price_median : p.price_max)
 
-// Dòng giá ngắn cho thẻ và danh sách
-export function priceShort(p) {
-  if (p.price_count >= 3) return `Giá thật ${formatPrice(p.price_median)}`
+// Dòng giá ngắn cho thẻ và danh sách. sample: bản demo, giá là giá mẫu chứ không phải giá thật
+export function priceShort(p, sample = false) {
+  if (p.price_count >= 3) return `${sample ? 'Giá mẫu' : 'Giá thật'} ${formatPrice(p.price_median)}`
   if (p.price_min && p.price_max) return `${formatPrice(p.price_min)}–${formatPrice(p.price_max)} (tham khảo)`
   return 'Chưa rõ giá'
 }

@@ -38,6 +38,12 @@ body {
   font: 400 16px/1.5 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 [hidden] { display: none !important; }
+/* Bản demo (chưa nối Supabase): dải nhãn "Bản demo" và ghi chú chỉ hiện khi <html class="demo"> */
+.demo-only { display: none; }
+.demo .demo-only { display: block; }
+.demo-banner { flex-basis: 100%; margin: 4px 0 0; padding: 6px 12px; border-radius: 999px; background: #FFF1BD; color: #6B4430; font-size: 13px; font-weight: 600; text-align: center; }
+.bar { flex-wrap: wrap; }
+@media (prefers-color-scheme: dark) { .demo-banner { background: #4A3F1F; color: #FFE9A8; } }
 a { color: var(--accent); }
 h1 { font-size: 26px; font-weight: 800; line-height: 1.25; margin: 12px 0 4px; }
 h2 { font-size: 19px; font-weight: 800; margin: 24px 0 8px; }

@@ -1,5 +1,5 @@
 // Đăng nhập (Google hoặc mã 6 số qua email), phát hiện trình duyệt trong app, trang Của tôi.
-import { sb, myProfile, updateName, myReviews, mySuggestions, deleteReview, deleteAccount } from './supabase.js'
+import { DEMO, sb, myProfile, updateName, myReviews, mySuggestions, deleteReview, deleteAccount } from './supabase.js'
 import { h, isInAppBrowser, formatDate, formatPrice } from './util.js'
 import { state, page, navigate, route, toast, mascot, errorBox, loadData } from './main.js'
 
@@ -35,6 +35,13 @@ export async function requireLogin(what, render) {
   const path = location.pathname
   await authReady
   if (location.pathname !== path) return
+  if (DEMO) {
+    return page('Bản demo', h('div', { class: 'empty' },
+      mascot('ngu', 96),
+      h('h1', { tabindex: -1 }, `Bản demo chưa mở chức năng ${what}`),
+      h('p', { class: 'muted' }, 'Quán và đánh giá đang hiện là dữ liệu minh họa. Khi app chạy thật, bạn đăng nhập rồi check-in tại quán để viết đánh giá.'),
+      h('a', { href: './', class: 'btn' }, 'Về bản đồ')))
+  }
   if (state.user) return render()
   page('Cần đăng nhập', h('div', { class: 'empty' },
     mascot('doi', 96),
@@ -45,6 +52,7 @@ export async function requireLogin(what, render) {
 }
 
 export function openLogin() {
+  if (DEMO) return toast('Bản demo chưa mở đăng nhập. Khi app chạy thật bạn sẽ đăng nhập ở đây nhé')
   if (document.querySelector('dialog.login[open]')) return
   const ua = navigator.userAgent
   const inApp = isInAppBrowser(ua)

@@ -1,6 +1,6 @@
 // Router, trạng thái chung, bộ lọc, ngăn kéo danh sách, thẻ xem nhanh, trang Về dự án.
 import './style.css'
-import { readCache, fetchPlaces, photoUrl, thumbPath } from './supabase.js'
+import { DEMO, readCache, fetchPlaces, photoUrl, thumbPath } from './supabase.js'
 import { initMap, showPlaces, select as selectPin, moveTo, showUser, showLandmarks, toggleLandmarks } from './map.js'
 import {
   CATEGORIES, h, normalizeVi, distanceM, isOpenNow, filterPrice, priceShort, scoreShort, formatDistance, placeLabel,
@@ -44,7 +44,8 @@ export function page(title, nodes, back = { href: './', label: 'Bản đồ' }) 
   $('home').hidden = true
   const main = $('page')
   main.hidden = false
-  main.replaceChildren(h('a', { href: back.href, class: 'back' }, `‹ ${back.label}`), h('div', null, nodes))
+  main.replaceChildren(h('a', { href: back.href, class: 'back' }, `‹ ${back.label}`),
+    DEMO && h('p', { class: 'demo-banner' }, '🧪 Bản demo: quán và đánh giá là minh họa, không phải quán thật'), h('div', null, nodes))
   scrollTo(0, 0)
   main.querySelector('h1')?.focus({ preventScroll: true })
 }
@@ -84,6 +85,7 @@ export function loadData() {
     }
   }).then(() => {
     state.loading = false
+    dataTried = true
     renderHome()
     startMap()
   })
@@ -158,7 +160,7 @@ function placeItem(p) {
       h('strong', null, p.name),
       h('span', { class: 'muted' }, [CATEGORIES[p.category].label, d != null && formatDistance(d)].filter(Boolean).join(' · ')),
       h('span', null,
-        h('b', { class: 'price' }, priceShort(p)), ' · ', scoreShort(p),
+        h('b', { class: 'price' }, priceShort(p, DEMO)), ' · ', scoreShort(p),
         open !== null && ' · ', open !== null && h('span', { class: open ? 'open' : 'muted' }, open ? 'Đang mở' : 'Đã đóng')),
     ),
   ))
@@ -212,7 +214,7 @@ function showQuick(id) {
       : placeIcon(p, 44),
     h('div', { class: 'info' },
       h('strong', null, p.name),
-      h('span', null, h('b', { class: 'price' }, priceShort(p)), ' · ', scoreShort(p), d != null && ` · ${formatDistance(d)}`),
+      h('span', null, h('b', { class: 'price' }, priceShort(p, DEMO)), ' · ', scoreShort(p), d != null && ` · ${formatDistance(d)}`),
       h('a', { href: `quan/${p.id}`, class: 'btn btn-sm' }, 'Xem quán')),
     h('button', { type: 'button', class: 'close', 'aria-label': 'Đóng', onclick: close }, '×'),
   )
@@ -229,10 +231,11 @@ function setListMode(on) {
 }
 
 let mapStarted = false
+let dataTried = false // đã tải dữ liệu lần đầu xong (thành công hay lỗi)
 function startMap() {
   // Bản đồ cần khung đang hiện để đo kích thước; trang khác (vd /de-xuat) chưa cần tới.
-  // Chưa có quán (Supabase lỗi hoặc chưa cấu hình) vẫn vẽ bản đồ để xem địa danh.
-  if (mapStarted || appPath() !== '/') return
+  // Chờ lần tải đầu để biết tâm cụm trường; tải lỗi mà không có quán vẫn vẽ bản đồ để xem địa danh.
+  if (mapStarted || appPath() !== '/' || (!state.places.length && !dataTried)) return
   mapStarted = true
   const o = origin() ?? state.places[0] ?? { lat: 21.0285, lng: 105.8542 } // mặc định: hồ Hoàn Kiếm
   const go = () => initMap($('map'), {
@@ -376,10 +379,12 @@ addEventListener('popstate', route)
 
 // ───────── Khởi động ─────────
 
+// Bản demo: hiện dòng "Bản demo" và các ghi chú chỉ dành cho bản demo (class .demo-only trong index.html)
+document.documentElement.classList.toggle('demo', DEMO)
 setupHome()
 const cached = readCache()
 if (cached) setData(cached)
 initAuth()
+loadData() // trước route(): mở thẳng link quán (vd /quan/12) lần đầu thì trang quán chờ được dữ liệu
 route()
 if (cached) startMap()
-loadData()

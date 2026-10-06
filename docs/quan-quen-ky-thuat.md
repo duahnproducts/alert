@@ -222,6 +222,13 @@ Chạy Lighthouse ngay ngày 07/10 trên bản deploy đầu tiên, không đợ
 - Bấm ghim: `openLandmark()` trong `place.js` mở tấm trượt có ảnh thật (chỉ tải lúc này), chip loại địa danh có icon, tên, mô tả, khoảng cách, đoạn giới thiệu, tối đa 3 quán trong vòng 2 km, dòng ghi công "Ảnh: tác giả · giấy phép · Wikimedia Commons. Nội dung: Wikipedia (CC BY-SA 4.0)" có link, và nút "Chỉ đường".
 - Mọi chữ lấy từ Wikidata/Wikipedia đều gán qua `textContent` (hàm `h()`), không qua `innerHTML`; tên tác giả trên Commons là HTML nên script đã bóc thẻ trước khi ghi file.
 
+### 3.12 Bản demo (khi chưa nối Supabase)
+
+- `DEMO = !import.meta.env.VITE_SUPABASE_URL` trong `supabase.js`. Khi đó `fetchPlaces`, `fetchReviews` đọc `public/demo.json`, `fetchPhotos` trả rỗng, không đọc hay ghi bản lưu trong `localStorage` (để dữ liệu thật và demo không lẫn nhau).
+- `demo.json` tạo bằng `node scripts/demo-data.mjs` (số ngẫu nhiên có hạt giống, chạy lại ra đúng dữ liệu cũ): 4 cụm trường, 32 quán tên tự đặt rải trong bán kính khoảng 700 m quanh tâm cụm, 3–9 đánh giá mẫu mỗi quán (`is_sample: true`), điểm, trung vị và phân vị giá tính sẵn theo đúng cách của `place_stats`, cùng `landmarkNotes`: 1–2 câu cảm nhận mẫu cho mỗi địa danh theo loại.
+- Nhãn: `<html class="demo">` bật dải "Bản demo" (`.demo-only`) ở trang chủ, mọi trang con và trang Về dự án; `priceShort(p, true)` ghi "Giá mẫu"; trang quán ghi "đánh giá mẫu", ẩn nút "Chỉ đường" và link Google Maps của quán minh họa. `requireLogin()` và `openLogin()` hiện thông báo "bản demo chưa mở" thay cho đăng nhập.
+- Khai `VITE_SUPABASE_URL` (biến của workflow `pages.yml`) là app tự chuyển sang dữ liệu thật, không phải sửa code.
+
 ## 4. Database (Supabase)
 
 Toàn bộ nằm trong `supabase/schema.sql`, chạy trong SQL Editor. Dưới đây là phần cốt lõi; file thật cần thêm phần bật RLS cho từng bảng.
@@ -557,6 +564,7 @@ Bổ sung cho ma trận thiết bị và buổi thử với sinh viên ở mục
 | 23 | Gom cụm tự viết theo lưới thay cho `leaflet.markercluster` | Vài trăm quán thì 25 dòng là đủ, bớt một gói phụ thuộc |
 | 24 | Thêm địa danh nổi tiếng của Hà Nội và TP. Hồ Chí Minh, có ảnh thật; dữ liệu tĩnh từ Wikidata/Wikipedia/Commons (mục 3.11) | Người dùng yêu cầu; Google Places cần thẻ và cấm lưu dữ liệu |
 | 25 | Hosting bằng GitHub Pages thay cho Vercel; đường dẫn tương đối theo `<base>`, `404.html` cho link sâu, sao lưu mã hóa | Người dùng muốn truy cập qua GitHub như các dự án trước; repo công khai |
+| 26 | Bản demo có nhãn khi chưa nối Supabase: quán tên tự đặt, đánh giá mẫu (mục 3.12) | Chưa có người dùng thật; nội dung mẫu luôn có nhãn, không gắn cho quán có thật |
 
 ## 11. Phương án B: Leaflet (đang dùng từ 06/10/2026)
 

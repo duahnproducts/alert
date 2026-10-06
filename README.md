@@ -78,6 +78,16 @@ name,category,lat,lng,address,area_id,price_min,price_max,opening_hours,google_p
 
 Đánh giá và ảnh: nhóm gửi qua chính app khi đến ăn. Đánh giá mẫu tạo trong Table Editor với `is_sample = true`, và xóa trước ngày 11/10 bằng `delete from reviews where is_sample;`.
 
+## Bản demo
+
+Chưa khai `VITE_SUPABASE_URL` thì app chạy **bản demo có nhãn**: quán tên tự đặt và đánh giá mẫu lấy từ `public/demo.json`, đầu trang có dải "Bản demo", mỗi đánh giá có nhãn "Mẫu", giá ghi "Giá mẫu". Đăng nhập và viết đánh giá tắt. Muốn đổi nội dung demo thì sửa và chạy:
+
+```bash
+node scripts/demo-data.mjs
+```
+
+Nối Supabase (khai biến ở GitHub) là app tự chuyển sang dữ liệu thật.
+
 ## Địa danh nổi tiếng
 
 Các địa danh của Hà Nội và TP. Hồ Chí Minh nằm trong `public/landmarks.json`, lấy từ Wikidata, Wikipedia tiếng Việt và Wikimedia Commons (ảnh thật, có tên tác giả và giấy phép). Muốn cập nhật, thêm thành phố hoặc đổi số lượng, sửa `CITIES` / `PER_CITY` trong `scripts/landmarks.mjs` rồi chạy:

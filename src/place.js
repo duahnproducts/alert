@@ -1,5 +1,5 @@
 // Trang chi tiết quán: ảnh, giá thật, điểm của app, link sang Google Maps, đánh giá, báo cáo.
-import { fetchReviews, fetchPhotos, photoUrl, thumbPath, report } from './supabase.js'
+import { DEMO, demoData, fetchReviews, fetchPhotos, photoUrl, thumbPath, report } from './supabase.js'
 import { CATEGORIES, h, hoursText, isOpenNow, formatPrice, formatStars, formatDistance, badgeFor, timeAgo, formatDate, distanceM, priceShort } from './util.js'
 import { state, page, toast, mascot, errorBox, dataReady, dist } from './main.js'
 import { openLogin } from './auth.js'
@@ -46,14 +46,15 @@ export async function renderPlace(id) {
     h('section', { class: 'card scores', 'aria-label': 'Điểm' },
       h('p', { class: 'score-main' },
         p.review_count >= 3 ? `Quán Quen ${formatStars(p.avg_stars)}★` : 'Quán Quen: Mới',
-        h('small', null, ` (${p.review_count} đánh giá)`)),
-      h('p', { class: 'score-google muted' }, h('a', { href: gmaps, target: '_blank', rel: 'noopener' }, 'Xem đánh giá trên Google Maps'))),
+        h('small', null, ` (${p.review_count} đánh giá${DEMO ? ' mẫu' : ''})`)),
+      // Quán minh họa trong bản demo không có thật: không dẫn sang Google Maps hay chỉ đường tới một tọa độ ngẫu nhiên
+      !DEMO && h('p', { class: 'score-google muted' }, h('a', { href: gmaps, target: '_blank', rel: 'noopener' }, 'Xem đánh giá trên Google Maps'))),
 
     h('section', { class: 'card' },
-      h('h2', null, 'Giá thật'),
+      h('h2', null, DEMO ? 'Giá mẫu' : 'Giá thật'),
       h('p', { class: 'price-line' }, p.price_count >= 3
         ? [h('b', { class: 'price big' }, `Thường ${formatPrice(p.price_median)}`),
-           ` · từ ${formatPrice(p.price_p25)} đến ${formatPrice(p.price_p75)} · theo ${p.price_count} người đã ăn`]
+           ` · từ ${formatPrice(p.price_p25)} đến ${formatPrice(p.price_p75)} · theo ${p.price_count} ${DEMO ? 'đánh giá mẫu' : 'người đã ăn'}`]
         : p.price_min && p.price_max
           ? [h('b', null, `Khoảng ${formatPrice(p.price_min)}–${formatPrice(p.price_max)}`), ' · giá tham khảo lúc nhóm khảo sát']
           : 'Chưa có ai báo giá. Ăn xong báo giá giúp mọi người nhé!'),
@@ -65,7 +66,7 @@ export async function renderPlace(id) {
     h('section', null, h('h2', null, 'Đánh giá'), reviewsBox),
 
     h('nav', { class: 'actionbar', 'aria-label': 'Hành động' },
-      h('a', { class: 'btn-ghost', href: dir, target: '_blank', rel: 'noopener' }, 'Chỉ đường'),
+      !DEMO && h('a', { class: 'btn-ghost', href: dir, target: '_blank', rel: 'noopener' }, 'Chỉ đường'),
       h('a', { class: 'btn', href: `quan/${p.id}/danh-gia` }, 'Viết đánh giá'),
       h('button', { type: 'button', class: 'btn-ghost icon-only', 'aria-label': 'Chia sẻ quán', onclick: () => share(p) }, '↗')),
   ])
@@ -193,6 +194,17 @@ export function openLandmark(l) {
     .sort((a, b) => a.d - b.d)
     .slice(0, 3)
   const desc = l.desc && l.desc[0].toUpperCase() + l.desc.slice(1)
+  // Bản demo: vài câu cảm nhận mẫu (có nhãn "Mẫu") lấy từ demo.json
+  const notes = h('section', { class: 'lm-notes', hidden: true })
+  if (DEMO) demoData().then(d => {
+    const list = d.landmarkNotes?.[l.id] ?? []
+    if (!list.length) return
+    notes.replaceChildren(h('h3', null, 'Cảm nhận'), h('ul', { class: 'reviews' }, list.map(n => h('li', { class: 'review card' },
+      h('div', { class: 'review-head' }, h('b', null, n.by), h('span', { class: 'badge sample' }, 'Mẫu')),
+      h('p', null, h('span', { class: 'stars', role: 'img', 'aria-label': `${n.stars} trên 5 sao` }, '★'.repeat(n.stars) + '☆'.repeat(5 - n.stars))),
+      h('p', { class: 'comment' }, n.text)))))
+    notes.hidden = false
+  }, () => {})
   const d = dist(l)
   const dlg = h('dialog', { class: 'sheet-dialog landmark', 'aria-labelledby': 'lm-title', onclose: () => dlg.remove() },
     h('figure', { class: 'lm-photo' },
@@ -202,11 +214,12 @@ export function openLandmark(l) {
     h('h2', { id: 'lm-title' }, l.name),
     h('p', { class: 'muted' }, [desc, l.city, d != null && `cách ${formatDistance(d)}`].filter(Boolean).join(' · ')),
     l.extract && h('p', null, l.extract),
+    notes,
     near.length > 0 && h('section', null,
       h('h3', null, 'Ăn gì gần đây?'),
       h('ul', { class: 'near' }, near.map(({ p, d }) => h('li', null,
         h('a', { href: `quan/${p.id}`, onclick: () => dlg.close() }, h('b', null, p.name)),
-        ` · ${priceShort(p)} · ${formatDistance(d)}`)))),
+        ` · ${priceShort(p, DEMO)} · ${formatDistance(d)}`)))),
     h('p', { class: 'small muted credit' },
       'Ảnh: ', h('a', { href: ph.page, target: '_blank', rel: 'noopener' }, ph.author), ' · ',
       ph.licenseUrl ? h('a', { href: ph.licenseUrl, target: '_blank', rel: 'noopener' }, ph.license) : ph.license,
