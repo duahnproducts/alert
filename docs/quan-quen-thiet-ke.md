@@ -118,11 +118,10 @@ Bản đồ ──> Chi tiết quán ──> [Đã đăng nhập?] ──rồi�
 - **Lưới ảnh thật,** rồi **danh sách đánh giá** mới nhất trước. Mỗi đánh giá gồm tên hiển thị, huy hiệu "Đã check-in", số sao, giá đã trả, món, một câu, ảnh, ngày và nút "Báo cáo".
 - **Thanh đáy cố định:** "Chỉ đường", "Viết đánh giá", biểu tượng chia sẻ.
 - **Chỉ đường ngay trong app** (`/quan/:id/chi-duong`), không phải rời sang Google Maps:
-  - **Điểm xuất phát mặc định** (chốt 06/10/2026): Hà Nội thì từ ĐH Kinh tế Quốc dân, TP.HCM thì từ ĐH Kinh tế TP.HCM (UEH), theo thành phố của quán (trùng thành phố người dùng đã chọn). Đường hiện ngay, không cần xin quyền vị trí, nên giám khảo mở trên laptop hay ở xa vẫn xem được.
-  - Chọn "🛵 Xe máy" hoặc "🚶 Đi bộ"; mặc định đi bộ nếu quán cách điểm xuất phát dưới 1,5 km. Dòng "Xuất phát: ĐH Kinh tế Quốc dân", dòng tóm tắt "1,2 km · khoảng 15 phút đi bộ", bản đồ có đường đi, ghim quán và Bao ở điểm xuất phát, rồi danh sách từng bước bằng tiếng Việt ("Rẽ phải vào Phố Giảng Võ · 230 m").
-  - Nút "📍 Đi từ chỗ tôi đang đứng": lúc này app mới xin vị trí, vẽ lại đường từ chỗ bạn và Bao đi theo vị trí thật của bạn. Bạn ở cách quán trên 30 km (thường là máy tính đoán sai vị trí) hoặc không cho phép vị trí thì vẫn giữ điểm xuất phát mặc định và nói rõ lý do. Bản đồ giữ khung cả tuyến, chỉ dời khi Bao sắp ra khỏi khung; bạn tự kéo hoặc zoom thì bản đồ để yên 15 giây cho bạn xem.
+  - Chọn "🛵 Xe máy" hoặc "🚶 Đi bộ"; mặc định đi bộ nếu quán cách dưới 1,5 km. Dòng tóm tắt "1,2 km · khoảng 15 phút đi bộ", bản đồ có đường đi, ghim quán và Bao ở vị trí của bạn, rồi danh sách từng bước bằng tiếng Việt ("Rẽ phải vào Phố Giảng Võ · 230 m").
+  - Bao đi theo vị trí thật của bạn. Bản đồ giữ khung cả tuyến, chỉ dời khi Bao sắp ra khỏi khung; bạn tự kéo hoặc zoom thì bản đồ để yên 15 giây cho bạn xem.
   - Đi lệch khỏi đường quá 40 m (hoặc quá sai số GPS lúc đó) thì Bao báo "Bạn đi khác đường rồi" và tự tìm đường mới từ chỗ bạn đứng, tối đa 30 giây một lần.
-  - Khi đã đi từ chỗ bạn: cách quán dưới 50 m thì hiện "Tới nơi rồi! Chúc bạn ăn ngon" và nút "Ăn xong viết đánh giá".
+  - Chọn xe máy hay đi bộ trước khi có vị trí thì app nhớ lựa chọn đó. Cách quán dưới 50 m thì hiện "Tới nơi rồi! Chúc bạn ăn ngon" và nút "Ăn xong viết đánh giá".
   - Ghi rõ trên trang: để vẽ đường, vị trí của bạn và của quán được gửi tới máy chủ tìm đường của FOSSGIS (Đức); app không lưu vị trí. Kèm ghi nguồn OpenStreetMap và link "Sửa bản đồ" (điều kiện dùng máy chủ).
   - Bản demo: quán minh họa vẫn có "Chỉ đường" để xem thử tính năng; đầu trang ghi "Quán minh họa, không có thật ở vị trí này: đường đi chỉ để xem thử tính năng".
   - Luôn có nút "Mở bằng Google Maps". Không lấy được vị trí, máy chủ tìm đường lỗi, hoặc bạn cách quán trên 30 km (thường là máy tính đoán sai vị trí) thì nói rõ lý do và chỉ sang nút này.
@@ -357,9 +356,9 @@ App chỉ thu những gì cần để hiện một đánh giá, và người dù
 | Tên hiển thị | Hiện cạnh đánh giá | Mọi người |
 | Đánh giá, ảnh (đã xóa EXIF) | Nội dung của app | Mọi người |
 | Khoảng cách lúc check-in | Hiện huy hiệu "Đã check-in" | Chỉ nhóm |
-| Vị trí khi bấm "Đi từ chỗ tôi đang đứng" ở trang chỉ đường (không lưu) | Vẽ đường tới quán | Máy chủ tìm đường của FOSSGIS (Đức), ghi vào nhật ký máy chủ của họ; nhóm không nhận |
+| Vị trí lúc mở trang chỉ đường (không lưu) | Vẽ đường tới quán | Máy chủ tìm đường của FOSSGIS (Đức), ghi vào nhật ký máy chủ của họ; nhóm không nhận |
 
-Không thu: tọa độ của người dùng, lịch sử duyệt, danh bạ, và không có công cụ phân tích hay quảng cáo của bên thứ ba. Vị trí dùng cho "Gợi ý quanh bạn" chỉ nằm trong bộ nhớ của tab, tính ngay trên máy, không gửi đi; vị trí chỉ rời máy khi check-in (gửi một lần cho `submit_review`) và khi bấm "Đi từ chỗ tôi đang đứng" ở trang chỉ đường (gửi cho máy chủ tìm đường). Mặc định trang chỉ đường xuất phát từ một trường đại học, không dùng vị trí người dùng.
+Không thu: tọa độ của người dùng, lịch sử duyệt, danh bạ, và không có công cụ phân tích hay quảng cáo của bên thứ ba. Vị trí dùng cho "Gợi ý quanh bạn" chỉ nằm trong bộ nhớ của tab, tính ngay trên máy, không gửi đi; vị trí chỉ rời máy khi check-in (gửi một lần cho `submit_review`) và khi mở trang chỉ đường (gửi cho máy chủ tìm đường).
 
 - Tấm đăng nhập có một dòng đồng ý, kèm link tới trang chính sách quyền riêng tư viết bằng lời dễ hiểu.
 - Căn cứ pháp lý hiện hành: **Luật Bảo vệ dữ liệu cá nhân 2025** (hiệu lực từ 01/01/2026) và **Nghị định 356/2025/NĐ-CP** hướng dẫn thi hành luật này. Nghị định 356 thay thế Nghị định 13/2023/NĐ-CP, nên không trích Nghị định 13 nữa. Nhóm cần đọc phần về sự đồng ý của chủ thể dữ liệu trước khi viết trang chính sách. Hình ảnh được Nghị định 356 nhắc đến trong nhóm dữ liệu cần bảo vệ chặt hơn, nên trang chính sách phải nói rõ ảnh được dùng thế nào và xóa bằng cách nào.
@@ -399,8 +398,7 @@ Phần lớn người dùng sẽ mở app từ bài đăng trên fanpage, tức 
 - [ ] Mở app lần đầu trên mạng 4G yếu (giả lập "Slow 4G" trong DevTools): bản đồ hiện trong 3 giây.
 - [ ] Từ chối quyền vị trí: bản đồ vẫn hiện ở thành phố đã chọn, không báo lỗi đỏ.
 - [ ] Bấm "Chia sẻ vị trí" khi đang ở gần trường: thẻ gợi ý 3 quán đang mở, bấm vào mở đúng trang quán. Mở lại app: không hỏi lại, tự gợi ý. Thử cả trong trình duyệt của Facebook và Zalo.
-- [ ] Bấm "Chỉ đường" ở một quán Hà Nội và một quán TP.HCM: đường hiện ngay từ ĐH Kinh tế Quốc dân và từ UEH, không hỏi quyền vị trí.
-- [ ] Ở gần quán, bấm "Đi từ chỗ tôi đang đứng": đường vẽ lại từ chỗ bạn, Bao đi theo khi bạn đi, cố ý rẽ sai một ngã thì app tự tìm đường mới, tới quán thì hiện "Tới nơi rồi!". Thử cả trong trình duyệt của Facebook và Zalo.
+- [ ] Bấm "Chỉ đường" khi đang ở gần quán: có đường đi, các bước tiếng Việt, Bao đi theo khi bạn đi, cố ý rẽ sai một ngã thì app tự tìm đường mới, tới quán thì hiện "Tới nơi rồi!". Thử cả trong trình duyệt của Facebook và Zalo.
 - [ ] Chặn `valhalla1.openstreetmap.de` (DevTools → Network request blocking): trang chỉ đường báo lỗi kèm nút thử lại, nút "Mở bằng Google Maps" vẫn dùng được.
 - [ ] Đăng nhập bằng mã email ngay trong trình duyệt của Facebook.
 - [ ] Viết đánh giá khi đang ở quán thì gửi được; ở nhà thì bị từ chối kèm lời giải thích.
