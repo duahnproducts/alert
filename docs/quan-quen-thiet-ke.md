@@ -2,15 +2,17 @@
 
 Bản trong repo là **bản chuẩn**, cập nhật ngày 05/10/2026: các con số về hạn mức, giá và quy định đã được kiểm trên trang chính thức (nguồn ở cuối tài liệu), và đã thống nhất với [phương án kỹ thuật](quan-quen-ky-thuat.md). Bản nháp đầu tiên (có sơ đồ vẽ) nằm trên Claude Docs, có thể cũ hơn bản này: https://claude.ai/code/artifact/eb3e82df-65aa-44b2-8470-35029f08e2e5
 
+**Cập nhật 06/10/2026: bản đồ chibi tự vẽ, không dùng Google Maps.** Không có thẻ để mở thanh toán Google Cloud, nên app làm theo phương án B (rủi ro đầu tiên ở mục 14). App tự vẽ bản đồ kiểu chibi (màu kẹo, đường to bo tròn, ghim tròn phồng) từ dữ liệu miễn phí của OpenFreeMap, không cần key. Máy chủ chính của OpenStreetMap (`openstreetmap.org`) không kết nối được từ mạng ở Việt Nam (kiểm ngày 06/10/2026), nên không dùng. Trang quán không còn dòng điểm Google; thay bằng link "Xem đánh giá trên Google Maps". Nút "Chỉ đường" vẫn mở Google Maps qua link (miễn phí, không cần key). Đăng nhập bằng Google vẫn giữ: OAuth của Google không cần thanh toán. Các mục dưới đây đã sửa theo quyết định này.
+
 Tài liệu này mô tả sản phẩm làm gì và vì sao. Cách làm cụ thể (SQL, cấu hình dịch vụ, cấu trúc code) nằm trong phương án kỹ thuật.
 
 ## 1. Tóm tắt
 
-Quán Quen (tên tạm) là bản đồ các quán ăn ngon dưới 50k quanh các trường đại học trong một thành phố. Sinh viên và người dân địa phương chấm điểm, báo giá thật và chụp ảnh thật; mỗi quán hiện trên bản đồ bằng một biểu tượng dễ thương.
+Quán Quen (tên tạm) là bản đồ các quán ăn ngon dưới 50k quanh các trường đại học ở Hà Nội và TP. Hồ Chí Minh. Sinh viên và người dân địa phương chấm điểm, báo giá thật và chụp ảnh thật; mỗi quán hiện trên bản đồ bằng một biểu tượng dễ thương.
 
 - **Cho ai:** sinh viên 18–24 tuổi, đặc biệt là tân sinh viên mới lên thành phố, chưa biết ăn ở đâu và phải tiêu tiền kỹ.
 - **Lời hứa:** quán ngon vì người ăn thật nói ngon, không phải vì được quảng cáo.
-- **Phạm vi dự thi:** một thành phố, 3–5 cụm trường, 30–50 quán do nhóm tự đi ăn và chụp.
+- **Phạm vi dự thi:** hai thành phố (Hà Nội, TP. Hồ Chí Minh), 3–5 cụm trường, 30–50 quán do nhóm tự đi ăn và chụp.
 
 |  | Google Maps | Foody / ShopeeFood | Quán Quen |
 | --- | --- | --- | --- |
@@ -52,11 +54,12 @@ Bản dự thi là một web app chạy trên điện thoại, có bản đồ, 
 
 - Bản đồ có biểu tượng theo loại món; lọc theo giá (dưới 30k, 30–50k), loại món, "đang mở cửa", cụm trường.
 - Chế độ danh sách, thay cho bản đồ khi bản đồ lỗi hoặc người dùng dùng trình đọc màn hình.
-- Trang quán: ảnh thật, giá thật, điểm của app, điểm Google, giờ mở cửa, chỉ đường, chia sẻ.
+- Trang quán: ảnh thật, giá thật, điểm của app, link xem đánh giá trên Google Maps, giờ mở cửa, chỉ đường, chia sẻ.
 - Đăng nhập Google, chỉ bắt buộc khi viết đánh giá.
 - Viết đánh giá: check-in GPS, số sao, giá đã trả, món đã ăn, một câu nhận xét, tối đa 3 ảnh.
 - Đề xuất quán mới; nhóm duyệt rồi mới lên bản đồ.
 - Nút báo cáo đánh giá hoặc ảnh sai.
+- 100 địa danh nổi tiếng của Hà Nội và TP. Hồ Chí Minh trên bản đồ: ghim vàng, icon theo loại (chùa đền, nhà thờ, bảo tàng, hồ, công viên, sở thú, cầu, cao ốc, nhà hát, sân vận động, chợ, dinh thự, bưu điện, khách sạn, phố, tượng đài), bật/tắt bằng chip "Địa danh". Thu nhỏ bản đồ chỉ hiện các địa danh nổi tiếng nhất, phóng to dần hiện thêm. Bấm vào thì hiện ảnh chụp thật, mô tả ngắn, tên tác giả và giấy phép của ảnh, quán ngon trong vòng 2 km và nút chỉ đường. Dữ liệu lấy từ Wikidata, Wikipedia tiếng Việt và Wikimedia Commons (xem mục 6), không lấy từ Google.
 - Trang "Về dự án": cách tính điểm, nguồn dữ liệu, cam kết không nhận tiền từ quán.
 
 **Cố ý không làm**
@@ -102,9 +105,9 @@ Bản đồ ──> Chi tiết quán ──> [Đã đăng nhập?] ──rồi�
 
 ### Màn 2: Chi tiết quán
 
-- **Ảnh bìa:** ảnh thật mới nhất, nhãn "Ảnh thật · 3 ngày trước".
+- **Ảnh bìa:** ảnh thật mới nhất, nhãn "Ảnh thật · 3 ngày trước". Quán chưa có ảnh thật thì hiện tranh vẽ quán vỉa hè theo loại món, nhãn "Hình minh họa · chưa có ảnh thật". Không dùng ảnh do máy tạo trông như ảnh chụp, vì như vậy là bịa "ảnh thật".
 - **Thông tin:** tên, loại món, địa chỉ, khoảng cách, "Đang mở · đóng lúc 21:00".
-- **Khối điểm, hai dòng tách biệt:** dòng lớn "Quán Quen 4,6★ (23 đánh giá)"; dòng nhỏ "Google 4,3★ (1.204)" có ghi nguồn. Không gộp hai điểm thành một (mục 10).
+- **Khối điểm:** dòng lớn "Quán Quen 4,6★ (23 đánh giá)"; dòng nhỏ là link "Xem đánh giá trên Google Maps". App không lấy và không hiện điểm Google (mục 10).
 - **Giá thật:** "Thường 35k · từ 30k đến 45k · theo 18 người đã ăn".
 - **Món được nhắc nhiều:** các chip như "Bún chả (12)", "Nem (5)".
 - **Lưới ảnh thật,** rồi **danh sách đánh giá** mới nhất trước. Mỗi đánh giá gồm tên hiển thị, huy hiệu "Đã check-in", số sao, giá đã trả, món, một câu, ảnh, ngày và nút "Báo cáo".
@@ -139,21 +142,21 @@ Bản đồ ──> Chi tiết quán ──> [Đã đăng nhập?] ──rồi�
 
 ## 5. Nhận diện hình ảnh
 
-Bản đồ trông như một tấm bản đồ ẩm thực vẽ tay: nền nhạt, mọi điểm nhấn đều là biểu tượng món ăn của app. App ẩn nhãn cửa hàng và các điểm trên bản đồ gốc của Google, để biểu tượng không bị lẫn và bản đồ không quảng cáo quán khác.
+Bản đồ trông như một tấm bản đồ ẩm thực vẽ tay kiểu chibi: nền kem, khuôn viên trường màu lavender, công viên xanh mint, hồ nước xanh baby có viền, đường trắng dày bo tròn, chữ tròn trịa có viền trắng. Bản đồ không vẽ biểu tượng cửa hàng, nên mọi điểm nhấn đều là biểu tượng món ăn của app và bản đồ không quảng cáo quán khác. Chế độ tối là bản đồ "ban đêm" tím đậm.
 
 **Biểu tượng theo loại món**
 
-| Loại món | Mã trong database | Biểu tượng | Hình gốc Fluent Emoji | Màu nền của ghim |
-| --- | --- | --- | --- | --- |
-| Bún, phở, mì | `bun_pho_mi` | Bát mì bốc khói | Steaming bowl | Vàng #F6C445 |
-| Cơm | `com` | Bát cơm có mặt cười | Cooked rice (nhóm vẽ thêm mặt cười) | Xanh lá #7BC67E |
-| Bánh mì, xôi | `banh_mi_xoi` | Ổ bánh mì | Baguette bread | Cam #E8A15A |
-| Ăn vặt | `an_vat` | Xiên que | Oden | Hồng #FF8FB1 |
-| Trà sữa, đồ uống | `do_uong` | Ly trân châu | Bubble tea | Tím #B79CED |
-| Cà phê học bài | `ca_phe` | Ly cà phê và quyển sách | Hot beverage (nhóm ghép thêm quyển sách) | Nâu #A47551 |
-| Chè, tráng miệng | `che` | Cốc chè | Shaved ice | Xanh ngọc #6CC5C0 |
+| Loại món | Mã trong database | Biểu tượng | Màu nền của ghim |
+| --- | --- | --- | --- |
+| Bún, phở, mì | `bun_pho_mi` | Bát phở bốc khói, có đũa | Vàng #F6C445 |
+| Cơm | `com` | Bát cơm xanh, cơm trắng đầy ngọn | Xanh lá #7BC67E |
+| Bánh mì, xôi | `banh_mi_xoi` | Ổ bánh mì nằm nghiêng | Cam #E8A15A |
+| Ăn vặt | `an_vat` | Xiên que ba viên | Hồng #FF8FB1 |
+| Trà sữa, đồ uống | `do_uong` | Ly trà sữa trân châu có ống hút | Tím #B79CED |
+| Cà phê học bài | `ca_phe` | Tách cà phê có phin | Nâu #A47551 |
+| Chè, tráng miệng | `che` | Cốc chè ba lớp có đá | Xanh ngọc #6CC5C0 |
 
-Bộ biểu tượng lấy từ [Fluent Emoji](https://github.com/microsoft/fluentui-emoji) của Microsoft, giấy phép MIT (đã kiểm ngày 05/10/2026). Trang Về dự án ghi nguồn và giấy phép. Kiểu 3D là ảnh PNG 256 × 256 px (khoảng 28 KB mỗi hình), không phải SVG. Nhóm chuyển mỗi hình thành WebP 64 × 64 px (khoảng 3 KB, đủ nét cho ghim 40 px trên màn hình mật độ cao). Nếu cần SVG thì dùng kiểu "Color" của cùng bộ (khoảng 15 KB mỗi hình).
+Bộ biểu tượng do nhóm tự vẽ (cập nhật 06/10/2026, thay cho Fluent Emoji): 7 biểu tượng món và 17 biểu tượng địa danh, cùng một phong cách với Bé Bao. Viền nâu đậm #3A2A1F bo tròn, màu kẹo pastel, và mỗi hình có khuôn mặt chibi (mắt tròn có đốm sáng, má hồng, miệng cười). Mỗi hình là một file SVG 64 × 64 khoảng 1–2 KB trong `public/icons/`, nét ở mọi cỡ màn hình, không cần ghi nguồn hay giấy phép của bên ngoài.
 
 **Quy tắc vẽ ghim trên bản đồ**
 
@@ -191,7 +194,7 @@ Mỗi biểu cảm là một file SVG dưới 10 KB.
 
 ## 6. Dữ liệu
 
-Toàn bộ dữ liệu của app nằm trong 6 bảng Postgres trên Supabase. Từ Google, app chỉ lưu `place_id`; điểm Google được lấy lại mỗi khi mở trang quán. Với khoảng 50 quán, app tải hết một lần (dưới 50 KB) rồi lọc ngay trên máy, không cần phân trang.
+Toàn bộ dữ liệu của app nằm trong 6 bảng Postgres trên Supabase. Từ Google, app chỉ lưu `place_id` (không bắt buộc) để link "Chỉ đường" và "Xem đánh giá trên Google Maps" mở đúng quán; app không lấy điểm Google. Với khoảng 50 quán, app tải hết một lần (dưới 50 KB) rồi lọc ngay trên máy, không cần phân trang.
 
 | Bảng | Trường chính | Ghi chú |
 | --- | --- | --- |
@@ -211,11 +214,19 @@ Toàn bộ dữ liệu của app nằm trong 6 bảng Postgres trên Supabase. T
 
 **Hai nguồn dữ liệu luôn tách riêng**
 
-|  | Dữ liệu của app | Dữ liệu từ Google |
+|  | Dữ liệu của app | Nền bản đồ và Google Maps |
 | --- | --- | --- |
-| Gồm | Quán, giờ mở cửa, đánh giá, giá thật, ảnh | Điểm sao và số lượt đánh giá trên Google |
-| Lưu ở đâu | Supabase, lưu lâu dài | Không lưu, chỉ giữ `place_id` |
-| Khi không lấy được | App không có dữ liệu, hiện linh vật buồn và nút thử lại | Ẩn dòng điểm Google, thay bằng link "Xem trên Google Maps" |
+| Gồm | Quán, giờ mở cửa, đánh giá, giá thật, ảnh | Dữ liệu bản đồ (OpenFreeMap, từ OpenStreetMap); link sang Google Maps |
+| Lưu ở đâu | Supabase, lưu lâu dài | Không lưu; chỉ giữ `place_id` để dựng link |
+| Khi không lấy được | Hiện dữ liệu đã lưu trên máy kèm giờ lưu; không có thì hiện linh vật buồn và nút thử lại | Ô bản đồ không tải được trong 8 giây thì chuyển sang chế độ danh sách |
+
+**Địa danh nổi tiếng (không nằm trong database)**
+
+- Lấy bằng script `scripts/landmarks.mjs`, ghi ra file tĩnh `public/landmarks.json`; app tải file này sau khi bản đồ đã vẽ. Chạy lại script khi muốn cập nhật.
+- Nguồn: Wikidata (vị trí, loại, độ nổi tiếng), Wikipedia tiếng Việt (tên, đoạn giới thiệu), Wikimedia Commons (ảnh). Không dùng Google: Places API cần thẻ thanh toán và điều khoản cấm lưu lại dữ liệu, ảnh.
+- "Nổi tiếng" là có bài viết ở nhiều ngôn ngữ Wikipedia. Mỗi thành phố lấy 50 địa danh trong bán kính 10 km quanh trung tâm (Hà Nội: hồ Hoàn Kiếm; TP. Hồ Chí Minh: chợ Bến Thành).
+- Chỉ giữ địa danh có ảnh chụp thật (file JPEG) và thuộc loại công trình hoặc nơi chốn: tòa nhà, đền chùa, nhà thờ, bảo tàng, hồ, công viên, cầu, quảng trường, chợ, di tích. Bỏ sự kiện, tổ chức, đơn vị hành chính, sân bay, bệnh viện, nhà ga, trại giam (trừ nơi đã thành bảo tàng như Hỏa Lò). Mỗi địa danh được xếp vào một loại để chọn icon, đoán theo tên tiếng Việt ("Chùa…", "Cầu…", "Nhà hát…") rồi đến loại trên Wikidata.
+- Ảnh luôn ghi tên tác giả và giấy phép (CC BY, CC BY-SA, phạm vi công cộng…) kèm link tới trang ảnh, đoạn giới thiệu ghi "Wikipedia (CC BY-SA 4.0)", đúng yêu cầu của các giấy phép này.
 
 **Cách nhập dữ liệu ban đầu**
 
@@ -226,7 +237,7 @@ Toàn bộ dữ liệu của app nằm trong 6 bảng Postgres trên Supabase. T
 
 ## 7. Kiến trúc kỹ thuật
 
-App không có server riêng. Trình duyệt gọi thẳng ba dịch vụ có gói miễn phí: Vercel phục vụ file tĩnh, Google Maps vẽ bản đồ và trả điểm Google, Supabase giữ dữ liệu, tài khoản và ảnh. Quyền đọc ghi được kiểm soát bằng Row Level Security của Postgres, không phải bằng code ở frontend.
+App không có server riêng. Trình duyệt gọi thẳng các dịch vụ có gói miễn phí: Vercel phục vụ file tĩnh, OpenFreeMap trả dữ liệu bản đồ để app tự vẽ kiểu chibi, Supabase giữ dữ liệu, tài khoản và ảnh. Quyền đọc ghi được kiểm soát bằng Row Level Security của Postgres, không phải bằng code ở frontend.
 
 Sơ đồ kiến trúc (dạng chữ):
 
@@ -234,7 +245,7 @@ Sơ đồ kiến trúc (dạng chữ):
 Điện thoại người dùng (Chrome, Safari, Facebook, Zalo)
   └─ Web app Quán Quen (HTML, CSS, JS thuần; nén ảnh, check-in GPS; lưu tạm dữ liệu quán khi mất kết nối)
        ├─ tải trang ─────────────> Vercel (file tĩnh, tự deploy khi push)  <── GitHub (mã nguồn)
-       ├─ key khóa domain ───────> Google Maps Platform (Maps JS: bản đồ, ghim, gom cụm; Place: điểm Google, không lưu)
+       ├─ dữ liệu bản đồ ────────> OpenFreeMap (miễn phí, không key); app tự vẽ kiểu chibi, ghim và gom cụm ngay trên máy
        └─ publishable key + RLS ─> Supabase (Auth: Google, mã email qua SMTP riêng; Postgres + RLS, submit_review; Storage: ảnh đã nén)
                                                                            <── UptimeRobot (ping 5 phút)
                                                                            <── GitHub Action (sao lưu mỗi đêm)
@@ -247,8 +258,8 @@ Dự án Supabase tạo sau tháng 11/2025 không còn "anon key" và "service_r
 | Thành phần | Chọn | Lý do |
 | --- | --- | --- |
 | Frontend | Vite + JavaScript thuần (nếu nhóm quen React thì dùng React, thiết kế không đổi) | Nhẹ, build ra file tĩnh |
-| Bản đồ | Google Maps JavaScript API, Advanced Markers, thư viện `@googlemaps/markerclusterer` | Ghim tùy biến bằng HTML/SVG; phong cách bản đồ cấu hình qua Map ID |
-| Điểm Google | Lớp `Place` của Maps JS, `fetchFields` với ba trường `rating`, `userRatingCount`, `googleMapsURI` | Gọi từ trình duyệt bằng key đã khóa theo domain, không cần proxy |
+| Bản đồ | Leaflet 1.9 + `protomaps-leaflet`, tự vẽ kiểu chibi từ dữ liệu vector của OpenFreeMap; ghim `L.divIcon` bằng HTML, gom cụm tự viết theo lưới | Không cần thẻ, không cần key; tự chọn được màu, nét, chữ cho ra chất chibi |
+| Google Maps | Chỉ dùng link Google Maps URLs cho "Chỉ đường" và "Xem đánh giá trên Google Maps" | Miễn phí, không cần key |
 | Dữ liệu và tài khoản | Supabase: Postgres, Auth (Google và mã qua email), Storage | Miễn phí, có sẵn đăng nhập và phân quyền theo dòng |
 | Gửi đánh giá | Hàm Postgres `submit_review` gọi qua RPC | Kiểm tra khoảng cách check-in và giới hạn 1 đánh giá/ngày ngay trong database |
 | Ảnh | Nén trên máy bằng canvas thành 2 cỡ: cạnh dài 1280 px để xem lớn, 400 px cho lưới ảnh và danh sách; chất lượng 0,8. Dùng WebP, riêng Safari và mọi trình duyệt trên iOS dùng JPEG (các trình duyệt này không xuất được WebP) | Bản lớn khoảng 150–250 KB, bản nhỏ khoảng 30 KB. Vẽ lại qua canvas cũng xóa luôn thông tin EXIF (có GPS nhà riêng). Supabase gói miễn phí không tự đổi cỡ ảnh, nên app phải tự làm |
@@ -260,14 +271,13 @@ Dự án Supabase tạo sau tháng 11/2025 không còn "anon key" và "service_r
 
 | Dịch vụ | Miễn phí | Giới hạn tự đặt |
 | --- | --- | --- |
-| Google Maps JS, lượt tải bản đồ (Dynamic Maps, nhóm Essentials) | 10.000 lượt/tháng | 300 lượt/ngày trong Google Cloud Console |
-| Google Place Details có `rating`, `userRatingCount` (nhóm Enterprise, tính theo trường đắt nhất được yêu cầu) | 1.000 lượt/tháng | 30 lượt/ngày; vượt thì hiện link "Xem trên Google Maps" |
+| OpenFreeMap (dữ liệu bản đồ) | Không giới hạn lượt, không cần đăng ký | Không cần |
 | Supabase Free | 500 MB database, 1 GB lưu trữ file, 5 GB băng thông, 50.000 người dùng hoạt động/tháng | 1 GB chứa được khoảng 5.000 ảnh. Băng thông là giới hạn dễ chạm nhất khi bài được chia sẻ mạnh, nên mọi chỗ xem nhiều ảnh dùng bản 400 px |
 | Vercel Hobby | Đủ cho một web tĩnh nhỏ | Không cần |
 | Resend / Brevo (SMTP) | Resend 100 email/ngày (3.000/tháng); Brevo 300 email/ngày | Đặt giới hạn gửi email của Supabase Auth cho khớp |
 | UptimeRobot Free | Monitor 5 phút; không cho thêm header tùy chỉnh | Truyền key qua tham số `?apikey=` |
 
-Tài khoản Google Cloud cần thẻ thanh toán. Ngoài giới hạn lượt gọi, đặt thêm cảnh báo ngân sách ở mức 1 USD. Giới hạn lượt gọi mới thật sự chặn chi tiêu; cảnh báo ngân sách chỉ gửi email.
+Không có dịch vụ nào cần thẻ thanh toán. Google Cloud chỉ dùng để tạo OAuth client cho nút "Tiếp tục với Google", việc này miễn phí.
 
 **Cấu trúc thư mục, SQL và cấu hình từng dịch vụ:** xem [phương án kỹ thuật](quan-quen-ky-thuat.md), mục 3 đến mục 5.
 
@@ -311,11 +321,11 @@ Bản 2023 của ISO/IEC 25010 có 9 đặc tính chất lượng sản phẩm: 
 | Đặc tính | Quán Quen đáp ứng thế nào | Đo bằng gì, đạt khi nào |
 | --- | --- | --- |
 | Phù hợp chức năng | Đủ vòng tìm quán, xem, đi, đánh giá; giá thật là trung vị, không bị một giá bất thường kéo lệch | Chạy view `place_stats` trên bộ dữ liệu biết trước kết quả |
-| Hiệu năng | JS và CSS của app dưới 150 KB (không tính script Google Maps); ảnh nén sẵn 2 cỡ, chỉ tải khi cuộn tới | Lighthouse mobile: LCP dưới 2,5 giây, điểm Performance từ 90 |
+| Hiệu năng | JS và CSS của app dưới 150 KB lúc mở (không tính thư viện bản đồ khoảng 86 KB, tải sau khi trang đã hiện); ảnh nén sẵn 2 cỡ, chỉ tải khi cuộn tới | Lighthouse mobile: LCP dưới 2,5 giây, điểm Performance từ 90 |
 | Tương thích | Chạy trên Chrome Android, Safari iOS, trình duyệt trong Facebook và Zalo | Bảng thử thiết bị ở mục 11 qua hết |
 | Khả năng tương tác (trước đây gọi là khả năng sử dụng) | Xem không cần đăng nhập, chế độ danh sách, tương phản 4,5:1 | 8/10 người thử tìm được quán trong 30 giây; Lighthouse Accessibility từ 90 |
-| Tin cậy | Google lỗi thì chuyển sang danh sách; Supabase lỗi thì hiện dữ liệu đã lưu trên máy kèm giờ lưu | UptimeRobot không ghi nhận lần sập nào trong mùa thi |
-| Bảo mật | Row Level Security trên mọi bảng; key Google khóa theo domain; không đưa secret key ra frontend | Dùng publishable key thử sửa đánh giá của người khác và gọi Maps từ domain lạ: cả hai phải bị từ chối |
+| Tin cậy | Nền bản đồ lỗi thì chuyển sang danh sách; Supabase lỗi thì hiện dữ liệu đã lưu trên máy kèm giờ lưu | UptimeRobot không ghi nhận lần sập nào trong mùa thi |
+| Bảo mật | Row Level Security trên mọi bảng; không đưa secret key ra frontend | Dùng publishable key thử sửa đánh giá của người khác: phải bị từ chối |
 | Bảo trì | Khoảng 6 file JS, toàn bộ cấu trúc database trong `schema.sql`, tự deploy từ GitHub | Người ngoài nhóm đọc README và chạy được app trong 15 phút |
 | Linh hoạt (trước đây gọi là khả chuyển) | Thêm thành phố hoặc cụm trường chỉ cần thêm dòng vào `areas` và `places`, không sửa code | Demo thêm một cụm trường mới trong 5 phút |
 | An toàn | Không lưu vị trí người dùng; xóa EXIF trong ảnh; ẩn nội dung khi bị báo cáo; không đánh giá vệ sinh an toàn thực phẩm thay cơ quan chức năng | Thả một ảnh có GPS vào app rồi kiểm tra file đã lưu không còn EXIF |
@@ -347,18 +357,13 @@ Không thu: tọa độ của người dùng, lịch sử duyệt, danh bạ, v�
   - Muốn thêm đánh giá phải đi qua hàm `submit_review`.
 - Kho ảnh: mỗi người chỉ được tải lên thư mục `<user_id>/` của mình; ai cũng xem được ảnh.
 - Supabase publishable key được thiết kế để công khai; secret key không bao giờ nằm trong code frontend hay trên GitHub (nếu bị dùng từ trình duyệt, Supabase tự từ chối).
-- Key Google: giới hạn theo domain (domain thật và `localhost`), chỉ cho dùng Maps JavaScript API và Places API.
 - Tài khoản Supabase và Google Cloud của nhóm bật xác thực 2 bước.
 
-**Điều khoản Google Maps Platform**
+**Điều khoản nền bản đồ và Google Maps**
 
-Nhóm cần đọc bản gốc trước ngày 07/10. Các điểm dưới đây là cách thiết kế để an toàn:
-
-- Điểm Google hiện bên ngoài bản đồ Google (trên trang quán), nên theo chính sách của Places API phải có ghi nguồn: ưu tiên logo Google Maps, chỗ hẹp thì dùng chữ "Google Maps". Người xem phải luôn biết dữ liệu nào đến từ Google Maps.
-- Không lưu điểm Google vào database hay bộ nhớ lâu dài của trình duyệt. Chỉ `place_id` được phép lưu không thời hạn.
-- Không gộp điểm Google với điểm của app, không sao chép hay cào đánh giá trên Google.
-- Nút chỉ đường dùng link Google Maps URLs (`https://www.google.com/maps/dir/?api=1&destination=...`), không tốn phí.
-- Ẩn các điểm của Google trên nền bản đồ bằng tính năng tùy biến phong cách mà Google cung cấp, không phủ lớp che lên bản đồ.
+- Ghi nguồn "OpenFreeMap © OpenMapTiles Data from OpenStreetMap" luôn hiện rõ ở góc trên bản đồ, có link tới trang bản quyền. Góc dưới bị ngăn kéo danh sách che nên không đặt ở đó.
+- Không tải trước hàng loạt ô bản đồ; chỉ tải phần người dùng đang xem. Mức zoom nhỏ nhất là 11 (cỡ một thành phố).
+- App không lấy, không lưu, không sao chép điểm hay đánh giá của Google. Nút chỉ đường và link xem đánh giá dùng Google Maps URLs (`https://www.google.com/maps/dir/?api=1&destination=...`), không tốn phí.
 
 ## 11. Kiểm thử
 
@@ -379,7 +384,7 @@ Phần lớn người dùng sẽ mở app từ bài đăng trên fanpage, tức 
 - [ ] Đăng nhập bằng mã email ngay trong trình duyệt của Facebook.
 - [ ] Viết đánh giá khi đang ở quán thì gửi được; ở nhà thì bị từ chối kèm lời giải thích.
 - [ ] Tải ảnh 8 MB chụp từ iPhone: file lưu trên Storage dưới 300 KB và không còn EXIF.
-- [ ] Tắt key Google (hoặc chặn domain): app chuyển sang chế độ danh sách, không trắng trang.
+- [ ] Chặn máy chủ nền bản đồ (DevTools → Network request blocking): sau 8 giây app chuyển sang chế độ danh sách, không trắng trang.
 - [ ] Tải ảnh từ iPhone: file lưu là JPEG (không phải PNG mang đuôi `.webp`).
 - [ ] Dùng publishable key gọi API xóa đánh giá của người khác: bị từ chối.
 - [ ] Lighthouse mobile đạt từ 90 ở cả 4 mục.
@@ -462,8 +467,8 @@ Rủi ro lớn nhất là app ngừng chạy giữa mùa thi, vì theo thể l�
 
 | Rủi ro | Dấu hiệu | Xử lý |
 | --- | --- | --- |
-| Nhóm không có thẻ để mở billing Google Cloud | Biết ngay ngày 05/10 | Đổi sang Leaflet và nền bản đồ miễn phí có ghi nguồn (ví dụ CARTO Voyager trên dữ liệu OpenStreetMap). Ghim, biểu tượng và luồng giữ nguyên. Bỏ điểm Google, thay bằng link "Xem trên Google Maps" |
-| Hết hạn mức Google khi bài được chia sẻ mạnh | Console báo chạm giới hạn ngày | Giới hạn lượt gọi đã chặn chi tiêu. App tự chuyển sang chế độ danh sách và ẩn điểm Google |
+| **Đã xảy ra (06/10):** không có thẻ để mở billing Google Cloud | Biết ngay ngày 05/10 | Đã đổi sang bản đồ tự vẽ kiểu chibi từ dữ liệu OpenFreeMap (miễn phí, không key). Ghim, biểu tượng và luồng giữ nguyên. Bỏ điểm Google, thay bằng link "Xem đánh giá trên Google Maps" |
+| Máy chủ bản đồ bị chặn hoặc quá tải khi bài được chia sẻ mạnh | Bản đồ trống, app tự chuyển sang danh sách | OpenFreeMap không giới hạn lượt; nếu bị chặn, đổi nguồn dữ liệu trong `map.js` |
 | Email mã đăng nhập không tới | Người ngoài nhóm báo không nhận được mã | Email mặc định của Supabase chỉ gửi tới thành viên nhóm (2 email/giờ), nên SMTP riêng qua Resend hoặc Brevo là việc **bắt buộc** của ngày 07/10, không phải dự phòng. Sau khi cấu hình, nâng giới hạn gửi email trong Supabase Auth và gửi thử tới Gmail, Outlook của người ngoài nhóm |
 | Supabase đổi hệ thống key | Hướng dẫn trên mạng nói "anon key" nhưng dashboard không có | Dùng publishable key (`sb_publishable_…`) ở mọi chỗ tài liệu cũ nói anon key |
 | Ảnh hoặc lời lẽ xấu lọt lên đúng lúc BTC chấm | Có báo cáo, hoặc phát hiện khi duyệt | Hàng chờ ảnh cho tài khoản mới, tự ẩn khi đủ 3 báo cáo, duyệt 2 lần mỗi ngày |
@@ -476,8 +481,8 @@ Rủi ro lớn nhất là app ngừng chạy giữa mùa thi, vì theo thể l�
 
 | Câu hỏi | Trạng thái | Đáp án |
 | --- | --- | --- |
-| Thành phố nào, những cụm trường nào? | Đã trả lời | *Cần ghi vào đây* |
-| Nhóm có thẻ để mở billing Google Cloud không? (quyết định dùng Google Maps hay Leaflet) | Đã trả lời | *Cần ghi vào đây.* Phương án kỹ thuật tạm giả định là có, dùng Google Maps |
+| Thành phố nào, những cụm trường nào? | Đã trả lời | Hà Nội và TP. Hồ Chí Minh (chốt 06/10/2026). Cụm trường: *cần ghi vào đây* |
+| Nhóm có thẻ để mở billing Google Cloud không? (quyết định dùng Google Maps hay Leaflet) | Đã trả lời | Không có thẻ (06/10/2026): dùng Leaflet, tự vẽ bản đồ chibi từ dữ liệu OpenFreeMap |
 | Nhóm quen React hay JavaScript thuần? | Đã trả lời | *Cần ghi vào đây.* Phương án kỹ thuật tạm giả định là JavaScript thuần |
 | Tên chính thức có giữ "Quán Quen" và linh vật "Bé Bao" không? | Chưa trả lời | |
 | Giữ ngưỡng 50k, hay đổi theo mặt bằng giá của thành phố đã chọn? | Chưa trả lời | |
@@ -494,7 +499,6 @@ Thể lệ cuộc thi "From Idea to Impact" do nhóm cung cấp. Các con số v
 - Giới hạn của email mặc định trong Supabase: [Custom SMTP](https://supabase.com/docs/guides/auth/auth-smtp).
 - Gói miễn phí của Resend: [Resend pricing](https://resend.com/pricing). UptimeRobot không có header tùy chỉnh ở gói miễn phí: [UptimeRobot pricing](https://uptimerobot.com/pricing/).
 - Safari không xuất WebP qua canvas: [Can I use: toBlob webp](https://caniuse.com/mdn-api_htmlcanvaselement_toblob_type_parameter_webp).
-- Fluent Emoji, giấy phép MIT: [microsoft/fluentui-emoji](https://github.com/microsoft/fluentui-emoji).
 - ISO/IEC 25010:2023: [arc42 quality model](https://quality.arc42.org/standards/iso-25010).
 - Luật Bảo vệ dữ liệu cá nhân 2025 và Nghị định 356/2025/NĐ-CP: [LuatVietnam](https://luatvietnam.vn/tin-van-ban-moi/da-co-nghi-dinh-356-huong-dan-luat-bao-ve-du-lieu-ca-nhan-2025-186-106267-article.html).
 

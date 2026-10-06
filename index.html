@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#FFF8EF" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1F1A17" media="(prefers-color-scheme: dark)">
+  <title>Quán Quen · Ăn ngon dưới 50k quanh trường</title>
+  <meta name="description" content="Bản đồ quán ăn ngon dưới 50k quanh trường, do sinh viên chấm điểm. Phải check-in tại quán mới được đánh giá. Giá là giá người ăn thật đã trả.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Quán Quen · Ăn ngon dưới 50k quanh trường">
+  <meta property="og:description" content="Do sinh viên chấm điểm. Phải check-in tại quán mới được đánh giá. Giá thật, ảnh thật.">
+  <meta property="og:url" content="%VITE_SITE_URL%/">
+  <meta property="og:image" content="%VITE_SITE_URL%/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/icons/bebao-vui.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&display=swap">
+  <script type="module" src="/src/main.js"></script>
+</head>
+<body>
+  <a class="skip" href="#list">Bỏ qua bản đồ, tới danh sách quán</a>
+
+  <section id="home">
+    <header class="bar">
+      <a href="/" class="logo" aria-label="Quán Quen, trang chủ">
+        <img src="/icons/bebao-vui.svg" width="36" height="36" alt="">
+        <span>Quán Quen</span>
+      </a>
+      <input type="search" id="q" class="search" placeholder="Tìm quán hoặc món, vd: bún chả" aria-label="Tìm quán hoặc món" autocomplete="off" enterkeyhint="search">
+      <details class="menu">
+        <summary aria-label="Mở menu">☰</summary>
+        <nav>
+          <a href="/de-xuat">Đề xuất quán mới</a>
+          <a href="/cua-toi">Của tôi</a>
+          <a href="/gioi-thieu">Về dự án</a>
+          <!-- CẦN ĐIỀN: link bài dự thi trên fanpage -->
+          <a href="https://www.facebook.com/" target="_blank" rel="noopener" class="fanpage">Chia sẻ Quán Quen<small>Nhớ follow fanpage nhé</small></a>
+        </nav>
+      </details>
+    </header>
+    <div class="filters" id="filters" role="group" aria-label="Bộ lọc">
+      <select id="area" class="chip" aria-label="Chọn cụm trường"></select>
+    </div>
+    <div id="map" role="region" aria-label="Bản đồ quán ăn"></div>
+    <button type="button" id="locate" class="fab" aria-label="Vị trí của tôi">◎</button>
+    <div id="quick" class="quick" hidden></div>
+    <section id="sheet" class="sheet" aria-label="Danh sách quán">
+      <button type="button" id="sheet-toggle" class="sheet-handle" aria-expanded="false" aria-controls="list">
+        <span id="sheet-title">Đang tìm quán ngon…</span>
+      </button>
+      <div class="sheet-tools">
+        <span id="saved-at" class="muted" hidden></span>
+        <label class="sort">Xếp theo
+          <select id="sort">
+            <option value="dist">gần nhất</option>
+            <option value="score">điểm cao</option>
+            <option value="price">rẻ nhất</option>
+          </select>
+        </label>
+        <button type="button" id="view-toggle" class="btn-ghost">Danh sách</button>
+      </div>
+      <ul id="list" class="places" tabindex="-1"></ul>
+    </section>
+  </section>
+
+  <main id="page" hidden></main>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <template id="about">
+    <article class="prose">
+      <h1>Về Quán Quen</h1>
+      <p>Quán Quen là bản đồ các quán ăn ngon dưới 50k quanh trường, do chính sinh viên chấm điểm. Quán ngon vì người ăn thật nói ngon, không phải vì được quảng cáo.</p>
+
+      <h2>Cách tính điểm</h2>
+      <ul>
+        <li><b>Điểm Quán Quen</b> là trung bình số sao của các đánh giá đang hiện. Quán có dưới 3 đánh giá thì hiện chữ “Mới” thay cho điểm.</li>
+        <li>App không lấy hay gộp điểm của Google. Muốn xem thêm đánh giá trên Google, bấm link “Xem đánh giá trên Google Maps” ở trang quán.</li>
+        <li>Đánh giá có nhãn “Mẫu” chỉ để minh họa, không được tính vào điểm hay giá.</li>
+      </ul>
+
+      <h2>Giá thật</h2>
+      <p>Mỗi người viết đánh giá báo lại số tiền đã trả. “Thường 35k” là giá ở giữa (trung vị) của tất cả các lần báo, nên một giá bất thường không kéo lệch được. Khoảng “từ… đến…” là nơi một nửa số người đã trả. Quán có dưới 3 lượt báo giá thì hiện khoảng giá nhóm ghi lúc đi khảo sát, kèm chữ “giá tham khảo”.</p>
+
+      <h2>Vì sao phải check-in</h2>
+      <p>Bạn chỉ viết được đánh giá khi đang ở trong vòng 150 m quanh quán. Đây là xác thực cơ bản: vị trí gửi từ trình duyệt vẫn có thể bị làm giả, nhưng đủ để chặn người ngồi nhà viết bừa. App không lưu vị trí của bạn, chỉ lưu khoảng cách tới quán.</p>
+
+      <h2>Giữ nội dung sạch</h2>
+      <ul>
+        <li>Mỗi người đánh giá mỗi quán một lần mỗi ngày, tối đa 10 đánh giá mỗi ngày.</li>
+        <li>Nhận xét không được có link hay số điện thoại, để không ai dùng app quảng cáo.</li>
+        <li>Ảnh của tài khoản mới chờ nhóm duyệt trước khi hiện.</li>
+        <li>Nội dung bị 3 người khác nhau báo cáo sẽ tự ẩn. Nhóm duyệt lúc 12:00 và 21:00 mỗi ngày.</li>
+        <li>Huy hiệu cạnh tên: <b>Mới đến</b> (1–4 đánh giá), <b>Hàng xóm</b> (5–14), <b>Thổ địa</b> (từ 15).</li>
+      </ul>
+
+      <h2>Cam kết</h2>
+      <p>Quán Quen không nhận tiền từ quán, không có quảng cáo, không có chỗ trả tiền để lên đầu. Đánh giá chỉ nói về trải nghiệm ăn uống, không thay cơ quan chức năng đánh giá vệ sinh an toàn thực phẩm. Chủ quán thấy đánh giá sai sự thật có thể bấm “Báo cáo” hoặc liên hệ nhóm, nhóm trả lời trong 24 giờ.</p>
+
+      <h2>Nguồn dữ liệu</h2>
+      <ul>
+        <li>Tên, vị trí, giờ mở cửa của quán: nhóm tự đi khảo sát và bạn đọc đề xuất.</li>
+        <li>Bản đồ: dữ liệu © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> qua <a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> và OpenMapTiles, nhóm tự vẽ lại kiểu chibi bằng <a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a> và protomaps-leaflet. Nút “Chỉ đường” mở Google Maps.</li>
+        <li>Địa danh nổi tiếng: vị trí từ <a href="https://www.wikidata.org" target="_blank" rel="noopener">Wikidata</a>, giới thiệu từ Wikipedia tiếng Việt (CC BY-SA 4.0), ảnh thật từ <a href="https://commons.wikimedia.org" target="_blank" rel="noopener">Wikimedia Commons</a>; tên tác giả và giấy phép ghi ngay dưới mỗi ảnh.</li>
+        <li>Biểu tượng món ăn, địa danh và linh vật Bé Bao: nhóm tự vẽ.</li>
+        <li>Font chữ: Be Vietnam Pro, giấy phép SIL Open Font License.</li>
+      </ul>
+
+      <details>
+        <summary>Chất lượng theo ISO/IEC 25010:2023</summary>
+        <ul>
+          <li><b>Phù hợp chức năng:</b> đủ vòng tìm quán, xem, đi, đánh giá; giá thật là trung vị.</li>
+          <li><b>Hiệu năng:</b> ảnh nén sẵn 2 cỡ, chỉ tải khi cuộn tới; bản đồ nạp sau danh sách.</li>
+          <li><b>Tương thích:</b> chạy trên Chrome Android, Safari iOS, trình duyệt trong Facebook và Zalo.</li>
+          <li><b>Khả năng tương tác:</b> xem không cần đăng nhập, có chế độ danh sách, chữ tương phản tối thiểu 4,5:1.</li>
+          <li><b>Tin cậy:</b> bản đồ lỗi thì chuyển sang danh sách; mất mạng thì hiện dữ liệu đã lưu kèm giờ lưu.</li>
+          <li><b>Bảo mật:</b> phân quyền theo dòng (Row Level Security) trên mọi bảng; mọi quy tắc nằm trong database.</li>
+          <li><b>Bảo trì:</b> khoảng 6 file JS, toàn bộ cấu trúc database trong một file.</li>
+          <li><b>Linh hoạt:</b> thêm thành phố hoặc cụm trường chỉ cần thêm dữ liệu, không sửa code.</li>
+          <li><b>An toàn:</b> không lưu vị trí người dùng, xóa thông tin vị trí trong ảnh, tự ẩn nội dung bị báo cáo.</li>
+        </ul>
+      </details>
+
+      <h2 id="rieng-tu">Chính sách quyền riêng tư</h2>
+      <p>App chỉ thu những gì cần để hiện một đánh giá, và bạn xóa được tất cả bằng một nút.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Thu gì</th><th>Để làm gì</th><th>Ai thấy</th></tr></thead>
+          <tbody>
+            <tr><td>Email</td><td>Đăng nhập</td><td>Chỉ bạn và hệ thống đăng nhập</td></tr>
+            <tr><td>Tên hiển thị</td><td>Hiện cạnh đánh giá</td><td>Mọi người</td></tr>
+            <tr><td>Đánh giá và ảnh</td><td>Nội dung của app</td><td>Mọi người</td></tr>
+            <tr><td>Khoảng cách lúc check-in</td><td>Xác nhận bạn đã ở quán</td><td>Chỉ nhóm</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><b>Không thu:</b> tọa độ của bạn, lịch sử duyệt web, danh bạ. App không dùng công cụ phân tích hay quảng cáo của bên thứ ba.</p>
+      <p><b>Ảnh:</b> trước khi tải lên, app vẽ lại ảnh ngay trên máy bạn nên mọi thông tin đi kèm ảnh (gồm vị trí GPS chụp ảnh) bị xóa. Ảnh chỉ dùng để hiện trong trang quán. Bạn xóa ảnh bằng cách xóa đánh giá chứa nó trong mục “Của tôi”.</p>
+      <p><b>Lưu ở đâu:</b> dữ liệu nằm trên Supabase (cơ sở dữ liệu và kho ảnh). Trình duyệt của bạn lưu tạm danh sách quán để xem được khi mất mạng, và lưu phiên đăng nhập. Bản đồ tải từ OpenFreeMap, ảnh địa danh tải từ Wikimedia; app không gửi thông tin gì của bạn cho hai nơi này.</p>
+      <p><b>Đồng ý và rút lại:</b> khi đăng nhập, bạn đồng ý cho app xử lý các dữ liệu trên. Bạn rút lại sự đồng ý bất cứ lúc nào bằng nút “Xóa tài khoản” trong mục “Của tôi”: mọi đánh giá, ảnh và email của bạn bị xóa vĩnh viễn.</p>
+      <p><b>Căn cứ pháp lý:</b> Luật Bảo vệ dữ liệu cá nhân 2025 và Nghị định 356/2025/NĐ-CP.</p>
+
+      <h2>Nhóm thực hiện</h2>
+      <!-- CẦN ĐIỀN: tên 3 thành viên, link fanpage, email liên hệ -->
+      <p>Bài dự thi “From Idea to Impact” của CLB FPC. Nhóm 3 người: [CẦN ĐIỀN tên thành viên].</p>
+      <p>Fanpage: <a href="https://www.facebook.com/" target="_blank" rel="noopener">[CẦN ĐIỀN link fanpage]</a> · Báo lỗi hoặc liên hệ: <a href="mailto:example@example.com">[CẦN ĐIỀN email]</a></p>
+    </article>
+  </template>
+</body>
+</html>

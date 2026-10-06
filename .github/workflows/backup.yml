@@ -1,0 +1,16 @@
+# Sao lưu dữ liệu mỗi đêm. Đồng thời là một lượt truy cập database mỗi ngày,
+# nên dự án Supabase miễn phí không bị tạm dừng kể cả khi UptimeRobot hỏng.
+# Cần secret SUPABASE_DB_URL (Supabase → Connect → Session pooler, có mật khẩu database).
+name: backup
+on:
+  schedule: [{ cron: '0 17 * * *' }]   # 00:00 giờ Việt Nam
+  workflow_dispatch: {}
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: supabase/setup-cli@v1
+      - run: supabase db dump --db-url "$DB_URL" --data-only --schema public -f data.sql
+        env: { DB_URL: '${{ secrets.SUPABASE_DB_URL }}' }
+      - uses: actions/upload-artifact@v4
+        with: { name: backup, path: data.sql, retention-days: 14 }

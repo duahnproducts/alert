@@ -2,17 +2,17 @@
 
 Viết ngày 05/10/2026, dựa trên [Quán Quen: Thiết kế sản phẩm](quan-quen-thiet-ke.md) (gọi tắt là "bản thiết kế", trích theo số mục). Tài liệu này trả lời câu "làm bằng gì, cụ thể ra sao" để nhóm 3 người code được ngay từ 06/10. Chỗ nào bổ sung hoặc khác bản thiết kế đều được ghi ở mục 10. Các con số về hạn mức, giá và hành vi của dịch vụ đã được kiểm ngày 05/10/2026; nguồn ở mục 12.
 
-**Giả định.** Bản thiết kế đã đánh dấu xong hai câu hỏi mở nhưng chưa ghi câu trả lời. Tài liệu này giả định: (1) nhóm có thẻ, dùng **Google Maps**; (2) dùng **JavaScript thuần**. Nếu khác, xem mục 11 (phương án Leaflet). Nếu nhóm quen React thì chỉ đổi mục 3, mọi phần khác giữ nguyên.
+**Đã chốt 06/10/2026:** (1) không có thẻ để mở thanh toán Google Cloud, nên bản đồ dùng **Leaflet** (mục 11), không dùng Google Maps; (2) dùng **JavaScript thuần**. Google Cloud chỉ còn dùng để tạo OAuth client cho nút "Tiếp tục với Google" (miễn phí, không cần thẻ). Các mục bên dưới đã sửa theo quyết định này.
 
 ## 1. Tóm tắt quyết định
 
 | Lớp | Chọn | Ghi chú |
 | --- | --- | --- |
 | Frontend | Vite + JavaScript thuần, ES modules | Build ra file tĩnh; không framework, không thư viện UI |
-| Phụ thuộc chạy trên trình duyệt | `@supabase/supabase-js`, `@googlemaps/markerclusterer` | Chỉ hai gói. Maps JS nạp bằng đoạn bootstrap chính thức của Google, không cần gói loader |
+| Phụ thuộc chạy trên trình duyệt | `@supabase/supabase-js`, `leaflet`, `protomaps-leaflet` | Ba gói. Hai gói bản đồ tải sau khi trang đã hiện; gom cụm tự viết, không thêm `leaflet.markercluster` |
 | Điều hướng | History API (`/quan/12`), Vercel rewrite về `index.html` | Link chia sẻ đẹp, không đụng hash của OAuth |
-| Bản đồ | Maps JS API, `AdvancedMarkerElement`, Map ID có phong cách sáng/tối | Ẩn POI bằng phong cách trên cloud |
-| Điểm Google | `Place.fetchFields(['rating','userRatingCount','googleMapsURI'])` | Gọi từ trình duyệt, không lưu |
+| Bản đồ | Leaflet 1.9 + `protomaps-leaflet` tự vẽ kiểu chibi từ OpenFreeMap (dữ liệu vector, miễn phí, không key, không giới hạn lượt) | Không dùng `openstreetmap.org`: không kết nối được từ Việt Nam |
+| Google Maps | Chỉ link Google Maps URLs: "Chỉ đường" và "Xem đánh giá trên Google Maps" | Không lấy điểm Google, không cần key |
 | Dữ liệu | Supabase Postgres, 6 bảng + 3 view + 4 hàm | Mọi quy tắc tin cậy nằm trong database |
 | Tài khoản | Supabase Auth: Google OAuth (PKCE) và mã 6 số qua email | **Bắt buộc** SMTP riêng (mục 5.4) |
 | Ảnh | Nén trên máy bằng canvas, 2 cỡ (1280 px và 400 px), WebP hoặc JPEG | Supabase Storage, bucket công khai |
@@ -30,7 +30,7 @@ Nguyên tắc xuyên suốt: **frontend chỉ hiển thị, database quyết đ�
 Điện thoại (Chrome, Safari, trình duyệt trong Facebook/Zalo)
   └─ Web app tĩnh (Vite build, ~6 file JS)
        ├─ HTML/JS/CSS ───────────────> Vercel (CDN, rewrite mọi đường dẫn về index.html)
-       ├─ Maps JS + Places ──────────> Google Maps Platform (key khóa theo domain, giới hạn lượt/ngày)
+       ├─ Dữ liệu bản đồ (vector) ───> OpenFreeMap; protomaps-leaflet vẽ kiểu chibi, Leaflet vẽ ghim, gom cụm trên máy
        ├─ REST/RPC (publishable key + JWT) ─> Supabase PostgREST ──> Postgres (RLS, view, submit_review, trigger)
        ├─ Đăng nhập ─────────────────> Supabase Auth ──> Google OAuth / SMTP riêng (Resend hoặc Brevo)
        └─ Tải ảnh lên/xuống ─────────> Supabase Storage (bucket "photos", thư mục theo user_id)
@@ -50,11 +50,11 @@ quan-quen/
   index.html            khung trang, thẻ Open Graph, preconnect font
   vercel.json           rewrite + header bảo mật
   package.json          scripts: dev, build, test
-  .env.local            (không commit) VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY, VITE_GMAPS_KEY, VITE_GMAPS_MAP_ID
+  .env.local            (không commit) VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY, VITE_SITE_URL
   src/
     main.js             router, trạng thái chung, bộ lọc, chế độ danh sách, ngăn kéo
-    map.js              nạp Maps JS, ghim, gom cụm, chuyển sang danh sách khi lỗi
-    place.js            trang quán, điểm Google, lưới ảnh, báo cáo
+    map.js              nạp Leaflet, nền bản đồ, ghim, gom cụm, chuyển sang danh sách khi lỗi
+    place.js            trang quán, link Google Maps, lưới ảnh, báo cáo
     review.js           check-in, nén ảnh, gửi đánh giá, đề xuất quán
     auth.js             tấm đăng nhập, phát hiện trình duyệt trong app, trang Của tôi
     supabase.js         client và mọi truy vấn
@@ -62,7 +62,8 @@ quan-quen/
     util.test.js        test cho util.js (node --test)
     style.css
   public/
-    icons/              7 biểu tượng món (WebP 64 px, chuyển từ Fluent Emoji 3D) + 4 biểu cảm Bé Bao (SVG)
+    icons/              bộ icon tự vẽ (SVG): 7 biểu tượng món, 17 biểu tượng địa danh `lm-*.svg`, 4 biểu cảm Bé Bao
+    covers/             7 tranh minh họa quán theo loại món (SVG 640×320, mỗi tranh dưới 5 KB), làm ảnh bìa khi quán chưa có ảnh thật
     og.png              ảnh xem trước 1200×630 khi dán link
   supabase/
     schema.sql          bảng, view, RLS, hàm, trigger, bucket (chạy lại được từ đầu)
@@ -70,7 +71,7 @@ quan-quen/
   .github/workflows/backup.yml
 ```
 
-`map.js` là file duy nhất biết đến Google Maps. Nếu phải đổi sang Leaflet thì chỉ viết lại file này.
+`map.js` là file duy nhất biết đến Leaflet và nguồn ô bản đồ. Đổi thư viện hoặc nguồn ô bản đồ thì chỉ sửa file này.
 
 ### 3.2 Điều hướng
 
@@ -95,7 +96,7 @@ Router khoảng 30 dòng trong `main.js`: một mảng `[regex, hàm render]`, `
 }
 ```
 
-Vercel ưu tiên file tĩnh có thật trước khi rewrite, nên `/assets/*` và `/icons/*` vẫn được phục vụ bình thường. `Referrer-Policy` không được đặt thành `no-referrer`, vì key Google kiểm tra domain qua header Referer.
+Vercel ưu tiên file tĩnh có thật trước khi rewrite, nên `/assets/*` và `/icons/*` vẫn được phục vụ bình thường. `Referrer-Policy` không được đặt thành `no-referrer`: giữ Referer để máy chủ bản đồ biết trang nào đang dùng.
 
 ### 3.3 Tải và lọc dữ liệu
 
@@ -140,26 +141,20 @@ Trong Google Sheet, nhóm gõ JSON vào một ô. Khi xuất CSV, Sheets tự th
 
 ### 3.5 Bản đồ (`map.js`)
 
-- Nạp Maps JS bằng [đoạn bootstrap `importLibrary`](https://developers.google.com/maps/documentation/javascript/load-maps-js-api) dán vào `index.html`, chỉ gọi sau khi khung trang và danh sách đã vẽ xong. Bản đồ là thứ nặng nhất, không được chặn lần vẽ đầu.
-- Tùy chọn bản đồ: `mapId`, `colorScheme: FOLLOW_SYSTEM` (dùng phong cách tối đã cấu hình cùng Map ID), `disableDefaultUI: true`, `zoomControl: true`, `clickableIcons: false`, `gestureHandling: 'greedy'` (một ngón tay kéo được bản đồ toàn màn hình).
-- Mỗi quán là một `AdvancedMarkerElement`. `content` là một `div` dựng từ SVG ghim và biểu tượng món, có `title` là nhãn đọc màn hình ("Bún chả Hương, 35 nghìn, 4,6 sao, cách 300 mét"). Vương miện, trạng thái mờ và mặt trăng là class CSS. Hiệu ứng nảy dùng `@keyframes` và bị tắt trong `@media (prefers-reduced-motion: reduce)`.
-- Gom cụm: `MarkerClusterer` với `renderer` tự viết, trả về một marker tròn màu kem có số quán và biểu tượng loại món nhiều nhất trong cụm.
-- Khi lọc: gọi `clusterer.clearMarkers()` rồi `addMarkers(lọc)`, không tạo lại marker.
-- **Chuyển sang danh sách khi lỗi:** gán `window.gm_authFailure` (Google gọi hàm này khi key sai hoặc domain bị chặn), bắt lỗi của `importLibrary`, và đặt hẹn giờ 8 giây cho sự kiện `tilesloaded`. Gặp một trong ba trường hợp thì chuyển hẳn sang chế độ danh sách, kèm dòng "Bản đồ đang nghỉ, xem danh sách nhé".
+- Leaflet 1.9 (bản ESM `leaflet/dist/leaflet-src.esm.js` và `leaflet.css`) và `protomaps-leaflet` nạp bằng `import()` động, chỉ sau khi khung trang và danh sách đã vẽ xong (`requestIdleCallback`). `protomaps-leaflet` dùng biến toàn cục `L`, nên gán `window.L` trước khi nạp nó.
+- Bản đồ kiểu chibi: lấy TileJSON `https://tiles.openfreemap.org/planet` (đường dẫn ô dữ liệu đổi theo mỗi bản cập nhật), rồi `protomaps-leaflet` vẽ từng ô lên canvas theo `paintRules` và `labelRules` trong `map.js`: nền kem, khuôn viên trường màu lavender, công viên xanh mint, nước xanh baby có viền, nhà màu đào (từ zoom 16), đường trắng dày bo tròn có viền màu theo cấp, tên đường và tên khu bằng font Be Vietnam Pro có viền trắng, tên trường đại học màu tím. Chế độ tối dùng bảng màu "ban đêm" riêng (`PALETTE.dark`), đổi ngay khi máy đổi chế độ. Không vẽ biểu tượng cửa hàng của bản đồ, để bản đồ không quảng cáo quán khác.
+- Ghi nguồn đặt ở góc trên bên trái (góc dưới bị ngăn kéo danh sách che). Nút zoom ở góc trên bên phải. `minZoom: 11` để không kéo ra ngoài cỡ một thành phố.
+- Mỗi quán là một `L.marker` với `L.divIcon({ html: <div class="pin">…</div> })`, dựng bằng `createElement` (không dùng chuỗi HTML). `title` và `aria-label` là nhãn đọc màn hình ("Bún chả Hương, 35 nghìn, 4,6 sao, cách 300 mét"). Vương miện, trạng thái mờ và mặt trăng là class CSS. Hiệu ứng nảy dùng `@keyframes` và bị tắt trong `@media (prefers-reduced-motion: reduce)`.
+- Gom cụm tự viết, khoảng 25 dòng: ở mỗi mức zoom chia màn hình thành ô lưới 64 px, các quán cùng ô gộp thành một bong bóng mây có biểu tượng loại món nhiều nhất và số quán trong huy hiệu hồng. Bấm cụm thì phóng tới vừa các quán trong cụm. Từ zoom 18 trở lên không gộp nữa. Đủ cho vài trăm quán; nhiều hơn thì dùng `leaflet.markercluster`.
+- Ghim chibi: đầu tròn phồng màu theo loại món, viền trắng dày, đuôi nhỏ, bóng dưới chân, lắc lư nhẹ lệch nhịp nhau; quán điểm cao có vương miện, quán đang đóng nhạt màu kèm 💤; ghim được chọn nảy lên. Vị trí của bạn là Bé Bao nhỏ có vòng sóng. Mọi chuyển động tắt khi máy bật giảm chuyển động.
+- Khi lọc: dùng lại marker đã tạo, chỉ tính lại cụm.
+- CSS của Leaflet ép `width: auto` cho ảnh trong lớp ghim, nên cỡ biểu tượng phải đặt bằng selector mạnh hơn (`.leaflet-container .qq-icon .pin img`). `#map` có `isolation: isolate` để các lớp của Leaflet (z-index 400 đến 1000) không đè lên ngăn kéo danh sách.
+- **Chuyển sang danh sách khi lỗi:** không tải được thư viện, hoặc sau 8 giây chưa tải được ô bản đồ nào trong khi khung bản đồ đang hiện. Gặp một trong hai trường hợp thì chuyển hẳn sang chế độ danh sách, kèm dòng "Bản đồ đang nghỉ, xem danh sách nhé".
 
 ### 3.6 Trang quán (`place.js`)
 
 - Dữ liệu chính lấy từ mảng đã tải. Chỉ đánh giá và ảnh cần gọi thêm: `reviews_public` và `photos` theo `place_id`, 20 dòng mới nhất.
-- Điểm Google:
-
-```js
-const { Place } = await google.maps.importLibrary('places')
-const p = new Place({ id: place.google_place_id })
-await p.fetchFields({ fields: ['rating', 'userRatingCount', 'googleMapsURI'] })
-```
-
-  Kết quả chỉ giữ trong một biến `Map` của tab đang mở, không ghi vào `localStorage`, vì chính sách Places chỉ cho lưu lâu dài `place_id`. Lỗi hoặc hết hạn mức thì ẩn dòng điểm Google, thay bằng link `https://www.google.com/maps/search/?api=1&query=Google&query_place_id=<place_id>`.
-- Ghi nguồn: dòng điểm nằm ngoài bản đồ Google nên bắt buộc có logo Google Maps, hoặc chữ "Google Maps" nếu chỗ hẹp, ví dụ "4,3★ (1.204) · Google Maps". Request này tính giá theo nhóm Enterprise (do có `rating`, `userRatingCount`), nên không yêu cầu thêm trường nào khác để tránh tốn thêm.
+- Không lấy điểm Google. Dòng dưới điểm Quán Quen là link "Xem đánh giá trên Google Maps": `https://www.google.com/maps/search/?api=1&query=<tên quán>&query_place_id=<place_id>` (không có `place_id` thì dùng tọa độ).
 - Chỉ đường: `https://www.google.com/maps/dir/?api=1&destination=<lat>,<lng>&destination_place_id=<place_id>`.
 - Chia sẻ: `navigator.share({ title, url })`, nếu trình duyệt không có thì sao chép link bằng `navigator.clipboard.writeText` và hiện thông báo "Đã chép link".
 - Ảnh: `<img loading="lazy" decoding="async" width height alt>`. Lưới ảnh dùng bản 400 px, bấm vào mới mở bản 1280 px.
@@ -209,14 +204,14 @@ export const isInAppBrowser = ua => /FBAN|FBAV|FB_IAB|Instagram|Zalo/i.test(ua)
 
 | Việc | Lý do |
 | --- | --- |
-| Vẽ khung trang, bộ lọc và danh sách từ dữ liệu đã lưu trước, nạp Maps JS sau | Maps JS là phần nặng nhất và nằm ngoài tầm kiểm soát; không để nó quyết định LCP |
+| Vẽ khung trang, bộ lọc và danh sách từ dữ liệu đã lưu trước, nạp thư viện bản đồ sau (`requestIdleCallback`) | Hai gói bản đồ (khoảng 86 KB nén cả CSS) và dữ liệu bản đồ là phần nặng nhất; không để chúng quyết định LCP |
 | Be Vietnam Pro qua Google Fonts với `display=swap`, `preconnect` tới `fonts.gstatic.com`, chỉ 3 độ đậm | Tránh chữ trống khi tải |
 | Tất cả `<img>` có `width`, `height`, `loading="lazy"` | Không bị CLS, không tải ảnh chưa cuộn tới |
 | Ngân sách: JS + CSS của app dưới 150 KB (supabase-js khoảng 45 KB nén) | Kiểm bằng `vite build`, Vite in kích thước từng file |
-| Biểu tượng món là WebP 64 px (khoảng 3 KB mỗi hình), linh vật là SVG dưới 10 KB | Fluent Emoji kiểu 3D là PNG 256 px (khoảng 28 KB), để nguyên thì 7 hình đã gần 200 KB |
+| Biểu tượng món, địa danh và linh vật là SVG tự vẽ (1–2 KB mỗi hình, linh vật dưới 1 KB) | SVG nét ở mọi cỡ màn hình; cả bộ 28 hình chưa tới 50 KB, ảnh bitmap 3D thì riêng 7 hình đã gần 200 KB |
 | Lưới ảnh và danh sách chỉ dùng ảnh 400 px | Giữ dưới hạn mức 5 GB băng thông của Supabase gói miễn phí |
 
-Chạy Lighthouse ngay ngày 07/10 trên bản deploy đầu tiên, không đợi đến 11/10. Nếu Maps JS kéo điểm Performance xuống dưới 90, cách xử lý là chỉ nạp bản đồ khi người dùng chạm vào vùng bản đồ hoặc sau `requestIdleCallback`.
+Chạy Lighthouse ngay ngày 07/10 trên bản deploy đầu tiên, không đợi đến 11/10. Nếu bản đồ kéo điểm Performance xuống dưới 90, cách xử lý là chỉ nạp bản đồ khi người dùng chạm vào vùng bản đồ.
 
 ### 3.10 Trợ năng và giao diện
 
@@ -224,6 +219,15 @@ Chạy Lighthouse ngay ngày 07/10 trên bản deploy đầu tiên, không đợ
 - Ngăn kéo và tấm đăng nhập dùng `<dialog>` để có sẵn bẫy focus và phím Esc.
 - Chế độ danh sách là HTML thuần (`<ul>` các `<a href="/quan/12">`), có đủ thông tin như ghim trên bản đồ.
 - **Không bao giờ dùng `innerHTML` với dữ liệu người dùng** (tên, nhận xét, món). Luôn gán qua `textContent`. Đây là lớp chặn XSS chính.
+
+### 3.11 Địa danh nổi tiếng (`scripts/landmarks.mjs`, `public/landmarks.json`)
+
+- Dữ liệu tĩnh, không nằm trong Supabase: `node scripts/landmarks.mjs` (Node 20+, không cần gói nào) chạy một truy vấn SPARQL trên Wikidata cho mỗi thành phố trong mảng `CITIES`, lấy thêm tên tác giả, giấy phép, link ảnh cỡ 960 px từ API của Commons và đoạn giới thiệu 3 câu từ Wikipedia tiếng Việt, rồi ghi `public/landmarks.json` (100 địa danh, khoảng 105 KB, nén còn khoảng 30 KB). Mất khoảng 30 giây.
+- Truy vấn: trong bán kính 10 km quanh tâm thành phố, có ảnh (P18) là file JPEG, có từ 3 bài Wikipedia các thứ tiếng trở lên (`wikibase:sitelinks`, dùng làm thước đo độ nổi tiếng), là lớp con của một trong các loại công trình hoặc nơi chốn (`KINDS`), không phải sân bay, bệnh viện, nhà ga hay trại giam (trừ trại giam đã thành bảo tàng). Đơn vị hành chính bị bỏ trừ khi đồng thời là công trình, thành cổ hay tượng đài (cây phân loại của Wikidata nối "citadel" lên đơn vị hành chính, nên Hoàng thành Thăng Long từng bị bỏ nhầm). Xếp theo số bài viết, lấy 50 mỗi thành phố; `order` là thứ hạng trong thành phố. Tên ưu tiên tên bài Wikipedia tiếng Việt.
+- Loại (`type`) để chọn icon `public/icons/lm-<loại>.svg` (17 icon tự vẽ): hàm `typeOf()` đoán theo tên tiếng Việt trước (mảng `TYPES`, có thứ tự ưu tiên), không khớp thì theo tên lớp tiếng Anh (P31), cuối cùng là `museum` (tòa nhà cổ điển).
+- App: sau khi bản đồ vẽ xong, `main.js` tải `/landmarks.json` và gọi `showLandmarks()` trong `map.js`: ghim vàng hình tòa nhà, không gộp cụm với quán, nằm dưới ghim quán. Chip "Địa danh" bật/tắt lớp này. Để bản đồ không rối, số địa danh hiện theo zoom: zoom 12 trở xuống 5 nơi đầu mỗi thành phố, zoom 13 là 12, zoom 14 là 25, từ zoom 15 hiện hết (`lmLimit` trong `map.js`). Lỗi tải file thì bản đồ vẫn chạy, chỉ thiếu địa danh.
+- Bấm ghim: `openLandmark()` trong `place.js` mở tấm trượt có ảnh thật (chỉ tải lúc này), chip loại địa danh có icon, tên, mô tả, khoảng cách, đoạn giới thiệu, tối đa 3 quán trong vòng 2 km, dòng ghi công "Ảnh: tác giả · giấy phép · Wikimedia Commons. Nội dung: Wikipedia (CC BY-SA 4.0)" có link, và nút "Chỉ đường".
+- Mọi chữ lấy từ Wikidata/Wikipedia đều gán qua `textContent` (hàm `h()`), không qua `innerHTML`; tên tác giả trên Commons là HTML nên script đã bóc thẻ trước khi ghi file.
 
 ## 4. Database (Supabase)
 
@@ -429,14 +433,10 @@ Duyệt bằng cách sửa ô `status` trong Table Editor. Đánh giá mẫu cũ
 
 ## 5. Cấu hình dịch vụ
 
-### 5.1 Google Cloud
+### 5.1 Google Cloud (chỉ cho đăng nhập Google)
 
-- [ ] Bật **Maps JavaScript API** và **Places API (New)**.
-- [ ] **Key prod:** HTTP referrer là `https://<domain-thật>/*`; API restriction chỉ hai API trên.
-- [ ] **Key dev:** referrer là `http://localhost:5173/*`. Dùng key riêng để không phải mở key prod cho localhost.
-- [ ] Quotas: Map loads 300/ngày (miễn phí 10.000/tháng); Place Details 30/ngày (miễn phí 1.000/tháng cho nhóm Enterprise).
-- [ ] Budget alert 1 USD, gửi email cho cả 3 người.
-- [ ] Map Management: tạo Map ID loại JavaScript, Vector. Tạo Map Style có bản sáng và tối, tắt "Points of interest" và "Transit", gắn vào Map ID.
+Không cần thanh toán: Google Cloud chỉ dùng cho đăng nhập Google. Không bật Maps API, không tạo key Maps.
+
 - [ ] OAuth consent screen (trong Console mới nằm ở mục Google Auth Platform: Branding, Audience): loại External, scope `email` và `profile`, rồi ở mục Audience **bấm Publish app (In production)**. Nếu để ở chế độ Testing thì chỉ tài khoản có trong danh sách test user mới đăng nhập được, người ngoài nhóm sẽ bị chặn. Hai scope này không nhạy cảm, nên không phải chờ Google xét duyệt.
 - [ ] OAuth Client ID (Web): redirect URI là `https://<project-ref>.supabase.co/auth/v1/callback`.
 
@@ -453,7 +453,7 @@ Duyệt bằng cách sửa ô `status` trong Table Editor. Đánh giá mẫu cũ
 ### 5.3 Vercel và GitHub
 
 - Repo GitHub để private (chứa dữ liệu sao lưu trong artifact). Nhánh `main` là production; nhánh khác tạo bản preview.
-- Biến môi trường trên Vercel: 4 biến `VITE_*`. Bản preview dùng key Google dev nên bản đồ không hiện và tự chuyển sang danh sách. Chấp nhận được, vì bản preview chỉ để kiểm giao diện và luồng.
+- Biến môi trường trên Vercel: 3 biến `VITE_*`: Supabase URL, publishable key, và `VITE_SITE_URL` (domain thật, để thẻ `og:image` có đường dẫn tuyệt đối cho Facebook). Bản đồ không cần key.
 - Không bao giờ để secret key (`sb_secret_…`) trong repo hay trong biến `VITE_*` (mọi biến `VITE_*` đều lộ ra trình duyệt).
 - Vercel Hobby chỉ dành cho dự án phi thương mại; bài dự thi thỏa điều kiện này.
 
@@ -497,7 +497,7 @@ jobs:
 | Tải file độc hoặc file lớn | Bucket giới hạn loại file và 1 MB; mỗi người chỉ ghi được vào thư mục của mình |
 | Spam đánh giá hoặc đề xuất quán | 1 đánh giá/quán/ngày, 10 đánh giá/ngày, 5 đề xuất/ngày, chặn link và số điện thoại |
 | Ảnh xấu lọt lên | Hàng chờ cho tài khoản mới, tự ẩn khi đủ 3 báo cáo, duyệt 2 lần/ngày |
-| Đốt tiền Google | Key khóa theo domain và API, giới hạn lượt/ngày (đây mới là thứ thật sự chặn chi tiêu) |
+| Máy chủ bản đồ quá tải hoặc ngừng | OpenFreeMap không giới hạn lượt; không tải trước dữ liệu, `minZoom` 11; lỗi thì app tự chuyển sang danh sách; không có dịch vụ nào gắn thẻ nên không thể bị tính tiền |
 | Làm giả GPS | Không chặn được hoàn toàn. Ghi rõ trên trang Về dự án là xác thực cơ bản |
 | Mất dữ liệu | Sao lưu mỗi đêm; `schema.sql` dựng lại được toàn bộ cấu trúc |
 | Mất tài khoản quản trị | Xác thực 2 bước trên Supabase, Google Cloud, Vercel, GitHub |
@@ -532,7 +532,7 @@ Bổ sung cho ma trận thiết bị và buổi thử với sinh viên ở mục
 ## 9. Câu hỏi kỹ thuật cần chốt hôm nay
 
 - [ ] Chọn Resend (cần tên miền) hay Brevo? Câu này quyết định có cần tên miền riêng hay dùng `.vercel.app`.
-- [ ] Tên miền Vercel cụ thể là gì? Cần biết để khóa key Google và điền Redirect URL của Supabase.
+- [ ] Tên miền Vercel cụ thể là gì? Cần biết để điền Redirect URL của Supabase và `VITE_SITE_URL`.
 - [ ] Ai giữ quyền owner của Google Cloud, Supabase, Vercel? Nên có ít nhất 2 người, để một người ốm không làm tắc cả nhóm.
 
 ## 10. Những điểm bổ sung hoặc khác bản thiết kế
@@ -549,24 +549,30 @@ Bổ sung cho ma trận thiết bị và buổi thử với sinh viên ở mục
 | 8 | Ảnh là JPEG trên iOS, WebP ở nơi khác | Safari và mọi trình duyệt trên iOS không xuất được WebP qua canvas (trả PNG mà không báo lỗi); EXIF vẫn bị xóa |
 | 9 | Xóa file ảnh qua Storage API trước khi xóa tài khoản | `on delete cascade` không xóa được file |
 | 10 | Đường dẫn thật (`/quan/12`) + PKCE thay vì hash | Link chia sẻ đẹp hơn, và không xung đột với token OAuth |
-| 11 | Hai key Google (prod và dev) | Không phải mở key prod cho localhost hay các domain preview |
+| 11 | (Bỏ từ 06/10) Hai key Google Maps | Không còn dùng Google Maps |
 | 12 | Sao lưu mỗi đêm bằng GitHub Action | Gói miễn phí của Supabase không có bản sao lưu tải về được; mất đánh giá giữa mùa thi là mất bài |
 | 13 | Đặt `Referrer-Policy` rõ ràng | Key khóa theo domain cần header Referer |
 | 14 | Ảnh xem trước khi dán link chỉ có một ảnh chung cho cả app | Facebook không chạy JS khi lấy ảnh xem trước. Ảnh riêng cho từng quán cần render phía server, để sau cuộc thi |
 | 15 | Publishable key và secret key thay cho anon key và service_role key | Dự án Supabase tạo sau 11/2025 chỉ có key kiểu mới |
-| 16 | Biểu tượng món là WebP 64 px chuyển từ PNG | Fluent Emoji kiểu 3D là PNG 256 px, không phải SVG |
-| 17 | Ghi nguồn điểm Google là "Google Maps" (hoặc logo), không chỉ "Google" | Chính sách Places API khi hiện dữ liệu ngoài bản đồ Google |
+| 16 | Bộ icon tự vẽ bằng SVG (món ăn và địa danh), thay cho Fluent Emoji | Có phong cách riêng đồng bộ với Bé Bao, nhẹ hơn, không phụ thuộc giấy phép bên ngoài |
+| 17 | (Bỏ từ 06/10) Ghi nguồn điểm Google | App không còn lấy điểm Google |
 | 18 | Trích Luật Bảo vệ dữ liệu cá nhân 2025 và Nghị định 356/2025/NĐ-CP | Nghị định 13/2023/NĐ-CP đã bị thay thế từ 01/01/2026 |
 | 19 | Nút mở Chrome bằng link `intent://` trên Android | Người dùng trong Facebook/Zalo vẫn đăng nhập Google được mà không phải tự sao chép link |
+| 20 | Quán chưa có ảnh thật dùng tranh minh họa theo loại món (`public/covers/`), nhãn "Hình minh họa" | Trang quán không trống trong lúc chờ ảnh thật, mà không bịa ảnh cho quán có thật |
+| 21 | Bản đồ dùng Leaflet + `protomaps-leaflet`, tự vẽ kiểu chibi từ dữ liệu OpenFreeMap; bỏ điểm Google | Không có thẻ để mở thanh toán Google Cloud; người dùng muốn bản đồ dễ thương hơn bản đồ thường |
+| 22 | Không dùng `tile.openstreetmap.org` | Không kết nối được từ mạng ở Việt Nam (kiểm 06/10/2026) |
+| 23 | Gom cụm tự viết theo lưới thay cho `leaflet.markercluster` | Vài trăm quán thì 25 dòng là đủ, bớt một gói phụ thuộc |
+| 24 | Thêm địa danh nổi tiếng của Hà Nội và TP. Hồ Chí Minh, có ảnh thật; dữ liệu tĩnh từ Wikidata/Wikipedia/Commons (mục 3.11) | Người dùng yêu cầu; Google Places cần thẻ và cấm lưu dữ liệu |
 
-## 11. Phương án B: Leaflet (không có billing Google)
+## 11. Phương án B: Leaflet (đang dùng từ 06/10/2026)
 
-Chỉ viết lại `map.js` và phần điểm Google trong `place.js`:
+Không có thẻ để mở thanh toán Google Cloud nên app dùng phương án này. Chỉ `map.js` và phần điểm Google trong `place.js` thay đổi so với phương án Google Maps:
 
-- Leaflet (khoảng 42 KB) + `leaflet.markercluster`. Ghim dùng `L.divIcon` với đúng HTML/SVG của ghim hiện tại.
-- Nền bản đồ: CARTO Voyager (sáng) và Dark Matter (tối) trên dữ liệu OpenStreetMap. Theo điều khoản CARTO cập nhật ngày 29/09/2026: **bắt buộc có API key riêng** (đăng ký miễn phí tại carto.com/basemaps/apikey); dùng phi thương mại (cá nhân, giáo dục, nghiên cứu) miễn phí đến 5 triệu lượt tải ô bản đồ mỗi tháng; ghi nguồn "© OpenStreetMap contributors © CARTO" phải hiện rõ trên bản đồ. Bài dự thi thuộc nhóm phi thương mại.
-- Bỏ dòng điểm Google, giữ link "Xem trên Google Maps" và nút chỉ đường (Google Maps URLs miễn phí, không cần key).
-- Đề xuất quán: kéo ghim bằng `draggable: true` của Leaflet.
+- Leaflet 1.9 (khoảng 43 KB nén, thêm 6 KB CSS) và `protomaps-leaflet` 5.1 (khoảng 37 KB nén), tải sau lần vẽ đầu. Ghim dùng `L.divIcon`; gom cụm tự viết (mục 3.5).
+- Bản đồ: `protomaps-leaflet` vẽ dữ liệu vector của OpenFreeMap (schema OpenMapTiles) lên canvas theo kiểu chibi tự đặt (mục 3.5). OpenFreeMap không cần đăng ký hay key, không giới hạn lượt, cho dùng cả thương mại, chỉ cần ghi nguồn "OpenFreeMap © OpenMapTiles Data from OpenStreetMap".
+- Đã thử và bỏ: `tile.openstreetmap.org` (không kết nối được từ Việt Nam); CARTO (cần key, nền ảnh có sẵn nên không đổi được nét vẽ); MapLibre GL (vẽ đẹp nhưng khoảng 300 KB nén, dễ kéo Lighthouse dưới 90).
+- Bỏ dòng điểm Google, giữ link "Xem đánh giá trên Google Maps" và nút chỉ đường (Google Maps URLs miễn phí, không cần key).
+- Đề xuất quán: kéo ghim bằng `draggable: true` của Leaflet, hoặc chạm vào bản đồ để dời ghim.
 
 Database, đăng nhập, ảnh và mọi luồng khác giữ nguyên.
 
@@ -589,11 +595,14 @@ Kiểm ngày 05/10/2026. Nếu đọc tài liệu này sau ngày nộp bài, ki�
 | Resend, Brevo gói miễn phí | Resend 100/ngày, 3.000/tháng; Brevo 300/ngày | [Resend pricing](https://resend.com/pricing), [Brevo pricing](https://www.brevo.com/pricing/) |
 | Tên miền `.id.vn` miễn phí | Công dân từ đủ 18 đến 23 tuổi, miễn phí 2 năm, gia hạn chương trình đến hết 2026 | [Thư viện Pháp luật](https://thuvienphapluat.vn/chinh-sach-phap-luat-moi/vn/ho-tro-phap-luat/chinh-sach-moi/64708/mien-phi-2-nam-su-dung-ten-mien-id-vn-cho-cong-dan-viet-nam-tu-du-18-den-23-tuoi), [Bộ KH&CN](https://mst.gov.vn/khoi-tao-hien-dien-so-voi-ten-mien-quoc-gia-viet-nam-vn-197260908161420492.htm) |
 | Safari xuất WebP qua canvas | Không hỗ trợ, kể cả Safari 26; `toBlob` trả PNG mà không báo lỗi | [Can I use](https://caniuse.com/mdn-api_htmlcanvaselement_toblob_type_parameter_webp) |
-| Fluent Emoji | Giấy phép MIT; kiểu 3D là PNG 256 px (khoảng 28 KB), kiểu Color là SVG; đủ hình cho 7 loại món | [microsoft/fluentui-emoji](https://github.com/microsoft/fluentui-emoji) |
 | Điều khoản CARTO Basemaps | Bắt buộc API key; phi thương mại miễn phí 5 triệu lượt tải ô bản đồ/tháng; ghi nguồn OSM và CARTO | [CARTO Basemap Terms](https://carto.com/legal/basemap-terms/) |
+| Key CARTO (kiểm 06/10/2026) | Xin miễn phí, không cần tài khoản; URL dạng `https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png?key=<key>` | [Request an API key for basemaps](https://www.carto.com/basemaps/apikey/) |
+| `openstreetmap.org` từ Việt Nam (kiểm 06/10/2026) | Cả trang chính và `tile.openstreetmap.org` không kết nối được (lỗi kết nối, lỗi TLS); CARTO và `tile.openstreetmap.fr` vào được | Thử bằng `curl` trên máy ở Việt Nam |
+| Wikidata, Wikipedia, Wikimedia Commons (kiểm 06/10/2026) | Truy vấn SPARQL, API Wikipedia và Commons đều vào được từ Việt Nam; ảnh trên `thumb.wikimedia.org` tải được (150–330 KB ở cỡ 960 px). Ảnh Commons cần ghi tác giả và giấy phép; nội dung Wikipedia theo CC BY-SA 4.0 | [Wikidata Query Service](https://query.wikidata.org/), [Commons: Reusing content](https://commons.wikimedia.org/wiki/Commons:Reusing_content_outside_Wikimedia) |
+| OpenFreeMap (kiểm 06/10/2026) | Không đăng ký, không key, không giới hạn lượt, cho dùng thương mại; ghi nguồn "OpenFreeMap © OpenMapTiles Data from OpenStreetMap"; TileJSON, ô dữ liệu và font đều vào được từ Việt Nam | [openfreemap.org](https://openfreemap.org/) |
 
 Chưa kiểm được trước khi có dự án thật, nhóm tự thử:
 
 - Truyền **publishable key** (key kiểu mới) qua `?apikey=` cho UptimeRobot: nguồn trên xác nhận với key kiểu cũ. Thử bằng `curl` (mục 5.5).
-- Điểm Lighthouse khi có Maps JS: chỉ đo được trên bản deploy thật (ngày 07/10).
+- Điểm Lighthouse khi có bản đồ: chỉ đo được trên bản deploy thật.
 - Trình duyệt của Facebook và Zalo trên máy thật có cho lấy vị trí GPS không: nằm trong ma trận thiết bị của bản thiết kế, mục 11.
