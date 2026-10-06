@@ -33,19 +33,37 @@ export function distanceM(a, b) {
   return 2 * 6371000 * Math.asin(Math.sqrt(h))
 }
 
-// Khoảng cách (m) từ một điểm tới đường gấp khúc [[lat, lng], ...]: chiếu phẳng quanh điểm đó, đủ chính xác trong vài km
-export function distanceToPath(pos, pts) {
+// Điểm gần pos nhất trên đường gấp khúc [[lat, lng], ...]: { d: khoảng cách (m), i: đoạn thứ i, t: vị trí trong đoạn 0..1 }.
+// Chiếu phẳng quanh pos, đủ chính xác trong vài km.
+function nearestOnPath(pos, pts) {
   const ky = 111195, kx = ky * Math.cos((pos.lat * Math.PI) / 180) // m mỗi độ, cùng bán kính Trái Đất với distanceM
   const xy = ([lat, lng]) => [(lng - pos.lng) * kx, (lat - pos.lat) * ky] // điểm cần đo nằm ở gốc tọa độ
-  let best = Infinity
+  let best = { d: Infinity, i: 0, t: 0 }
   for (let i = 0; i < pts.length; i++) {
     const [ax, ay] = xy(pts[i]), [bx, by] = xy(pts[i + 1] ?? pts[i])
     const dx = bx - ax, dy = by - ay, len = dx * dx + dy * dy
     const t = len ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / len)) : 0
-    best = Math.min(best, Math.hypot(ax + t * dx, ay + t * dy))
+    const d = Math.hypot(ax + t * dx, ay + t * dy)
+    if (d < best.d) best = { d, i, t }
   }
   return best
 }
+
+// Khoảng cách (m) từ một điểm tới đường gấp khúc
+export const distanceToPath = (pos, pts) => nearestOnPath(pos, pts).d
+
+// Quãng đường (m) còn phải đi dọc đường gấp khúc, tính từ chỗ gần pos nhất tới điểm cuối
+export function remainingOnPath(pos, pts) {
+  const { i, t } = nearestOnPath(pos, pts)
+  const seg = j => (pts[j + 1] ? distanceM({ lat: pts[j][0], lng: pts[j][1] }, { lat: pts[j + 1][0], lng: pts[j + 1][1] }) : 0)
+  let m = -t * seg(i)
+  for (let j = i; j < pts.length - 1; j++) m += seg(j)
+  return m
+}
+
+// Giờ tới nơi nếu đi thêm s giây từ bây giờ, theo giờ Việt Nam: "12:45"
+export const arriveAt = (s, now = new Date()) =>
+  new Date(now.getTime() + s * 1000).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Ho_Chi_Minh' })
 
 const vnNow = now => new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }))
 const toMin = t => +t.slice(0, 2) * 60 + +t.slice(3)

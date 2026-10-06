@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { isOpenNow, hoursText, distanceM, normalizeVi, isInAppBrowser, filterPrice, priceShort, scoreShort, badgeFor, formatPrice, placeLabel, suggestNear, decodePolyline, formatDuration, distanceToPath, cityOf, CITIES } from './util.js'
+import { isOpenNow, hoursText, distanceM, normalizeVi, isInAppBrowser, filterPrice, priceShort, scoreShort, badgeFor, formatPrice, placeLabel, suggestNear, decodePolyline, formatDuration, distanceToPath, remainingOnPath, arriveAt, cityOf, CITIES } from './util.js'
 
 // Giờ Việt Nam = UTC+7. 05/10/2026 là thứ Hai, 04/10/2026 là Chủ nhật.
 const vn = (date, time) => new Date(`${date}T${time}:00+07:00`)
@@ -129,4 +129,13 @@ test('formatDuration', () => {
 test('nhãn đọc màn hình của ghim', () => {
   const p = { name: 'Bún chả Hương', price_count: 3, price_median: 35000, review_count: 23, avg_stars: 4.6 }
   assert.equal(placeLabel(p, 300), 'Bún chả Hương, 35 nghìn, 4,6 sao, cách 300 mét')
+})
+
+test('remainingOnPath, arriveAt', () => {
+  const path = [[21, 105.8], [21.001, 105.8], [21.002, 105.8]] // 2 đoạn, mỗi đoạn ≈ 111 m
+  assert.ok(Math.abs(remainingOnPath({ lat: 21, lng: 105.8 }, path) - 222.4) < 1, 'đứng ở đầu: còn cả đường')
+  assert.ok(Math.abs(remainingOnPath({ lat: 21.0015, lng: 105.80005 }, path) - 55.6) < 1, 'giữa đoạn 2, lệch sang bên')
+  assert.equal(remainingOnPath({ lat: 21.003, lng: 105.8 }, path), 0, 'quá điểm cuối')
+  assert.equal(arriveAt(15 * 60, vn('2026-10-05', '11:50')), '12:05')
+  assert.equal(arriveAt(30 * 60, vn('2026-10-05', '23:45')), '00:15')
 })
