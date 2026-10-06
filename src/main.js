@@ -18,7 +18,7 @@ const savedCity = () => {
 export const state = {
   city: savedCity(),
   places: [], areas: [], savedAt: null,
-  q: '', price: null, open: false, cats: new Set(), sort: 'dist',
+  q: '', open: false, cats: new Set(), sort: 'dist',
   userPos: null, // chỉ giữ trong bộ nhớ, không lưu
   inBounds: null, listMode: false, mapFailed: false, user: null, loading: false,
   landmarks: true, // hiện địa danh nổi tiếng trên bản đồ
@@ -115,9 +115,6 @@ function filtered() {
   return state.places.filter(p => {
     if (state.city && cityOf(p) !== state.city) return false
     if (state.cats.size && !state.cats.has(p.category)) return false
-    const price = filterPrice(p)
-    if (state.price === 'u30' && !(price < 30000)) return false
-    if (state.price === '30_50' && !(price >= 30000 && price <= 50000)) return false
     if (state.open && isOpenNow(p.opening_hours) === false) return false // không rõ giờ thì không lọc
     if (q && !p._search.includes(q)) return false
     return true
@@ -263,7 +260,7 @@ function renderList(list = filtered()) {
     ? `Đói chưa? Quanh đây có ${shown.length} quán ngon nè`
     : 'Chưa có quán nào khớp'
   if (!shown.length) {
-    const hasFilter = state.q || state.price || state.open || state.cats.size
+    const hasFilter = state.q || state.open || state.cats.size
     ul.replaceChildren(h('li', { class: 'empty' }, mascot('buon', 72),
       h('p', null, hasFilter ? 'Chưa có quán nào khớp, thử bỏ bớt bộ lọc nhé.' : 'Vùng này chưa có quán. Kéo bản đồ sang chỗ khác nhé.'),
       hasFilter && h('button', { type: 'button', class: 'btn-ghost', onclick: clearFilters }, 'Bỏ lọc')))
@@ -273,7 +270,7 @@ function renderList(list = filtered()) {
 }
 
 function clearFilters() {
-  Object.assign(state, { q: '', price: null, open: false })
+  Object.assign(state, { q: '', open: false })
   state.cats.clear()
   $('q').value = ''
   for (const b of $('filters').querySelectorAll('[aria-pressed]:not(.lm-chip)')) b.setAttribute('aria-pressed', 'false')
@@ -373,15 +370,6 @@ function setupHome() {
   const filters = $('filters')
   const chip = (label, onclick, icon) => h('button', { type: 'button', class: 'chip', 'aria-pressed': 'false', onclick },
     icon && h('img', { src: icon, width: 22, height: 22, alt: '' }), label)
-  const priceChip = (label, key) => chip(label, e => {
-    state.price = state.price === key ? null : key
-    for (const b of filters.querySelectorAll('[data-price]')) b.setAttribute('aria-pressed', String(b.dataset.price === state.price))
-    renderHome()
-  })
-  const u30 = priceChip('Dưới 30k', 'u30')
-  const p3050 = priceChip('30–50k', '30_50')
-  u30.dataset.price = 'u30'
-  p3050.dataset.price = '30_50'
   const openChip = chip('Đang mở', e => {
     state.open = !state.open
     e.currentTarget.setAttribute('aria-pressed', String(state.open))
@@ -401,7 +389,7 @@ function setupHome() {
   lmChip.setAttribute('aria-pressed', 'true')
   const cityChip = h('button', { type: 'button', id: 'city', class: 'chip', title: 'Đổi thành phố', onclick: askCity },
     `${state.city?.name ?? 'Thành phố'} ▾`)
-  filters.append(cityChip, u30, p3050, openChip, lmChip, ...cats)
+  filters.append(cityChip, openChip, lmChip, ...cats)
   $('q').oninput = e => { state.q = e.target.value; renderHome() }
   $('sort').onchange = e => { state.sort = e.target.value; renderList() }
   $('view-toggle').onclick = () => setListMode(!state.listMode)
