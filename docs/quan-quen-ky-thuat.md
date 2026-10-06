@@ -10,13 +10,13 @@ Viết ngày 05/10/2026, dựa trên [Quán Quen: Thiết kế sản phẩm](qua
 | --- | --- | --- |
 | Frontend | Vite + JavaScript thuần, ES modules | Build ra file tĩnh; không framework, không thư viện UI |
 | Phụ thuộc chạy trên trình duyệt | `@supabase/supabase-js`, `leaflet`, `protomaps-leaflet` | Ba gói. Hai gói bản đồ tải sau khi trang đã hiện; gom cụm tự viết, không thêm `leaflet.markercluster` |
-| Điều hướng | History API (`/quan/12`), Vercel rewrite về `index.html` | Link chia sẻ đẹp, không đụng hash của OAuth |
+| Điều hướng | History API (`/alert/quan/12`), đường dẫn tương đối theo thẻ `<base>`; `404.html` = `index.html` cho link sâu | Link chia sẻ đẹp, không đụng hash của OAuth |
 | Bản đồ | Leaflet 1.9 + `protomaps-leaflet` tự vẽ kiểu chibi từ OpenFreeMap (dữ liệu vector, miễn phí, không key, không giới hạn lượt) | Không dùng `openstreetmap.org`: không kết nối được từ Việt Nam |
 | Google Maps | Chỉ link Google Maps URLs: "Chỉ đường" và "Xem đánh giá trên Google Maps" | Không lấy điểm Google, không cần key |
 | Dữ liệu | Supabase Postgres, 6 bảng + 3 view + 4 hàm | Mọi quy tắc tin cậy nằm trong database |
 | Tài khoản | Supabase Auth: Google OAuth (PKCE) và mã 6 số qua email | **Bắt buộc** SMTP riêng (mục 5.4) |
 | Ảnh | Nén trên máy bằng canvas, 2 cỡ (1280 px và 400 px), WebP hoặc JPEG | Supabase Storage, bucket công khai |
-| Hosting | Vercel Hobby, tự deploy từ nhánh `main` | |
+| Hosting | GitHub Pages (https://duahnproducts.github.io/alert/), workflow `pages.yml` tự deploy từ nhánh mặc định | Chốt 06/10/2026, không dùng Vercel |
 | Giám sát, sao lưu | UptimeRobot + một GitHub Action chạy mỗi đêm | Action vừa sao lưu dữ liệu vừa giữ Supabase không bị tạm dừng |
 | Kiểm thử | `node --test` cho hàm thuần, `supabase/test.sql` cho RLS và view | Không dùng framework test |
 
@@ -29,13 +29,13 @@ Nguyên tắc xuyên suốt: **frontend chỉ hiển thị, database quyết đ�
 ```text
 Điện thoại (Chrome, Safari, trình duyệt trong Facebook/Zalo)
   └─ Web app tĩnh (Vite build, ~6 file JS)
-       ├─ HTML/JS/CSS ───────────────> Vercel (CDN, rewrite mọi đường dẫn về index.html)
+       ├─ HTML/JS/CSS ───────────────> GitHub Pages (file tĩnh; 404.html là app cho link sâu)
        ├─ Dữ liệu bản đồ (vector) ───> OpenFreeMap; protomaps-leaflet vẽ kiểu chibi, Leaflet vẽ ghim, gom cụm trên máy
        ├─ REST/RPC (publishable key + JWT) ─> Supabase PostgREST ──> Postgres (RLS, view, submit_review, trigger)
        ├─ Đăng nhập ─────────────────> Supabase Auth ──> Google OAuth / SMTP riêng (Resend hoặc Brevo)
        └─ Tải ảnh lên/xuống ─────────> Supabase Storage (bucket "photos", thư mục theo user_id)
 
-Công cụ phụ:  GitHub ──push──> Vercel        GitHub Action (mỗi đêm) ──pg_dump──> artifact sao lưu
+Công cụ phụ:  GitHub ──push──> Action pages.yml ──> GitHub Pages     GitHub Action (mỗi đêm) ──pg_dump + gpg──> artifact sao lưu
               UptimeRobot ──5 phút──> trang web + một truy vấn đọc Supabase
 ```
 
@@ -48,7 +48,6 @@ Không có server nào của nhóm. Thứ cần vận hành trong mùa thi chỉ
 ```text
 quan-quen/
   index.html            khung trang, thẻ Open Graph, preconnect font
-  vercel.json           rewrite + header bảo mật
   package.json          scripts: dev, build, test
   .env.local            (không commit) VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY, VITE_SITE_URL
   src/
@@ -84,19 +83,13 @@ quan-quen/
 | `/cua-toi` | Của tôi | Có |
 | `/gioi-thieu` | Về dự án, chính sách quyền riêng tư | Không |
 
-Router khoảng 30 dòng trong `main.js`: một mảng `[regex, hàm render]`, `history.pushState` khi bấm link nội bộ, nghe sự kiện `popstate`. `vercel.json`:
+Router khoảng 30 dòng trong `main.js`: một mảng `[regex, hàm render]`, `history.pushState` khi bấm link nội bộ, nghe sự kiện `popstate`.
 
-```json
-{
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
-  "headers": [{ "source": "/(.*)", "headers": [
-    { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-    { "key": "X-Content-Type-Options", "value": "nosniff" }
-  ]}]
-}
-```
+App chạy trên GitHub Pages dưới đường dẫn con `/alert/` (tên repo). Thẻ `<base href="%BASE_URL%">` trong `index.html` là `/` khi chạy trên máy và `/alert/` khi build bằng `vite build --base=/alert/`. Vì vậy mọi đường dẫn trong code đều tương đối (`icons/com.svg`, `quan/12`, `./`, `landmarks.json`), không viết `/` ở đầu. Router bỏ phần gốc trước khi so khớp (`appPath()`), và chỉ chặn các link cùng trang nằm dưới đường dẫn gốc.
 
-Vercel ưu tiên file tĩnh có thật trước khi rewrite, nên `/assets/*` và `/icons/*` vẫn được phục vụ bình thường. `Referrer-Policy` không được đặt thành `no-referrer`: giữ Referer để máy chủ bản đồ biết trang nào đang dùng.
+GitHub Pages không có rewrite: mở thẳng `/alert/quan/12` thì Pages trả `404.html`. Workflow chép `index.html` thành `404.html`, nên trang 404 chính là app và router vẽ đúng màn. Mã trạng thái vẫn là 404, nên Facebook có thể không lấy ảnh xem trước cho link sâu; link trang chủ vẫn có ảnh xem trước bình thường.
+
+GitHub Pages không cho đặt header, nên `Referrer-Policy` đặt bằng thẻ `<meta name="referrer" content="strict-origin-when-cross-origin">`. Không đặt `no-referrer`: giữ Referer để máy chủ bản đồ biết trang nào đang dùng. Không có `X-Content-Type-Options: nosniff`; chấp nhận được vì app không cho tải file lên chính trang này (ảnh nằm trên Supabase Storage).
 
 ### 3.3 Tải và lọc dữ liệu
 
@@ -450,12 +443,12 @@ Không cần thanh toán: Google Cloud chỉ dùng cho đăng nhập Google. Kh�
 - [ ] Settings → API Keys: chép publishable key vào biến `VITE_SUPABASE_PUBLISHABLE_KEY`. Secret key chỉ dán vào GitHub Secrets nếu thật sự cần.
 - [ ] Bật xác thực 2 bước cho tài khoản của cả 3 người.
 
-### 5.3 Vercel và GitHub
+### 5.3 GitHub và GitHub Pages
 
-- Repo GitHub để private (chứa dữ liệu sao lưu trong artifact). Nhánh `main` là production; nhánh khác tạo bản preview.
-- Biến môi trường trên Vercel: 3 biến `VITE_*`: Supabase URL, publishable key, và `VITE_SITE_URL` (domain thật, để thẻ `og:image` có đường dẫn tuyệt đối cho Facebook). Bản đồ không cần key.
+- Repo GitHub công khai (GitHub Pages miễn phí chỉ chạy với repo công khai). Vì vậy bản sao lưu database được mã hóa bằng gpg trước khi lưu thành artifact (mục 5.5).
+- Settings → Pages → Source: **GitHub Actions**. Workflow `.github/workflows/pages.yml` chạy khi push vào nhánh mặc định: `npm ci`, `npm test`, `vite build --base=/<tên repo>/`, chép `index.html` thành `404.html`, rồi deploy. Trang ở https://duahnproducts.github.io/alert/.
+- Biến build (Settings → Secrets and variables → Actions → **Variables**): `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`. `VITE_SITE_URL` workflow tự điền theo tên repo. Bản đồ không cần key. Chưa khai biến Supabase thì app vẫn mở được (bản đồ, địa danh), danh sách quán báo không tải được.
 - Không bao giờ để secret key (`sb_secret_…`) trong repo hay trong biến `VITE_*` (mọi biến `VITE_*` đều lộ ra trình duyệt).
-- Vercel Hobby chỉ dành cho dự án phi thương mại; bài dự thi thỏa điều kiện này.
 
 ### 5.4 Email đăng nhập
 
@@ -463,15 +456,15 @@ SMTP mặc định của Supabase chỉ dành cho thử nghiệm: nó **chỉ g�
 
 | Cách | Cần gì | Ghi chú |
 | --- | --- | --- |
-| Resend (miễn phí 100 email/ngày, 3.000 email/tháng) | Một tên miền riêng đã xác minh DNS | Gửi ổn định nhất. VNNIC tặng tên miền `.id.vn` miễn phí 2 năm cho công dân từ đủ 18 đến 23 tuổi, chương trình đã gia hạn đến hết năm 2026; đăng ký qua nhà đăng ký tên miền, cần xác minh danh tính bằng CCCD (eKYC). Khi đó dùng luôn tên miền này cho Vercel |
+| Resend (miễn phí 100 email/ngày, 3.000 email/tháng) | Một tên miền riêng đã xác minh DNS | Gửi ổn định nhất. VNNIC tặng tên miền `.id.vn` miễn phí 2 năm cho công dân từ đủ 18 đến 23 tuổi, chương trình đã gia hạn đến hết năm 2026; đăng ký qua nhà đăng ký tên miền, cần xác minh danh tính bằng CCCD (eKYC). Khi đó có thể gắn luôn tên miền này cho GitHub Pages |
 | Brevo (miễn phí 300 email/ngày) | Xác minh một địa chỉ người gửi | Không cần tên miền, nhưng email gửi từ địa chỉ Gmail dễ vào thư rác hơn; email có chân trang quảng cáo của Brevo |
 
 Ngay sau khi cấu hình, gửi thử tới một địa chỉ Gmail và một địa chỉ Outlook không thuộc nhóm, và kiểm tra cả hộp thư rác.
 
 ### 5.5 Giám sát và sao lưu
 
-- **UptimeRobot**, 2 monitor 5 phút: (1) trang chủ trên Vercel; (2) `https://<ref>.supabase.co/rest/v1/areas?select=id&limit=1&apikey=<publishable key>`. Gói miễn phí của UptimeRobot không cho thêm header tùy chỉnh, nên key phải đi qua tham số `apikey` trên URL; Supabase bản cloud chấp nhận cách này. Trước khi tạo monitor, chạy thử đúng URL đó bằng `curl` và xác nhận nhận về mã 200.
-- **GitHub Action mỗi đêm** (`.github/workflows/backup.yml`): `supabase db dump --data-only --schema public` rồi lưu thành artifact 14 ngày. Action này đồng thời là một lượt truy cập database mỗi ngày, nên dự án miễn phí không bị tạm dừng kể cả khi UptimeRobot hỏng. Secret cần có: `SUPABASE_DB_URL`. Ảnh trong Storage không được sao lưu; mất ảnh thì ít hại hơn mất đánh giá.
+- **UptimeRobot**, 2 monitor 5 phút: (1) trang chủ https://duahnproducts.github.io/alert/; (2) `https://<ref>.supabase.co/rest/v1/areas?select=id&limit=1&apikey=<publishable key>`. Gói miễn phí của UptimeRobot không cho thêm header tùy chỉnh, nên key phải đi qua tham số `apikey` trên URL; Supabase bản cloud chấp nhận cách này. Trước khi tạo monitor, chạy thử đúng URL đó bằng `curl` và xác nhận nhận về mã 200.
+- **GitHub Action mỗi đêm** (`.github/workflows/backup.yml`): `supabase db dump --data-only --schema public`, mã hóa bằng `gpg --symmetric` với secret `BACKUP_PASSPHRASE` (repo công khai nên ai cũng tải được artifact), rồi lưu thành artifact 14 ngày. Chưa khai secret thì workflow bỏ qua, không báo lỗi. Action này đồng thời là một lượt truy cập database mỗi ngày, nên dự án miễn phí không bị tạm dừng kể cả khi UptimeRobot hỏng. Secret cần có: `SUPABASE_DB_URL`. Ảnh trong Storage không được sao lưu; mất ảnh thì ít hại hơn mất đánh giá.
 
 ```yaml
 on: { schedule: [{ cron: '0 17 * * *' }], workflow_dispatch: {} }   # 00:00 giờ Việt Nam
@@ -500,7 +493,7 @@ jobs:
 | Máy chủ bản đồ quá tải hoặc ngừng | OpenFreeMap không giới hạn lượt; không tải trước dữ liệu, `minZoom` 11; lỗi thì app tự chuyển sang danh sách; không có dịch vụ nào gắn thẻ nên không thể bị tính tiền |
 | Làm giả GPS | Không chặn được hoàn toàn. Ghi rõ trên trang Về dự án là xác thực cơ bản |
 | Mất dữ liệu | Sao lưu mỗi đêm; `schema.sql` dựng lại được toàn bộ cấu trúc |
-| Mất tài khoản quản trị | Xác thực 2 bước trên Supabase, Google Cloud, Vercel, GitHub |
+| Mất tài khoản quản trị | Xác thực 2 bước trên Supabase, Google Cloud, GitHub |
 
 ## 7. Kiểm thử kỹ thuật
 
@@ -531,9 +524,9 @@ Bổ sung cho ma trận thiết bị và buổi thử với sinh viên ở mục
 
 ## 9. Câu hỏi kỹ thuật cần chốt hôm nay
 
-- [ ] Chọn Resend (cần tên miền) hay Brevo? Câu này quyết định có cần tên miền riêng hay dùng `.vercel.app`.
-- [ ] Tên miền Vercel cụ thể là gì? Cần biết để điền Redirect URL của Supabase và `VITE_SITE_URL`.
-- [ ] Ai giữ quyền owner của Google Cloud, Supabase, Vercel? Nên có ít nhất 2 người, để một người ốm không làm tắc cả nhóm.
+- [ ] Chọn Resend (cần tên miền) hay Brevo? Câu này quyết định có cần tên miền riêng hay dùng `github.io`.
+- [x] Tên miền: https://duahnproducts.github.io/alert/ (GitHub Pages). Có tên miền riêng thì đổi Redirect URL của Supabase và build với `--base=/`.
+- [ ] Ai giữ quyền owner của Google Cloud, Supabase, GitHub? Nên có ít nhất 2 người, để một người ốm không làm tắc cả nhóm.
 
 ## 10. Những điểm bổ sung hoặc khác bản thiết kế
 
@@ -563,6 +556,7 @@ Bổ sung cho ma trận thiết bị và buổi thử với sinh viên ở mục
 | 22 | Không dùng `tile.openstreetmap.org` | Không kết nối được từ mạng ở Việt Nam (kiểm 06/10/2026) |
 | 23 | Gom cụm tự viết theo lưới thay cho `leaflet.markercluster` | Vài trăm quán thì 25 dòng là đủ, bớt một gói phụ thuộc |
 | 24 | Thêm địa danh nổi tiếng của Hà Nội và TP. Hồ Chí Minh, có ảnh thật; dữ liệu tĩnh từ Wikidata/Wikipedia/Commons (mục 3.11) | Người dùng yêu cầu; Google Places cần thẻ và cấm lưu dữ liệu |
+| 25 | Hosting bằng GitHub Pages thay cho Vercel; đường dẫn tương đối theo `<base>`, `404.html` cho link sâu, sao lưu mã hóa | Người dùng muốn truy cập qua GitHub như các dự án trước; repo công khai |
 
 ## 11. Phương án B: Leaflet (đang dùng từ 06/10/2026)
 

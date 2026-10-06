@@ -9,13 +9,14 @@ Sản phẩm: Quán Quen, web app trên điện thoại, bản đồ quán ăn n
 | File | Nội dung | Khi nào đọc |
 | --- | --- | --- |
 | [docs/quan-quen-thiet-ke.md](docs/quan-quen-thiet-ke.md) | Thiết kế sản phẩm: người dùng, phạm vi, 6 màn hình, nhận diện, dữ liệu, kiểm duyệt, ISO 25010, quyền riêng tư, kiểm thử, fanpage, kế hoạch, rủi ro | Mọi việc liên quan đến hành vi, giao diện, câu chữ |
-| [docs/quan-quen-ky-thuat.md](docs/quan-quen-ky-thuat.md) | Phương án kỹ thuật: stack, thư mục, router, SQL bảng/RLS/`submit_review`, cấu hình Supabase/Vercel/nền bản đồ, bảo mật, test, phân việc theo ngày | Mọi việc code, cấu hình, database |
+| [docs/quan-quen-ky-thuat.md](docs/quan-quen-ky-thuat.md) | Phương án kỹ thuật: stack, thư mục, router, SQL bảng/RLS/`submit_review`, cấu hình Supabase/GitHub Pages/nền bản đồ, bảo mật, test, phân việc theo ngày | Mọi việc code, cấu hình, database |
 
 Bản thiết kế là nguồn gốc về sản phẩm; bản kỹ thuật là nguồn gốc về cách làm. Mục 10 bản kỹ thuật liệt kê các chỗ bản kỹ thuật bổ sung hoặc sửa bản thiết kế. Hai file trong `docs/` là **bản chuẩn**; bản nháp trên Claude Docs (link ở đầu file thiết kế) cũ hơn, không dùng làm căn cứ. Khi sửa một quyết định, sửa cả hai file cho thống nhất.
 
 ## Quyết định đã chốt
 
-- Không server riêng: Vercel (file tĩnh) + Leaflet + Supabase (Postgres, Auth, Storage).
+- Không server riêng: GitHub Pages (file tĩnh, https://duahnproducts.github.io/alert/) + Leaflet + Supabase (Postgres, Auth, Storage). Không dùng Vercel (chốt 06/10/2026). Workflow `pages.yml` chỉ deploy từ nhánh mặc định của repo.
+- App chạy dưới đường dẫn con `/alert/`: mọi đường dẫn trong code là tương đối theo thẻ `<base>` (vd `icons/x.svg`, `quan/12`, `./`), không viết `/` ở đầu.
 - Vite + JavaScript thuần, 3 gói chạy trên trình duyệt: `@supabase/supabase-js`, `leaflet`, `protomaps-leaflet` (vẽ bản đồ chibi từ dữ liệu vector).
 - Bản đồ: không có thẻ thanh toán nên không dùng Google Maps (chốt 06/10/2026, mục 11 bản kỹ thuật). App tự vẽ bản đồ kiểu chibi (màu kẹo, đường to bo tròn, ghim tròn phồng) từ dữ liệu vector của OpenFreeMap: miễn phí, không key, không giới hạn lượt. Không dùng `openstreetmap.org`: không kết nối được từ Việt Nam.
 - Mọi quy tắc tin cậy (quyền, check-in 150 m, giới hạn đánh giá, hàng chờ ảnh, tự ẩn khi đủ 3 báo cáo) nằm trong Postgres (RLS, hàm, trigger), không nằm ở frontend.
@@ -42,5 +43,5 @@ Google Cloud chỉ còn dùng cho nút "Tiếp tục với Google" (OAuth, miễ
 
 - Tên chính thức có giữ "Quán Quen" và linh vật "Bé Bao" không; giữ ngưỡng 50k hay đổi theo thành phố.
 - Thành phố đã chốt (06/10/2026): Hà Nội và TP. Hồ Chí Minh. Các cụm trường chưa được ghi vào tài liệu.
-- SMTP: Resend (cần tên miền) hay Brevo; tên miền chính thức trên Vercel.
+- SMTP: Resend (cần tên miền) hay Brevo; có gắn tên miền riêng cho GitHub Pages không.
 - Hạn mức, giá và hành vi dịch vụ đã kiểm ngày 05/10/2026 (bảng nguồn ở mục 12 bản kỹ thuật). Còn 3 điểm chỉ thử được khi có dự án thật, liệt kê cuối mục 12.

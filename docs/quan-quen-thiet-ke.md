@@ -237,14 +237,14 @@ Toàn bộ dữ liệu của app nằm trong 6 bảng Postgres trên Supabase. T
 
 ## 7. Kiến trúc kỹ thuật
 
-App không có server riêng. Trình duyệt gọi thẳng các dịch vụ có gói miễn phí: Vercel phục vụ file tĩnh, OpenFreeMap trả dữ liệu bản đồ để app tự vẽ kiểu chibi, Supabase giữ dữ liệu, tài khoản và ảnh. Quyền đọc ghi được kiểm soát bằng Row Level Security của Postgres, không phải bằng code ở frontend.
+App không có server riêng. Trình duyệt gọi thẳng các dịch vụ có gói miễn phí: GitHub Pages phục vụ file tĩnh, OpenFreeMap trả dữ liệu bản đồ để app tự vẽ kiểu chibi, Supabase giữ dữ liệu, tài khoản và ảnh. Quyền đọc ghi được kiểm soát bằng Row Level Security của Postgres, không phải bằng code ở frontend.
 
 Sơ đồ kiến trúc (dạng chữ):
 
 ```text
 Điện thoại người dùng (Chrome, Safari, Facebook, Zalo)
   └─ Web app Quán Quen (HTML, CSS, JS thuần; nén ảnh, check-in GPS; lưu tạm dữ liệu quán khi mất kết nối)
-       ├─ tải trang ─────────────> Vercel (file tĩnh, tự deploy khi push)  <── GitHub (mã nguồn)
+       ├─ tải trang ─────────────> GitHub Pages (file tĩnh, tự deploy khi push lên nhánh mặc định)
        ├─ dữ liệu bản đồ ────────> OpenFreeMap (miễn phí, không key); app tự vẽ kiểu chibi, ghim và gom cụm ngay trên máy
        └─ publishable key + RLS ─> Supabase (Auth: Google, mã email qua SMTP riêng; Postgres + RLS, submit_review; Storage: ảnh đã nén)
                                                                            <── UptimeRobot (ping 5 phút)
@@ -263,7 +263,7 @@ Dự án Supabase tạo sau tháng 11/2025 không còn "anon key" và "service_r
 | Dữ liệu và tài khoản | Supabase: Postgres, Auth (Google và mã qua email), Storage | Miễn phí, có sẵn đăng nhập và phân quyền theo dòng |
 | Gửi đánh giá | Hàm Postgres `submit_review` gọi qua RPC | Kiểm tra khoảng cách check-in và giới hạn 1 đánh giá/ngày ngay trong database |
 | Ảnh | Nén trên máy bằng canvas thành 2 cỡ: cạnh dài 1280 px để xem lớn, 400 px cho lưới ảnh và danh sách; chất lượng 0,8. Dùng WebP, riêng Safari và mọi trình duyệt trên iOS dùng JPEG (các trình duyệt này không xuất được WebP) | Bản lớn khoảng 150–250 KB, bản nhỏ khoảng 30 KB. Vẽ lại qua canvas cũng xóa luôn thông tin EXIF (có GPS nhà riêng). Supabase gói miễn phí không tự đổi cỡ ảnh, nên app phải tự làm |
-| Hosting | Vercel (gói Hobby, dùng cho dự án phi thương mại), tên miền `.vercel.app` hoặc tên miền riêng | Tự deploy mỗi lần push GitHub |
+| Hosting | GitHub Pages: https://duahnproducts.github.io/alert/ (chốt 06/10/2026, không dùng Vercel) | Miễn phí với repo công khai, tự deploy mỗi lần push |
 | Email đăng nhập | SMTP riêng qua Resend hoặc Brevo | Email mặc định của Supabase chỉ gửi tới thành viên nhóm, tối đa 2 email/giờ, nên không dùng được cho người dùng thật |
 | Giám sát, sao lưu | UptimeRobot gọi 5 phút một lần vào trang web và một truy vấn đọc nhẹ; GitHub Action sao lưu dữ liệu mỗi đêm | Báo khi app sập, đồng thời giữ Supabase không bị tạm dừng (dự án miễn phí bị tạm dừng sau 7 ngày ít hoạt động, phải vào dashboard bật lại bằng tay) |
 
@@ -273,7 +273,7 @@ Dự án Supabase tạo sau tháng 11/2025 không còn "anon key" và "service_r
 | --- | --- | --- |
 | OpenFreeMap (dữ liệu bản đồ) | Không giới hạn lượt, không cần đăng ký | Không cần |
 | Supabase Free | 500 MB database, 1 GB lưu trữ file, 5 GB băng thông, 50.000 người dùng hoạt động/tháng | 1 GB chứa được khoảng 5.000 ảnh. Băng thông là giới hạn dễ chạm nhất khi bài được chia sẻ mạnh, nên mọi chỗ xem nhiều ảnh dùng bản 400 px |
-| Vercel Hobby | Đủ cho một web tĩnh nhỏ | Không cần |
+| GitHub Pages | Đủ cho một web tĩnh nhỏ (giới hạn mềm 100 GB băng thông/tháng) | Không cần |
 | Resend / Brevo (SMTP) | Resend 100 email/ngày (3.000/tháng); Brevo 300 email/ngày | Đặt giới hạn gửi email của Supabase Auth cho khớp |
 | UptimeRobot Free | Monitor 5 phút; không cho thêm header tùy chỉnh | Truyền key qua tham số `?apikey=` |
 

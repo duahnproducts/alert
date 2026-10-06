@@ -4,7 +4,9 @@ Bản đồ quán ăn ngon dưới 50k quanh trường, do sinh viên chấm đi
 
 Bài dự thi "From Idea to Impact" (CLB FPC). Thiết kế sản phẩm: [docs/quan-quen-thiet-ke.md](docs/quan-quen-thiet-ke.md). Phương án kỹ thuật: [docs/quan-quen-ky-thuat.md](docs/quan-quen-ky-thuat.md).
 
-Không có server riêng: Vercel phục vụ file tĩnh, Leaflet vẽ bản đồ, Supabase giữ dữ liệu, tài khoản và ảnh. Mọi quy tắc tin cậy (quyền, check-in 150 m, giới hạn đánh giá, hàng chờ ảnh, tự ẩn khi đủ 3 báo cáo) nằm trong [supabase/schema.sql](supabase/schema.sql).
+Bản chạy thật: https://duahnproducts.github.io/alert/
+
+Không có server riêng: GitHub Pages phục vụ file tĩnh, Leaflet vẽ bản đồ, Supabase giữ dữ liệu, tài khoản và ảnh. Mọi quy tắc tin cậy (quyền, check-in 150 m, giới hạn đánh giá, hàng chờ ảnh, tự ẩn khi đủ 3 báo cáo) nằm trong [supabase/schema.sql](supabase/schema.sql).
 
 ## Chạy trên máy
 
@@ -115,8 +117,10 @@ delete from reports where target_type = 'review' and target_id = 123;
 
 ## Deploy
 
-- **Vercel:** Import repo, framework Vite (tự nhận), thêm 4 biến môi trường ở trên. Nhánh `main` là production. `vercel.json` đã có rewrite cho đường dẫn `/quan/12` và header bảo mật.
-- **Sao lưu:** thêm secret `SUPABASE_DB_URL` cho repo (Supabase → Connect → Session pooler). Workflow `.github/workflows/backup.yml` chạy mỗi đêm, giữ bản sao 14 ngày, và giữ dự án Supabase miễn phí không bị tạm dừng.
+- **GitHub Pages:** Settings → Pages → Source: GitHub Actions (đã bật). Workflow `.github/workflows/pages.yml` tự build và deploy mỗi khi push vào nhánh mặc định của repo, ra https://duahnproducts.github.io/alert/. Khai 2 biến ở Settings → Secrets and variables → Actions → **Variables**: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (`VITE_SITE_URL` workflow tự điền). Chưa khai thì app vẫn mở được: bản đồ và địa danh chạy, danh sách quán báo không tải được.
+- **Supabase Auth → URL Configuration:** Site URL và Redirect URLs gồm `https://duahnproducts.github.io/alert/` và `http://localhost:5173`.
+- **Đường dẫn:** app chạy dưới `/alert/`, nên trong code mọi đường dẫn đều tương đối theo thẻ `<base>` trong `index.html`. GitHub Pages không có rewrite, nên workflow chép `index.html` thành `404.html` để link sâu như `/alert/quan/12` vẫn mở được app.
+- **Sao lưu:** thêm 2 secret `SUPABASE_DB_URL` (Supabase → Connect → Session pooler) và `BACKUP_PASSPHRASE` (mật khẩu tự đặt). Workflow `.github/workflows/backup.yml` chạy mỗi đêm, mã hóa bản sao bằng gpg (repo công khai nên ai cũng tải được artifact), giữ 14 ngày, và giữ dự án Supabase miễn phí không bị tạm dừng. Giải mã: `gpg -d data.sql.gpg > data.sql`.
 - **UptimeRobot:** 2 monitor 5 phút: trang chủ, và `https://<ref>.supabase.co/rest/v1/areas?select=id&limit=1&apikey=<publishable key>` (chạy thử bằng `curl` trước, phải ra mã 200).
 
 ## Trước khi nộp
@@ -129,7 +133,6 @@ delete from reports where target_type = 'review' and target_id = 123;
 
 ```text
 index.html            khung trang, thẻ Open Graph, nội dung trang Về dự án và chính sách quyền riêng tư
-vercel.json           rewrite + header
 src/main.js           router, trạng thái, bộ lọc, ngăn kéo danh sách, thẻ xem nhanh
 src/map.js            file duy nhất biết đến thư viện bản đồ; kiểu chibi (màu, nét đường, chữ) nằm ở đây
 src/place.js          trang quán, link Google Maps, ảnh, báo cáo
