@@ -8,7 +8,8 @@ on:
   push: {}
   workflow_dispatch: {}
 permissions: { contents: read, pages: write, id-token: write }
-concurrency: { group: pages, cancel-in-progress: true }
+# Nhóm theo nhánh: push lên nhánh khác (bị bỏ qua ở bước build) không được hủy lần deploy đang chạy của nhánh mặc định
+concurrency: { group: 'pages-${{ github.ref }}', cancel-in-progress: true }
 jobs:
   build:
     if: github.ref_name == github.event.repository.default_branch
