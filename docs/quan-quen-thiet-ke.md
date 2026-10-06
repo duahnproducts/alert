@@ -327,7 +327,7 @@ Bản 2023 của ISO/IEC 25010 có 9 đặc tính chất lượng sản phẩm: 
 | Tin cậy | Nền bản đồ lỗi thì chuyển sang danh sách; Supabase lỗi thì hiện dữ liệu đã lưu trên máy kèm giờ lưu | UptimeRobot không ghi nhận lần sập nào trong mùa thi |
 | Bảo mật | Row Level Security trên mọi bảng; không đưa secret key ra frontend | Dùng publishable key thử sửa đánh giá của người khác: phải bị từ chối |
 | Bảo trì | Khoảng 6 file JS, toàn bộ cấu trúc database trong `schema.sql`, tự deploy từ GitHub | Người ngoài nhóm đọc README và chạy được app trong 15 phút |
-| Linh hoạt (trước đây gọi là khả chuyển) | Thêm thành phố hoặc cụm trường chỉ cần thêm dòng vào `areas` và `places`, không sửa code | Demo thêm một cụm trường mới trong 5 phút |
+| Linh hoạt (trước đây gọi là khả chuyển) | Thêm cụm trường chỉ cần thêm dòng vào `areas` và `places`, không sửa code; thêm thành phố thì thêm một dòng khung bản đồ trong `map.js` | Demo thêm một cụm trường mới trong 5 phút |
 | An toàn | Không lưu vị trí người dùng; xóa EXIF trong ảnh; ẩn nội dung khi bị báo cáo; không đánh giá vệ sinh an toàn thực phẩm thay cơ quan chức năng | Thả một ảnh có GPS vào app rồi kiểm tra file đã lưu không còn EXIF |
 
 ## 10. Quyền riêng tư, bảo mật, điều khoản Google

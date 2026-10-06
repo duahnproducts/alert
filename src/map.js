@@ -8,6 +8,12 @@ const ATTRIBUTION = '<a href="https://openfreemap.org" target="_blank" rel="noop
 const CELL = 64 // px: các quán gần nhau hơn khoảng này trên màn hình thì gộp thành cụm
 const FONT = '"Be Vietnam Pro", system-ui, sans-serif'
 const dark = matchMedia('(prefers-color-scheme: dark)')
+// Bản đồ chỉ kéo được trong một thành phố, [[nam, tây], [bắc, đông]]. Hà Nội tính tới Hòa Lạc (ĐH FPT, ĐHQG), TP.HCM tính cả Thủ Đức.
+const CITIES = [
+  [[20.9, 105.48], [21.2, 106.0]],
+  [[10.65, 106.55], [10.95, 106.9]],
+]
+const cityOf = (L, p) => CITIES.map(c => L.latLngBounds(c)).find(b => b.contains(p))
 
 let lib // Promise<{ L, pm, tiles }>
 let map, layer, lmLayer, userMarker, selectedId, onSelectCb
@@ -90,7 +96,9 @@ function rules(pm, c) {
 }
 
 function newMap({ L, pm, tiles }, el, center, zoom) {
-  const m = L.map(el, { zoomControl: false, attributionControl: false, maxZoom: 19, minZoom: 11 }).setView(center, zoom)
+  const city = cityOf(L, center) ?? L.latLngBounds(CITIES[0]) // ở ngoài cả hai thành phố thì mở Hà Nội
+  const m = L.map(el, { zoomControl: false, attributionControl: false, maxZoom: 19, minZoom: 11, maxBounds: city, maxBoundsViscosity: 1 })
+    .setView(city.contains(center) ? center : city.getCenter(), zoom)
   L.control.zoom({ position: 'topright', zoomInTitle: 'Phóng to', zoomOutTitle: 'Thu nhỏ' }).addTo(m)
   // Ghi nguồn ở góc trên: góc dưới bị ngăn kéo danh sách che, mà điều khoản bắt buộc ghi nguồn
   L.control.attribution({ prefix: false, position: 'topleft' }).addTo(m)
@@ -266,6 +274,14 @@ export function toggleLandmarks(on) {
   else lmLayer.remove()
 }
 
+// Dời bản đồ tới điểm p; điểm ở thành phố kia thì đổi khung giới hạn trước, ngoài cả hai thành phố thì để yên
+function goTo(m, p, zoom) {
+  const city = cityOf(m.qqL, p)
+  if (!city) return
+  if (!city.equals(m.options.maxBounds)) m.setMaxBounds(city)
+  m.setView(p, zoom ?? m.getZoom())
+}
+
 const pinOf = id => markers.get(id)?.options.icon.options.html
 
 export function select(id) {
@@ -276,11 +292,11 @@ export function select(id) {
   if (!m || !map) return
   pinOf(id).classList.add('sel')
   m.setZIndexOffset(1000)
-  map.panTo(m.getLatLng())
+  goTo(map, m.getLatLng())
 }
 
 export function moveTo(center, zoom) {
-  if (map) map.setView([center.lat, center.lng], zoom ?? map.getZoom())
+  if (map) goTo(map, [center.lat, center.lng], zoom)
 }
 
 // Vị trí của bạn: Bé Bao nhỏ có vòng sóng
@@ -297,7 +313,7 @@ export function showUser(pos) {
     }).addTo(map)
   }
   userMarker.setLatLng(pos)
-  map.panTo(pos)
+  goTo(map, pos)
 }
 
 // Bản đồ nhỏ có ghim kéo được, cho form đề xuất quán. Trả về { get, set } hoặc null nếu không tải được.
@@ -305,7 +321,8 @@ export async function pickLocation(el, start) {
   try {
     const lb = await loadLib()
     const { m } = newMap(lb, el, [start.lat, start.lng], 17)
-    const pin = lb.L.marker([start.lat, start.lng], {
+    m.qqL = lb.L
+    const pin = lb.L.marker(m.getCenter(), {
       icon: lb.L.divIcon({ html: pinEl('', 'icons/bebao-vui.svg'), className: 'qq-icon', iconSize: [48, 60], iconAnchor: [24, 58] }),
       draggable: true, autoPan: true, title: 'Ghim vị trí quán: kéo ghim hoặc chạm vào bản đồ để dời',
     }).addTo(m)
@@ -316,7 +333,7 @@ export async function pickLocation(el, start) {
         const { lat, lng } = pin.getLatLng()
         return { lat, lng }
       },
-      set: pos => { pin.setLatLng(pos); m.panTo(pos) },
+      set: pos => { pin.setLatLng(pos); goTo(m, pos) },
     }
   } catch {
     return null
