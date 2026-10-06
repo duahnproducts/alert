@@ -77,7 +77,7 @@ Không cần dữ liệu lớn, nhưng không nên bịa đánh giá cho quán c
 - **Thông tin quán** (tên, vị trí, giờ mở cửa): lấy thật, gắn với `place_id` của Google.
 - **Đánh giá và ảnh:** chỉ do nhóm viết khi đã ăn thật. Ba người, mỗi người khoảng 10 quán trong tuần là đủ 30 quán.
 - **Chỗ nào cần lấp đầy để demo:** dùng đánh giá mẫu có nhãn "Mẫu" hiển thị rõ, và xóa hết trước khi đăng bài lên fanpage.
-- **Bản demo (chốt 06/10/2026):** trong lúc chưa có người dùng thật, app chạy bản demo có nhãn: khoảng 32 quán **tên tự đặt** (cố ý không trùng quán thật) quanh 4 cụm trường ở Hà Nội và TP.HCM, mỗi quán vài đánh giá mẫu, mỗi địa danh vài câu cảm nhận mẫu. Đầu mọi trang có dải "Bản demo: quán và đánh giá là minh họa", mỗi đánh giá có nhãn "Mẫu", giá ghi "Giá mẫu", điểm ghi "đánh giá mẫu"; quán minh họa không có nút chỉ đường. Đăng nhập, viết đánh giá, đề xuất quán hiện thông báo "bản demo chưa mở". Khi nối Supabase, app tự chuyển sang dữ liệu thật. Không tạo đánh giá giả trông như thật: như vậy là nói sai về quán có thật và đi ngược lời hứa "đánh giá thật" của app.
+- **Bản demo (chốt 06/10/2026):** trong lúc chưa có người dùng thật, app chạy bản demo có nhãn: khoảng 200 quán **tên tự đặt** (cố ý không trùng quán thật), mỗi thành phố 100 quán rải đều khắp nội thành, thuộc 4 cụm trường, mỗi quán vài đánh giá mẫu, mỗi địa danh vài câu cảm nhận mẫu. Đầu mọi trang có dải "Bản demo: quán và đánh giá là minh họa", mỗi đánh giá có nhãn "Mẫu", giá ghi "Giá mẫu", điểm ghi "đánh giá mẫu"; quán minh họa không có nút chỉ đường. Đăng nhập, viết đánh giá, đề xuất quán hiện thông báo "bản demo chưa mở". Khi nối Supabase, app tự chuyển sang dữ liệu thật. Không tạo đánh giá giả trông như thật: như vậy là nói sai về quán có thật và đi ngược lời hứa "đánh giá thật" của app.
 
 ## 4. Màn hình và luồng
 
@@ -237,7 +237,7 @@ Toàn bộ dữ liệu của app nằm trong 6 bảng Postgres trên Supabase. T
 
 - Lấy bằng script `scripts/landmarks.mjs`, ghi ra file tĩnh `public/landmarks.json`; app tải file này sau khi bản đồ đã vẽ. Chạy lại script khi muốn cập nhật.
 - Nguồn: Wikidata (vị trí, loại, độ nổi tiếng), Wikipedia tiếng Việt (tên, đoạn giới thiệu), Wikimedia Commons (ảnh). Không dùng Google: Places API cần thẻ thanh toán và điều khoản cấm lưu lại dữ liệu, ảnh.
-- "Nổi tiếng" là có bài viết ở nhiều ngôn ngữ Wikipedia. Mỗi thành phố lấy 50 địa danh trong bán kính 10 km quanh trung tâm (Hà Nội: hồ Hoàn Kiếm; TP. Hồ Chí Minh: chợ Bến Thành).
+- Độ "nổi tiếng" đo bằng số ngôn ngữ Wikipedia có bài viết; nơi nổi tiếng hơn hiện trước khi thu nhỏ bản đồ. Mỗi thành phố lấy khoảng 100 địa danh có bài Wikipedia, quanh trung tâm (Hà Nội: hồ Hoàn Kiếm, 15 km; TP. Hồ Chí Minh: chợ Bến Thành, 10 km).
 - Chỉ giữ địa danh có ảnh chụp thật (file JPEG) và thuộc loại công trình hoặc nơi chốn: tòa nhà, đền chùa, nhà thờ, bảo tàng, hồ, công viên, cầu, quảng trường, chợ, di tích. Bỏ sự kiện, tổ chức, đơn vị hành chính, sân bay, bệnh viện, nhà ga, trại giam (trừ nơi đã thành bảo tàng như Hỏa Lò). Mỗi địa danh được xếp vào một loại để chọn icon, đoán theo tên tiếng Việt ("Chùa…", "Cầu…", "Nhà hát…") rồi đến loại trên Wikidata.
 - Ảnh luôn ghi tên tác giả và giấy phép (CC BY, CC BY-SA, phạm vi công cộng…) kèm link tới trang ảnh, đoạn giới thiệu ghi "Wikipedia (CC BY-SA 4.0)", đúng yêu cầu của các giấy phép này.
 

@@ -2,16 +2,18 @@
 // ghi ra public/landmarks.json để app hiện trên bản đồ. Chạy lại khi muốn cập nhật: node scripts/landmarks.mjs
 // Không dùng Google: Places API cần thẻ thanh toán và cấm lưu lại dữ liệu, ảnh.
 //
-// "Nổi tiếng" = có bài viết ở nhiều ngôn ngữ Wikipedia (số sitelinks). Chỉ giữ địa danh có ảnh chụp (JPEG)
+// Độ nổi tiếng = số bài viết Wikipedia các ngôn ngữ (sitelinks), lấy cả nơi chỉ có 1 bài vì nhiều chùa, đình chỉ có bài tiếng Việt. Chỉ giữ địa danh có ảnh chụp (JPEG)
 // và thuộc loại công trình hoặc nơi chốn; bỏ sự kiện, tổ chức, đơn vị hành chính, sân bay, bệnh viện, nhà ga, trại giam (trừ trại giam đã thành bảo tàng).
 import { writeFileSync } from 'node:fs'
 
 const CITIES = [
-  { city: 'Hà Nội', lng: 105.8521, lat: 21.0285, km: 10 }, // tâm: hồ Hoàn Kiếm
+  { city: 'Hà Nội', lng: 105.8521, lat: 21.0285, km: 15 }, // tâm: hồ Hoàn Kiếm
   { city: 'TP. Hồ Chí Minh', lng: 106.6980, lat: 10.7725, km: 10 }, // tâm: chợ Bến Thành
 ]
-const PER_CITY = 50
-const MIN_SITELINKS = 3
+const PER_CITY = 100
+const MIN_SITELINKS = 1
+// Lọt qua bộ lọc nhưng không phải chỗ để ghé: chung cư, văn phòng, trụ sở, cầu vượt, các cổng và giếng lẻ bên trong Văn Miếu
+const SKIP = new Set(['Q131210711', 'Q18325666', 'Q86012381', 'Q16480461', 'Q110892038', 'Q110895421', 'Q110923596'])
 // Loại được tính là địa danh (gồm cả các lớp con): tòa nhà, công trình kiến trúc, tượng đài, bảo tàng,
 // công viên, hồ, quảng trường, điểm du lịch, di chỉ khảo cổ, di tích, chợ, nơi thờ tự, vườn, sở thú, tượng, khu chợ, thành cổ
 const KINDS = ['Q41176', 'Q811979', 'Q4989906', 'Q33506', 'Q22698', 'Q23397', 'Q174782', 'Q570116', 'Q839954', 'Q1081138', 'Q37654', 'Q1370598', 'Q1107656', 'Q43501', 'Q179700', 'Q330284', 'Q88291']
@@ -28,7 +30,7 @@ const TYPES = [
   ['park', /^(công viên|vườn)/i, /park|garden/i],
   ['bridge', /^(cầu|hầm|đường hầm)\s/i, /bridge|tunnel/i],
   ['theatre', /^(nhà hát|rạp|nhà văn hóa)/i, /theat(re|er)|opera|cinema|concert/i],
-  ['stadium', /^(sân vận động|nhà thi đấu|cung thể thao|cung điền kinh|trung tâm thể thao)/i, /stadium|arena|sports/i],
+  ['stadium', /^(sân vận động|nhà thi đấu|cung thể thao|cung thi đấu|cung điền kinh|trung tâm thể thao)/i, /stadium|arena|sports/i],
   ['market', /^(chợ|trung tâm thương mại|phố mua sắm)/i, /market|shopping/i],
   ['post', /^bưu điện/i, /post office/i],
   ['hotel', /^khách sạn/i, /hotel/i],
@@ -120,7 +122,7 @@ for (const c of CITIES) {
     const name = title?.replace(/ \(.*\)$|, .*$/, '') ?? b.name.value
     const type = typeOf(name, b.classes?.value ?? '')
     return { id: b.item.value.split('/').pop(), city: c.city, name, type, desc: b.desc?.value ?? '', lat, lng, file, title, rank: +b.sitelinks.value }
-  })
+  }).filter(r => !SKIP.has(r.id))
   // order: thứ hạng nổi tiếng trong thành phố (0 = nổi tiếng nhất); bản đồ thu nhỏ chỉ hiện các địa danh đứng đầu
   all.push(...rows.slice(0, PER_CITY).map((r, order) => ({ ...r, order })))
   console.log(`${c.city}: ${rows.length} địa danh, lấy ${Math.min(rows.length, PER_CITY)}`)
