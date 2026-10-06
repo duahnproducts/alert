@@ -345,7 +345,6 @@ function askCity() {
   }, h('form', { method: 'dialog' },
     mascot('vui', 72),
     h('h2', { id: 'city-title' }, 'Bạn đang ở đâu?'),
-    h('p', { class: 'muted' }, 'Chọn thành phố để Bao tìm quán quanh trường cho bạn nhé.'),
     CITIES.map((c, i) => h('button', { class: 'btn btn-block', value: String(i) }, c.name)),
   ))
   document.body.append(dlg)
