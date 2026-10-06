@@ -34,7 +34,7 @@ export async function renderPlace(id) {
           h('figcaption', { class: 'tag' }, `Ảnh thật · ${timeAgo(p.cover_at)}`))
       // Chưa có ảnh thật: dùng tranh vẽ theo loại món, ghi rõ là minh họa để không lẫn với "Ảnh thật"
       : h('figure', { class: 'cover illus' },
-          h('img', { src: `/covers/${p.category}.svg`, width: 640, height: 320, alt: `Hình minh họa quán ${cat.label.toLowerCase()}` }),
+          h('img', { src: `covers/${p.category}.svg`, width: 640, height: 320, alt: `Hình minh họa quán ${cat.label.toLowerCase()}` }),
           h('figcaption', { class: 'tag' }, 'Hình minh họa · chưa có ảnh thật')),
     h('h1', { tabindex: -1 }, p.name),
     h('p', { class: 'muted' }, [cat.label, p.address].filter(Boolean).join(' · ')),
@@ -66,7 +66,7 @@ export async function renderPlace(id) {
 
     h('nav', { class: 'actionbar', 'aria-label': 'Hành động' },
       h('a', { class: 'btn-ghost', href: dir, target: '_blank', rel: 'noopener' }, 'Chỉ đường'),
-      h('a', { class: 'btn', href: `/quan/${p.id}/danh-gia` }, 'Viết đánh giá'),
+      h('a', { class: 'btn', href: `quan/${p.id}/danh-gia` }, 'Viết đánh giá'),
       h('button', { type: 'button', class: 'btn-ghost icon-only', 'aria-label': 'Chia sẻ quán', onclick: () => share(p) }, '↗')),
   ])
 
@@ -163,7 +163,7 @@ function reportFlow(type, targetId) {
 }
 
 async function share(p) {
-  const url = `${location.origin}/quan/${p.id}`
+  const url = new URL(`quan/${p.id}`, document.baseURI).href
   if (navigator.share) {
     try { await navigator.share({ title: p.name, text: `${p.name} trên Quán Quen`, url }) } catch {}
     return
@@ -198,14 +198,14 @@ export function openLandmark(l) {
     h('figure', { class: 'lm-photo' },
       h('img', { src: ph.src, width: ph.w, height: ph.h, alt: `Ảnh chụp ${l.name}, tác giả ${ph.author}`, decoding: 'async' }),
       h('figcaption', { class: 'tag' }, 'Ảnh thật')),
-    h('p', { class: 'chip static lm-type' }, h('img', { src: `/icons/lm-${l.type}.svg`, width: 22, height: 22, alt: '' }), LM_TYPES[l.type] ?? 'Địa danh'),
+    h('p', { class: 'chip static lm-type' }, h('img', { src: `icons/lm-${l.type}.svg`, width: 22, height: 22, alt: '' }), LM_TYPES[l.type] ?? 'Địa danh'),
     h('h2', { id: 'lm-title' }, l.name),
     h('p', { class: 'muted' }, [desc, l.city, d != null && `cách ${formatDistance(d)}`].filter(Boolean).join(' · ')),
     l.extract && h('p', null, l.extract),
     near.length > 0 && h('section', null,
       h('h3', null, 'Ăn gì gần đây?'),
       h('ul', { class: 'near' }, near.map(({ p, d }) => h('li', null,
-        h('a', { href: `/quan/${p.id}`, onclick: () => dlg.close() }, h('b', null, p.name)),
+        h('a', { href: `quan/${p.id}`, onclick: () => dlg.close() }, h('b', null, p.name)),
         ` · ${priceShort(p)} · ${formatDistance(d)}`)))),
     h('p', { class: 'small muted credit' },
       'Ảnh: ', h('a', { href: ph.page, target: '_blank', rel: 'noopener' }, ph.author), ' · ',

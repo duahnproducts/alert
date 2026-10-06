@@ -2,6 +2,9 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8">
+  <!-- Mọi đường dẫn trong app là tương đối so với base: "/" khi chạy trên máy, "/alert/" trên GitHub Pages -->
+  <base href="%BASE_URL%">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#FFF8EF" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#1F1A17" media="(prefers-color-scheme: dark)">
@@ -27,7 +30,7 @@
 
   <section id="home">
     <header class="bar">
-      <a href="/" class="logo" aria-label="Quán Quen, trang chủ">
+      <a href="./" class="logo" aria-label="Quán Quen, trang chủ">
         <img src="/icons/bebao-vui.svg" width="36" height="36" alt="">
         <span>Quán Quen</span>
       </a>
@@ -35,9 +38,9 @@
       <details class="menu">
         <summary aria-label="Mở menu">☰</summary>
         <nav>
-          <a href="/de-xuat">Đề xuất quán mới</a>
-          <a href="/cua-toi">Của tôi</a>
-          <a href="/gioi-thieu">Về dự án</a>
+          <a href="de-xuat">Đề xuất quán mới</a>
+          <a href="cua-toi">Của tôi</a>
+          <a href="gioi-thieu">Về dự án</a>
           <!-- CẦN ĐIỀN: link bài dự thi trên fanpage -->
           <a href="https://www.facebook.com/" target="_blank" rel="noopener" class="fanpage">Chia sẻ Quán Quen<small>Nhớ follow fanpage nhé</small></a>
         </nav>

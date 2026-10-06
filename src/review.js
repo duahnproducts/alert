@@ -57,7 +57,7 @@ export async function renderReview(id) {
   if (!p) return page('Không thấy quán', errorBox('Không thấy quán này. Có thể quán đã bị ẩn hoặc bạn đang mất mạng.'))
 
   let pos = null // chỉ giữ trong bộ nhớ tới lúc gửi xong
-  const back = { href: `/quan/${p.id}`, label: p.name }
+  const back = { href: `quan/${p.id}`, label: p.name }
   const status = h('div', { class: 'card checkin', 'aria-live': 'polite' })
   const btn = h('button', { type: 'button', class: 'btn', onclick: checkin }, 'Check-in tại quán')
   const form = reviewForm(p)
@@ -152,7 +152,7 @@ function done(p, reviewId, photoCount, failed) {
     h('p', null, 'Đánh giá của bạn đã lên bản đồ.'),
     photoCount > 0 && h('p', { class: 'muted' }, 'Ảnh của tài khoản mới hiện sau khi nhóm duyệt (thường trong ngày). Từ đánh giá thứ 3, ảnh lên ngay.'),
     retryBox,
-    h('a', { href: `/quan/${p.id}`, class: 'btn' }, 'Xem quán')), { href: `/quan/${p.id}`, label: p.name })
+    h('a', { href: `quan/${p.id}`, class: 'btn' }, 'Xem quán')), { href: `quan/${p.id}`, label: p.name })
 }
 
 const FACES = [['😖', 'Tệ'], ['😕', 'Tạm'], ['😐', 'Được'], ['😋', 'Ngon'], ['🤩', 'Tuyệt']]
@@ -327,6 +327,6 @@ export async function renderSuggest() {
       h('h1', { tabindex: -1 }, 'Đã gửi, cảm ơn bạn!'),
       h('p', null, `“${row.name}” đang chờ duyệt. Nhóm sẽ đến ăn thử và duyệt trong vòng 24 giờ.`),
       h('p', { class: 'muted' }, 'Bạn xem trạng thái trong mục Của tôi.'),
-      h('a', { href: '/cua-toi', class: 'btn' }, 'Xem Của tôi')))
+      h('a', { href: 'cua-toi', class: 'btn' }, 'Xem Của tôi')))
   })
 }

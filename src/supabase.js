@@ -1,7 +1,11 @@
 // Client Supabase và mọi truy vấn. Bảng reviews có quyền theo cột: luôn liệt kê cột, không select=*.
 import { createClient } from '@supabase/supabase-js'
 
-export const sb = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY, {
+// Chưa cấu hình Supabase (vd bản GitHub Pages đầu tiên) thì app vẫn mở được: bản đồ và địa danh chạy,
+// danh sách quán hiện thông báo không tải được
+export const sb = createClient(
+  import.meta.env.VITE_SUPABASE_URL || 'https://chua-cau-hinh.invalid',
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'chua-cau-hinh', {
   auth: { flowType: 'pkce' },
 })
 

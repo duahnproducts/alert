@@ -14,7 +14,7 @@ export function initAuth() {
     const params = new URLSearchParams(location.search)
     if (params.has('code') || params.has('error')) {
       if (error || params.has('error')) toast('Đăng nhập Google chưa xong. Thử lại, hoặc dùng mã qua email nhé')
-      const next = sessionStorage.getItem(AFTER) || '/'
+      const next = sessionStorage.getItem(AFTER) || './'
       sessionStorage.removeItem(AFTER)
       navigate(next, { replace: true })
     }
@@ -98,7 +98,7 @@ export function openLogin() {
 
   async function google() {
     sessionStorage.setItem(AFTER, location.pathname + location.search)
-    const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin } })
+    const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: document.baseURI } })
     if (error) toast('Chưa mở được đăng nhập Google. Thử lại, hoặc dùng mã qua email nhé')
   }
 
@@ -125,7 +125,7 @@ export function openLogin() {
     emailForm,
     codeForm,
     h('p', { class: 'small muted' }, 'Khi đăng nhập, bạn đồng ý với ',
-      h('a', { href: '/gioi-thieu#rieng-tu', onclick: () => dlg.close() }, 'chính sách quyền riêng tư'), '.'),
+      h('a', { href: 'gioi-thieu#rieng-tu', onclick: () => dlg.close() }, 'chính sách quyền riêng tư'), '.'),
     h('button', { type: 'button', class: 'link', onclick: () => dlg.close() }, 'Để sau'),
   )
   dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close() })
@@ -170,7 +170,7 @@ export async function renderMine() {
   const loadReviews = () => myReviews(uid).then(rows => {
     reviewsBox.replaceChildren(...(rows.length ? rows.map(r => {
       const li = h('li', { class: 'card' },
-        h('a', { href: `/quan/${r.place_id}` }, h('b', null, r.places?.name ?? 'Quán đã ẩn')),
+        h('a', { href: `quan/${r.place_id}` }, h('b', null, r.places?.name ?? 'Quán đã ẩn')),
         h('p', null, `${'★'.repeat(r.stars)}${r.price_paid != null ? ` · ${formatPrice(r.price_paid)}` : ''} · ${formatDate(r.review_date)} · ${STATUS[r.status]}`),
         r.comment && h('p', { class: 'muted' }, r.comment),
         h('button', { type: 'button', class: 'link danger', onclick: async () => {
@@ -191,12 +191,12 @@ export async function renderMine() {
   mySuggestions(uid).then(rows => {
     suggestBox.replaceChildren(...(rows.length
       ? rows.map(r => h('li', null, h('b', null, r.name), ` · ${r.status === 'pending' ? 'Chờ duyệt' : 'Chưa được duyệt'}`))
-      : [h('li', { class: 'muted' }, 'Chưa có. ', h('a', { href: '/de-xuat' }, 'Đề xuất quán mới'))]))
+      : [h('li', { class: 'muted' }, 'Chưa có. ', h('a', { href: 'de-xuat' }, 'Đề xuất quán mới'))]))
   }, () => suggestBox.replaceChildren())
 
   async function logout() {
     await sb.auth.signOut()
-    navigate('/')
+    navigate('./')
   }
 
   async function removeAccount() {
@@ -207,7 +207,7 @@ export async function renderMine() {
       return toast('Chưa xóa được tài khoản. Kiểm tra mạng rồi thử lại nhé')
     }
     await sb.auth.signOut({ scope: 'local' })
-    navigate('/')
+    navigate('./')
     toast('Đã xóa tài khoản và mọi dữ liệu của bạn')
     loadData()
   }

@@ -1,6 +1,9 @@
 # Sao lưu dữ liệu mỗi đêm. Đồng thời là một lượt truy cập database mỗi ngày,
 # nên dự án Supabase miễn phí không bị tạm dừng kể cả khi UptimeRobot hỏng.
-# Cần secret SUPABASE_DB_URL (Supabase → Connect → Session pooler, có mật khẩu database).
+# Repo công khai thì ai cũng tải được artifact, nên bản sao lưu được mã hóa trước khi lưu.
+# Cần 2 secret: SUPABASE_DB_URL (Supabase → Connect → Session pooler, có mật khẩu database)
+# và BACKUP_PASSPHRASE (mật khẩu tự đặt để mã hóa; mất là không giải mã được).
+# Giải mã: gpg -d data.sql.gpg > data.sql
 name: backup
 on:
   schedule: [{ cron: '0 17 * * *' }]   # 00:00 giờ Việt Nam
@@ -8,9 +11,19 @@ on:
 jobs:
   dump:
     runs-on: ubuntu-latest
+    env:
+      DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      PASS: ${{ secrets.BACKUP_PASSPHRASE }}
     steps:
-      - uses: supabase/setup-cli@v1
-      - run: supabase db dump --db-url "$DB_URL" --data-only --schema public -f data.sql
-        env: { DB_URL: '${{ secrets.SUPABASE_DB_URL }}' }
-      - uses: actions/upload-artifact@v4
-        with: { name: backup, path: data.sql, retention-days: 14 }
+      - if: env.DB_URL == '' || env.PASS == ''
+        run: echo "Chưa khai SUPABASE_DB_URL hoặc BACKUP_PASSPHRASE, bỏ qua sao lưu."
+      - if: env.DB_URL != '' && env.PASS != ''
+        uses: supabase/setup-cli@v1
+      - if: env.DB_URL != '' && env.PASS != ''
+        run: |
+          supabase db dump --db-url "$DB_URL" --data-only --schema public -f data.sql
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$PASS" --symmetric --cipher-algo AES256 -o data.sql.gpg data.sql
+          rm data.sql
+      - if: env.DB_URL != '' && env.PASS != ''
+        uses: actions/upload-artifact@v4
+        with: { name: backup, path: data.sql.gpg, retention-days: 14 }

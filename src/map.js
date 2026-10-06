@@ -122,7 +122,7 @@ function pinEl(category, iconSrc) {
   el.style.setProperty('--d', `${(Math.random() * 2).toFixed(2)}s`) // lệch nhịp để các ghim không lắc cùng lúc
   const head = document.createElement('span')
   head.className = 'pin-head'
-  head.append(img(iconSrc ?? `/icons/${category}.svg`, 30))
+  head.append(img(iconSrc ?? `icons/${category}.svg`, 30))
   el.append(head)
   return el
 }
@@ -135,7 +135,7 @@ function clusterEl(group) {
   el.className = 'cluster'
   const n = document.createElement('b')
   n.textContent = group.length
-  el.append(img(`/icons/${top}.svg`, 30), n)
+  el.append(img(`icons/${top}.svg`, 30), n)
   return el
 }
 
@@ -247,7 +247,7 @@ export function showLandmarks(list, onPick) {
   if (!map) return
   const L = map.qqL
   lmMarkers = list.map(l => {
-    const el = pinEl('', `/icons/lm-${l.type}.svg`)
+    const el = pinEl('', `icons/lm-${l.type}.svg`)
     el.classList.add('lm')
     const m = L.marker([l.lat, l.lng], {
       icon: L.divIcon({ html: el, className: 'qq-icon', iconSize: [48, 60], iconAnchor: [24, 58] }),
@@ -290,7 +290,7 @@ export function showUser(pos) {
   if (!userMarker) {
     const me = document.createElement('div')
     me.className = 'me'
-    me.append(img('/icons/bebao-vui.svg', 30))
+    me.append(img('icons/bebao-vui.svg', 30))
     userMarker = L.marker(pos, {
       icon: L.divIcon({ html: me, className: 'qq-icon', iconSize: [36, 36], iconAnchor: [18, 18] }),
       title: 'Vị trí của bạn', keyboard: false, interactive: false, zIndexOffset: 2000,
@@ -306,7 +306,7 @@ export async function pickLocation(el, start) {
     const lb = await loadLib()
     const { m } = newMap(lb, el, [start.lat, start.lng], 17)
     const pin = lb.L.marker([start.lat, start.lng], {
-      icon: lb.L.divIcon({ html: pinEl('', '/icons/bebao-vui.svg'), className: 'qq-icon', iconSize: [48, 60], iconAnchor: [24, 58] }),
+      icon: lb.L.divIcon({ html: pinEl('', 'icons/bebao-vui.svg'), className: 'qq-icon', iconSize: [48, 60], iconAnchor: [24, 58] }),
       draggable: true, autoPan: true, title: 'Ghim vị trí quán: kéo ghim hoặc chạm vào bản đồ để dời',
     }).addTo(m)
     m.on('click', e => pin.setLatLng(e.latlng))

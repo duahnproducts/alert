@@ -23,7 +23,7 @@ const TITLE = document.title
 // ───────── Tiện ích giao diện dùng chung ─────────
 
 export const mascot = (mood, size = 96) =>
-  h('img', { src: `/icons/bebao-${mood}.svg`, width: size, height: size, alt: '', class: 'mascot' })
+  h('img', { src: `icons/bebao-${mood}.svg`, width: size, height: size, alt: '', class: 'mascot' })
 
 let toastTimer
 export function toast(msg) {
@@ -36,10 +36,10 @@ export function toast(msg) {
 
 const placeIcon = (p, size = 40) =>
   h('span', { class: 'thumb icon', style: `--c:${CATEGORIES[p.category].color}` },
-    h('img', { src: `/icons/${p.category}.svg`, width: size, height: size, alt: '' }))
+    h('img', { src: `icons/${p.category}.svg`, width: size, height: size, alt: '' }))
 
 // Hiện một trang con (mọi màn trừ bản đồ). Bản đồ vẫn giữ nguyên phía sau để quay lại không phải vẽ lại.
-export function page(title, nodes, back = { href: '/', label: 'Bản đồ' }) {
+export function page(title, nodes, back = { href: './', label: 'Bản đồ' }) {
   document.title = `${title} · Quán Quen`
   $('home').hidden = true
   const main = $('page')
@@ -150,7 +150,7 @@ function renderHome() {
 function placeItem(p) {
   const d = dist(p)
   const open = isOpenNow(p.opening_hours)
-  return h('li', null, h('a', { href: `/quan/${p.id}`, class: 'place-item' },
+  return h('li', null, h('a', { href: `quan/${p.id}`, class: 'place-item' },
     p.cover_path
       ? h('img', { src: photoUrl(thumbPath(p.cover_path)), width: 64, height: 64, loading: 'lazy', decoding: 'async', alt: '', class: 'thumb' })
       : placeIcon(p),
@@ -213,7 +213,7 @@ function showQuick(id) {
     h('div', { class: 'info' },
       h('strong', null, p.name),
       h('span', null, h('b', { class: 'price' }, priceShort(p)), ' · ', scoreShort(p), d != null && ` · ${formatDistance(d)}`),
-      h('a', { href: `/quan/${p.id}`, class: 'btn btn-sm' }, 'Xem quán')),
+      h('a', { href: `quan/${p.id}`, class: 'btn btn-sm' }, 'Xem quán')),
     h('button', { type: 'button', class: 'close', 'aria-label': 'Đóng', onclick: close }, '×'),
   )
   box.hidden = false
@@ -230,10 +230,11 @@ function setListMode(on) {
 
 let mapStarted = false
 function startMap() {
-  // Bản đồ cần khung đang hiện để đo kích thước; trang khác (vd /de-xuat) chưa cần tới
-  if (mapStarted || !state.places.length || location.pathname !== '/') return
+  // Bản đồ cần khung đang hiện để đo kích thước; trang khác (vd /de-xuat) chưa cần tới.
+  // Chưa có quán (Supabase lỗi hoặc chưa cấu hình) vẫn vẽ bản đồ để xem địa danh.
+  if (mapStarted || appPath() !== '/') return
   mapStarted = true
-  const o = origin() ?? state.places[0]
+  const o = origin() ?? state.places[0] ?? { lat: 21.0285, lng: 105.8542 } // mặc định: hồ Hoàn Kiếm
   const go = () => initMap($('map'), {
     center: { lat: o.lat, lng: o.lng },
     onSelect: showQuick,
@@ -247,7 +248,7 @@ function startMap() {
   }).then(() => {
     renderHome()
     // Địa danh: dữ liệu tĩnh lấy từ Wikidata/Wikipedia bằng scripts/landmarks.mjs. Lỗi thì bản đồ vẫn chạy, chỉ thiếu địa danh
-    fetch('/landmarks.json').then(r => r.json()).then(list => {
+    fetch('landmarks.json').then(r => r.json()).then(list => {
       showLandmarks(list, openLandmark)
       toggleLandmarks(state.landmarks)
     }, () => {})
@@ -278,19 +279,19 @@ function setupHome() {
     state.cats.has(key) ? state.cats.delete(key) : state.cats.add(key)
     e.currentTarget.setAttribute('aria-pressed', String(state.cats.has(key)))
     renderHome()
-  }, `/icons/${key}.svg`))
+  }, `icons/${key}.svg`))
   const lmChip = chip('Địa danh', e => {
     state.landmarks = !state.landmarks
     e.currentTarget.setAttribute('aria-pressed', String(state.landmarks))
     toggleLandmarks(state.landmarks)
-  }, '/icons/lm-museum.svg')
+  }, 'icons/lm-museum.svg')
   lmChip.classList.add('lm-chip')
   lmChip.setAttribute('aria-pressed', 'true')
   filters.append(u30, p3050, openChip, lmChip, ...cats)
 
   $('area').onchange = e => {
     state.area = +e.target.value
-    history.replaceState(null, '', state.area ? `/?khu=${state.area}` : '/')
+    history.replaceState(null, '', state.area ? `./?khu=${state.area}` : './')
     const a = currentArea()
     if (a) moveTo({ lat: a.center_lat, lng: a.center_lng }, 15)
     renderHome()
@@ -343,26 +344,33 @@ const routes = [
   [/^\/gioi-thieu\/?$/, renderAbout],
 ]
 
+// Đường dẫn gốc của app: "/" khi chạy trên máy, "/alert/" trên GitHub Pages (thẻ <base> trong index.html)
+const BASE = new URL(document.baseURI).pathname
+// Đường dẫn của màn hiện tại, đã bỏ phần gốc: "/quan/12"
+const appPath = () => '/' + location.pathname.slice(BASE.length)
+
 export function route() {
   document.querySelector('details.menu')?.removeAttribute('open')
   for (const [re, fn] of routes) {
-    const m = location.pathname.match(re)
+    const m = appPath().match(re)
     if (m) return fn(...m.slice(1))
   }
   page('Không tìm thấy', errorBox('Trang này không có. Quay lại bản đồ tìm quán khác nhé.'))
 }
 
+// path: tương đối theo <base> ("quan/12", "./") hoặc URL đầy đủ cùng trang
 export function navigate(path, { replace = false } = {}) {
   history[replace ? 'replaceState' : 'pushState'](null, '', path)
   route()
 }
 
+// Link nội bộ (cùng trang, nằm dưới đường dẫn gốc) đổi màn tại chỗ, không tải lại trang
 document.addEventListener('click', e => {
-  const a = e.target.closest('a[href^="/"]')
-  if (!a || a.target || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+  const a = e.target.closest('a[href]')
+  if (!a || a.target || a.origin !== location.origin || !a.pathname.startsWith(BASE)) return
+  if (e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
   e.preventDefault()
-  const href = a.getAttribute('href')
-  if (href !== location.pathname + location.search + location.hash) navigate(href)
+  if (a.href !== location.href) navigate(a.href)
 })
 addEventListener('popstate', route)
 
