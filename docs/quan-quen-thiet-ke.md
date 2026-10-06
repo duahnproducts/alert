@@ -2,7 +2,7 @@
 
 Bản trong repo là **bản chuẩn**, cập nhật ngày 05/10/2026: các con số về hạn mức, giá và quy định đã được kiểm trên trang chính thức (nguồn ở cuối tài liệu), và đã thống nhất với [phương án kỹ thuật](quan-quen-ky-thuat.md). Bản nháp đầu tiên (có sơ đồ vẽ) nằm trên Claude Docs, có thể cũ hơn bản này: https://claude.ai/code/artifact/eb3e82df-65aa-44b2-8470-35029f08e2e5
 
-**Cập nhật 06/10/2026: bản đồ chibi tự vẽ, không dùng Google Maps.** Không có thẻ để mở thanh toán Google Cloud, nên app làm theo phương án B (rủi ro đầu tiên ở mục 14). App tự vẽ bản đồ kiểu chibi (màu kẹo, đường to bo tròn, ghim tròn phồng) từ dữ liệu miễn phí của OpenFreeMap, không cần key. Máy chủ chính của OpenStreetMap (`openstreetmap.org`) không kết nối được từ mạng ở Việt Nam (kiểm ngày 06/10/2026), nên không dùng. Trang quán không còn dòng điểm Google; thay bằng link "Xem đánh giá trên Google Maps". Nút "Chỉ đường" vẫn mở Google Maps qua link (miễn phí, không cần key). Đăng nhập bằng Google vẫn giữ: OAuth của Google không cần thanh toán. Các mục dưới đây đã sửa theo quyết định này.
+**Cập nhật 06/10/2026: bản đồ chibi tự vẽ, không dùng Google Maps.** Không có thẻ để mở thanh toán Google Cloud, nên app làm theo phương án B (rủi ro đầu tiên ở mục 14). App tự vẽ bản đồ kiểu chibi (màu kẹo, đường to bo tròn, ghim tròn phồng) từ dữ liệu miễn phí của OpenFreeMap, không cần key. Máy chủ chính của OpenStreetMap (`openstreetmap.org`) không kết nối được từ mạng ở Việt Nam (kiểm ngày 06/10/2026), nên không dùng. Trang quán không còn dòng điểm Google; thay bằng link "Xem đánh giá trên Google Maps". Nút "Chỉ đường" ban đầu mở Google Maps qua link; nay mở trang chỉ đường ngay trong app (Màn 2), Google Maps còn làm nút dự phòng. Đăng nhập bằng Google vẫn giữ: OAuth của Google không cần thanh toán. Các mục dưới đây đã sửa theo quyết định này.
 
 Tài liệu này mô tả sản phẩm làm gì và vì sao. Cách làm cụ thể (SQL, cấu hình dịch vụ, cấu trúc code) nằm trong phương án kỹ thuật.
 
@@ -100,6 +100,10 @@ Bản đồ ──> Chi tiết quán ──> [Đã đăng nhập?] ──rồi�
 - **Thanh trên:** logo và linh vật nhỏ; ô tìm theo tên quán hoặc tên món (tìm trong dữ liệu của app, không gọi API); chip chọn cụm trường, ví dụ "Quanh: ĐH Bách khoa ▾".
 - **Hàng bộ lọc cuộn ngang:** "Dưới 30k", "30–50k", "Đang mở", rồi các loại món có biểu tượng (mục 5).
 - **Bản đồ toàn màn:** mỗi quán là một biểu tượng theo loại món. Thu nhỏ bản đồ thì các quán gần nhau gộp thành một cụm có số. Nút "Vị trí của tôi" chỉ xin quyền GPS khi được bấm.
+- **Thẻ "Gợi ý quanh bạn"** (nổi trên mép ngăn kéo; laptop và chế độ danh sách thì nằm đầu danh sách):
+  - Chưa có vị trí: Bao mời "Đói chưa? Cho Bao biết bạn đang ở đâu nhé", ghi rõ vị trí chỉ dùng trên máy, không lưu, không gửi đi; nút "Chia sẻ vị trí". App chỉ xin quyền GPS khi người dùng bấm nút này hoặc nút "Vị trí của tôi". Đã cho phép từ lần trước thì app tự lấy vị trí, không hỏi lại; đã chặn thì không hiện thẻ.
+  - Có vị trí: chuyển chip cụm trường sang "Tất cả cụm trường" (quán gần bạn có thể thuộc cụm khác), xếp danh sách theo khoảng cách, và thẻ gợi ý 3 quán trong 2 km, không đang đóng cửa, theo các bộ lọc đang bật. Thứ tự: số sao trừ khoảng cách, mỗi km trừ 1 sao; quán dưới 3 đánh giá tính 3,5 sao. Không có quán nào thì nói rõ cần bỏ bớt bộ lọc hoặc kéo bản đồ.
+  - Chạm ghim thì thẻ xem nhanh thế chỗ; bấm × thì ẩn thẻ.
 - **Chạm vào biểu tượng:** hiện thẻ xem nhanh ở đáy gồm ảnh, tên, giá thật, điểm, khoảng cách và nút "Xem quán".
 - **Ngăn kéo từ đáy lên:** danh sách các quán đang hiện trên bản đồ, sắp theo khoảng cách hoặc theo điểm. Nút "Bản đồ / Danh sách" chuyển hẳn sang chế độ danh sách.
 - **Không có kết quả:** linh vật và câu "Chưa có quán nào khớp, thử bỏ bớt bộ lọc nhé".
@@ -112,7 +116,15 @@ Bản đồ ──> Chi tiết quán ──> [Đã đăng nhập?] ──rồi�
 - **Giá thật:** "Thường 35k · từ 30k đến 45k · theo 18 người đã ăn".
 - **Món được nhắc nhiều:** các chip như "Bún chả (12)", "Nem (5)".
 - **Lưới ảnh thật,** rồi **danh sách đánh giá** mới nhất trước. Mỗi đánh giá gồm tên hiển thị, huy hiệu "Đã check-in", số sao, giá đã trả, món, một câu, ảnh, ngày và nút "Báo cáo".
-- **Thanh đáy cố định:** "Chỉ đường" (mở Google Maps), "Viết đánh giá", biểu tượng chia sẻ.
+- **Thanh đáy cố định:** "Chỉ đường", "Viết đánh giá", biểu tượng chia sẻ.
+- **Chỉ đường ngay trong app** (`/quan/:id/chi-duong`), không phải rời sang Google Maps:
+  - Chọn "🛵 Xe máy" hoặc "🚶 Đi bộ"; mặc định đi bộ nếu quán cách dưới 1,5 km. Dòng tóm tắt "1,2 km · khoảng 15 phút đi bộ", bản đồ có đường đi, ghim quán và Bao ở vị trí của bạn, rồi danh sách từng bước bằng tiếng Việt ("Rẽ phải vào Phố Giảng Võ · 230 m").
+  - Bao đi theo vị trí thật của bạn. Bản đồ giữ khung cả tuyến, chỉ dời khi Bao sắp ra khỏi khung; bạn tự kéo hoặc zoom thì bản đồ để yên 15 giây cho bạn xem.
+  - Đi lệch khỏi đường quá 40 m (hoặc quá sai số GPS lúc đó) thì Bao báo "Bạn đi khác đường rồi" và tự tìm đường mới từ chỗ bạn đứng, tối đa 30 giây một lần.
+  - Chọn xe máy hay đi bộ trước khi có vị trí thì app nhớ lựa chọn đó. Cách quán dưới 50 m thì hiện "Tới nơi rồi! Chúc bạn ăn ngon" và nút "Ăn xong viết đánh giá".
+  - Ghi rõ trên trang: để vẽ đường, vị trí của bạn và của quán được gửi tới máy chủ tìm đường của FOSSGIS (Đức); app không lưu vị trí. Kèm ghi nguồn OpenStreetMap và link "Sửa bản đồ" (điều kiện dùng máy chủ).
+  - Bản demo (quán minh họa) không có nút "Chỉ đường"; mở thẳng đường dẫn thì báo "Bản demo chưa có chỉ đường".
+  - Luôn có nút "Mở bằng Google Maps". Không lấy được vị trí, máy chủ tìm đường lỗi, hoặc bạn cách quán trên 30 km (thường là máy tính đoán sai vị trí) thì nói rõ lý do và chỉ sang nút này.
 
 ### Màn 3: Viết đánh giá
 
@@ -195,7 +207,7 @@ Mỗi biểu cảm là một file SVG dưới 10 KB.
 
 ## 6. Dữ liệu
 
-Toàn bộ dữ liệu của app nằm trong 6 bảng Postgres trên Supabase. Từ Google, app chỉ lưu `place_id` (không bắt buộc) để link "Chỉ đường" và "Xem đánh giá trên Google Maps" mở đúng quán; app không lấy điểm Google. Với khoảng 50 quán, app tải hết một lần (dưới 50 KB) rồi lọc ngay trên máy, không cần phân trang.
+Toàn bộ dữ liệu của app nằm trong 6 bảng Postgres trên Supabase. Từ Google, app chỉ lưu `place_id` (không bắt buộc) để link "Mở bằng Google Maps" (trang chỉ đường) và "Xem đánh giá trên Google Maps" mở đúng quán; app không lấy điểm Google. Với khoảng 50 quán, app tải hết một lần (dưới 50 KB) rồi lọc ngay trên máy, không cần phân trang.
 
 | Bảng | Trường chính | Ghi chú |
 | --- | --- | --- |
@@ -217,7 +229,7 @@ Toàn bộ dữ liệu của app nằm trong 6 bảng Postgres trên Supabase. T
 
 |  | Dữ liệu của app | Nền bản đồ và Google Maps |
 | --- | --- | --- |
-| Gồm | Quán, giờ mở cửa, đánh giá, giá thật, ảnh | Dữ liệu bản đồ (OpenFreeMap, từ OpenStreetMap); link sang Google Maps |
+| Gồm | Quán, giờ mở cửa, đánh giá, giá thật, ảnh | Dữ liệu bản đồ (OpenFreeMap, từ OpenStreetMap); đường đi (Valhalla của FOSSGIS, từ OpenStreetMap); link sang Google Maps |
 | Lưu ở đâu | Supabase, lưu lâu dài | Không lưu; chỉ giữ `place_id` để dựng link |
 | Khi không lấy được | Hiện dữ liệu đã lưu trên máy kèm giờ lưu; không có thì hiện linh vật buồn và nút thử lại | Ô bản đồ không tải được trong 8 giây thì chuyển sang chế độ danh sách |
 
@@ -260,7 +272,8 @@ Dự án Supabase tạo sau tháng 11/2025 không còn "anon key" và "service_r
 | --- | --- | --- |
 | Frontend | Vite + JavaScript thuần (nếu nhóm quen React thì dùng React, thiết kế không đổi) | Nhẹ, build ra file tĩnh |
 | Bản đồ | Leaflet 1.9 + `protomaps-leaflet`, tự vẽ kiểu chibi từ dữ liệu vector của OpenFreeMap; ghim `L.divIcon` bằng HTML, gom cụm tự viết theo lưới | Không cần thẻ, không cần key; tự chọn được màu, nét, chữ cho ra chất chibi |
-| Google Maps | Chỉ dùng link Google Maps URLs cho "Chỉ đường" và "Xem đánh giá trên Google Maps" | Miễn phí, không cần key |
+| Chỉ đường | Valhalla trên máy chủ miễn phí của FOSSGIS (`valhalla1.openstreetmap.de`), chế độ `motor_scooter` (xe máy) và `pedestrian` (đi bộ), câu chỉ dẫn `vi-VN` | Miễn phí, không cần key, có sẵn chế độ xe máy và tiếng Việt. Điều kiện: ghi nguồn OSM kèm link sửa bản đồ, tối đa 1 yêu cầu/giây, không dùng nặng. Là máy chủ demo nên luôn giữ nút Google Maps dự phòng |
+| Google Maps | Chỉ dùng link Google Maps URLs cho "Mở bằng Google Maps" và "Xem đánh giá trên Google Maps" | Miễn phí, không cần key |
 | Dữ liệu và tài khoản | Supabase: Postgres, Auth (Google và mã qua email), Storage | Miễn phí, có sẵn đăng nhập và phân quyền theo dòng |
 | Gửi đánh giá | Hàm Postgres `submit_review` gọi qua RPC | Kiểm tra khoảng cách check-in và giới hạn 1 đánh giá/ngày ngay trong database |
 | Ảnh | Nén trên máy bằng canvas thành 2 cỡ: cạnh dài 1280 px để xem lớn, 400 px cho lưới ảnh và danh sách; chất lượng 0,8. Dùng WebP, riêng Safari và mọi trình duyệt trên iOS dùng JPEG (các trình duyệt này không xuất được WebP) | Bản lớn khoảng 150–250 KB, bản nhỏ khoảng 30 KB. Vẽ lại qua canvas cũng xóa luôn thông tin EXIF (có GPS nhà riêng). Supabase gói miễn phí không tự đổi cỡ ảnh, nên app phải tự làm |
@@ -343,8 +356,9 @@ App chỉ thu những gì cần để hiện một đánh giá, và người dù
 | Tên hiển thị | Hiện cạnh đánh giá | Mọi người |
 | Đánh giá, ảnh (đã xóa EXIF) | Nội dung của app | Mọi người |
 | Khoảng cách lúc check-in | Hiện huy hiệu "Đã check-in" | Chỉ nhóm |
+| Vị trí lúc mở trang chỉ đường (không lưu) | Vẽ đường tới quán | Máy chủ tìm đường của FOSSGIS (Đức), ghi vào nhật ký máy chủ của họ; nhóm không nhận |
 
-Không thu: tọa độ của người dùng, lịch sử duyệt, danh bạ, và không có công cụ phân tích hay quảng cáo của bên thứ ba.
+Không thu: tọa độ của người dùng, lịch sử duyệt, danh bạ, và không có công cụ phân tích hay quảng cáo của bên thứ ba. Vị trí dùng cho "Gợi ý quanh bạn" chỉ nằm trong bộ nhớ của tab, tính ngay trên máy, không gửi đi; vị trí chỉ rời máy khi check-in (gửi một lần cho `submit_review`) và khi mở trang chỉ đường (gửi cho máy chủ tìm đường).
 
 - Tấm đăng nhập có một dòng đồng ý, kèm link tới trang chính sách quyền riêng tư viết bằng lời dễ hiểu.
 - Căn cứ pháp lý hiện hành: **Luật Bảo vệ dữ liệu cá nhân 2025** (hiệu lực từ 01/01/2026) và **Nghị định 356/2025/NĐ-CP** hướng dẫn thi hành luật này. Nghị định 356 thay thế Nghị định 13/2023/NĐ-CP, nên không trích Nghị định 13 nữa. Nhóm cần đọc phần về sự đồng ý của chủ thể dữ liệu trước khi viết trang chính sách. Hình ảnh được Nghị định 356 nhắc đến trong nhóm dữ liệu cần bảo vệ chặt hơn, nên trang chính sách phải nói rõ ảnh được dùng thế nào và xóa bằng cách nào.
@@ -364,7 +378,8 @@ Không thu: tọa độ của người dùng, lịch sử duyệt, danh bạ, v�
 
 - Ghi nguồn "OpenFreeMap © OpenMapTiles Data from OpenStreetMap" luôn hiện rõ ở góc trên bản đồ, có link tới trang bản quyền. Góc dưới bị ngăn kéo danh sách che nên không đặt ở đó.
 - Không tải trước hàng loạt ô bản đồ; chỉ tải phần người dùng đang xem. Mức zoom nhỏ nhất là 11 (cỡ một thành phố).
-- App không lấy, không lưu, không sao chép điểm hay đánh giá của Google. Nút chỉ đường và link xem đánh giá dùng Google Maps URLs (`https://www.google.com/maps/dir/?api=1&destination=...`), không tốn phí.
+- App không lấy, không lưu, không sao chép điểm hay đánh giá của Google. Nút "Mở bằng Google Maps" và link xem đánh giá dùng Google Maps URLs (`https://www.google.com/maps/dir/?api=1&destination=...`), không tốn phí.
+- Máy chủ tìm đường của FOSSGIS: trang chỉ đường ghi nguồn OpenStreetMap kèm link "Sửa bản đồ"; mỗi lần mở trang chỉ gửi 1 yêu cầu cho mỗi chế độ đi (đổi qua lại không hỏi lại), không tìm đường cho quãng trên 30 km.
 
 ## 11. Kiểm thử
 
@@ -382,6 +397,9 @@ Phần lớn người dùng sẽ mở app từ bài đăng trên fanpage, tức 
 
 - [ ] Mở app lần đầu trên mạng 4G yếu (giả lập "Slow 4G" trong DevTools): bản đồ hiện trong 3 giây.
 - [ ] Từ chối quyền vị trí: bản đồ vẫn hiện ở cụm trường mặc định, không báo lỗi đỏ.
+- [ ] Bấm "Chia sẻ vị trí" khi đang ở gần trường: thẻ gợi ý 3 quán đang mở, bấm vào mở đúng trang quán. Mở lại app: không hỏi lại, tự gợi ý. Thử cả trong trình duyệt của Facebook và Zalo.
+- [ ] Bấm "Chỉ đường" khi đang ở gần quán: có đường đi, các bước tiếng Việt, Bao đi theo khi bạn đi, cố ý rẽ sai một ngã thì app tự tìm đường mới, tới quán thì hiện "Tới nơi rồi!". Thử cả trong trình duyệt của Facebook và Zalo.
+- [ ] Chặn `valhalla1.openstreetmap.de` (DevTools → Network request blocking): trang chỉ đường báo lỗi kèm nút thử lại, nút "Mở bằng Google Maps" vẫn dùng được.
 - [ ] Đăng nhập bằng mã email ngay trong trình duyệt của Facebook.
 - [ ] Viết đánh giá khi đang ở quán thì gửi được; ở nhà thì bị từ chối kèm lời giải thích.
 - [ ] Tải ảnh 8 MB chụp từ iPhone: file lưu trên Storage dưới 300 KB và không còn EXIF.
@@ -470,6 +488,7 @@ Rủi ro lớn nhất là app ngừng chạy giữa mùa thi, vì theo thể l�
 | --- | --- | --- |
 | **Đã xảy ra (06/10):** không có thẻ để mở billing Google Cloud | Biết ngay ngày 05/10 | Đã đổi sang bản đồ tự vẽ kiểu chibi từ dữ liệu OpenFreeMap (miễn phí, không key). Ghim, biểu tượng và luồng giữ nguyên. Bỏ điểm Google, thay bằng link "Xem đánh giá trên Google Maps" |
 | Máy chủ bản đồ bị chặn hoặc quá tải khi bài được chia sẻ mạnh | Bản đồ trống, app tự chuyển sang danh sách | OpenFreeMap không giới hạn lượt; nếu bị chặn, đổi nguồn dữ liệu trong `map.js` |
+| Máy chủ tìm đường của FOSSGIS (bản demo) chậm, chặn hoặc ngừng | Trang chỉ đường báo "Máy chủ tìm đường chưa trả lời" | Người dùng vẫn có nút "Mở bằng Google Maps". Nếu kéo dài, đổi nút "Chỉ đường" ở trang quán về link Google Maps (`gmapsDir` trong `place.js`) |
 | Email mã đăng nhập không tới | Người ngoài nhóm báo không nhận được mã | Email mặc định của Supabase chỉ gửi tới thành viên nhóm (2 email/giờ), nên SMTP riêng qua Resend hoặc Brevo là việc **bắt buộc** của ngày 07/10, không phải dự phòng. Sau khi cấu hình, nâng giới hạn gửi email trong Supabase Auth và gửi thử tới Gmail, Outlook của người ngoài nhóm |
 | Supabase đổi hệ thống key | Hướng dẫn trên mạng nói "anon key" nhưng dashboard không có | Dùng publishable key (`sb_publishable_…`) ở mọi chỗ tài liệu cũ nói anon key |
 | Ảnh hoặc lời lẽ xấu lọt lên đúng lúc BTC chấm | Có báo cáo, hoặc phát hiện khi duyệt | Hàng chờ ảnh cho tài khoản mới, tự ẩn khi đủ 3 báo cáo, duyệt 2 lần mỗi ngày |

@@ -3,9 +3,9 @@ import './style.css'
 import { DEMO, readCache, fetchPlaces, photoUrl, thumbPath } from './supabase.js'
 import { initMap, showPlaces, select as selectPin, moveTo, showUser, showLandmarks, toggleLandmarks } from './map.js'
 import {
-  CATEGORIES, h, normalizeVi, distanceM, isOpenNow, filterPrice, priceShort, scoreShort, formatDistance, placeLabel,
+  CATEGORIES, h, normalizeVi, distanceM, isOpenNow, filterPrice, priceShort, scoreShort, formatDistance, placeLabel, suggestNear,
 } from './util.js'
-import { renderPlace, openLandmark } from './place.js'
+import { renderPlace, renderDirections, openLandmark } from './place.js'
 import { renderReview, renderSuggest } from './review.js'
 import { initAuth, requireLogin, renderMine } from './auth.js'
 
@@ -147,6 +147,88 @@ function renderHome() {
   const list = filtered()
   showPlaces(list, p => placeLabel(p, dist(p)))
   renderList(list)
+  renderNear(list)
+}
+
+// ───────── Gợi ý quanh bạn ─────────
+// Thẻ mời chia sẻ vị trí, có vị trí thì gợi ý quán đang mở gần bạn. Vị trí chỉ nằm trong bộ nhớ của tab, tính ngay trên máy.
+
+let near = 'off' // 'off' | 'ask' | 'wait' | 'show'
+
+function renderNear(list = filtered()) {
+  const box = $('near')
+  box.hidden = near === 'off'
+  if (box.hidden) return
+  const close = h('button', {
+    type: 'button', class: 'close', 'aria-label': near === 'show' ? 'Đóng gợi ý' : 'Để sau',
+    onclick: () => { near = 'off'; renderNear() },
+  }, '×')
+  if (near !== 'show') {
+    box.replaceChildren(close,
+      h('div', { class: 'row' }, mascot('doi', 56), h('div', null,
+        h('strong', null, 'Đói chưa? Cho Bao biết bạn đang ở đâu nhé'),
+        h('p', { class: 'muted' }, 'Bao gợi ý quán ngon đang mở gần bạn. Vị trí chỉ dùng ngay trên máy, không lưu, không gửi đi đâu.'))),
+      h('button', { type: 'button', class: 'btn btn-sm', onclick: locate, disabled: near === 'wait' },
+        near === 'wait' ? 'Bao đang tìm bạn…' : '📍 Chia sẻ vị trí'))
+    return
+  }
+  const picks = suggestNear(list, state.userPos)
+  box.replaceChildren(close,
+    h('div', { class: 'near-head' }, h('strong', null, 'Gợi ý quanh bạn'),
+      h('button', { type: 'button', class: 'link', onclick: locate }, 'Cập nhật vị trí')),
+    picks.length
+      ? h('ul', null, picks.map(({ p, d }) => h('li', null, h('a', { href: `quan/${p.id}` },
+        placeIcon(p, 28),
+        h('span', { class: 'info' }, h('b', null, p.name),
+          h('span', { class: 'muted' },
+            [formatDistance(d), priceShort(p, DEMO), scoreShort(p), isOpenNow(p.opening_hours) && 'Đang mở'].filter(Boolean).join(' · ')))))))
+      : h('p', { class: 'muted' }, 'Trong 2 km quanh bạn chưa có quán đang mở nào khớp. Thử bỏ bớt bộ lọc hoặc kéo bản đồ xem quán xa hơn nhé.'))
+}
+
+function locate() {
+  if (!navigator.geolocation) {
+    near = 'off'
+    renderNear()
+    return toast('Máy bạn không lấy được vị trí. App tính khoảng cách từ tâm cụm trường nhé')
+  }
+  if (state.userPos) toast('Đang lấy vị trí…')
+  else { near = 'wait'; renderNear() }
+  navigator.geolocation.getCurrentPosition(g => {
+    state.userPos = { lat: g.coords.latitude, lng: g.coords.longitude }
+    // Quán gần bạn có thể thuộc cụm trường khác: xem tất cả, danh sách tự gọn theo vùng bản đồ đang hiện
+    state.area = 0
+    $('area').value = '0'
+    if (new URLSearchParams(location.search).has('khu')) history.replaceState(null, '', './')
+    state.sort = 'dist'
+    $('sort').value = 'dist'
+    near = 'show'
+    renderHome()
+    showUser(state.userPos, coveredBottom()) // sau renderHome: thẻ đã đổi cỡ
+    toast('Đã xếp quán theo khoảng cách tới bạn')
+  }, e => {
+    near = state.userPos ? 'show' : e.code === 1 ? 'off' : 'ask'
+    renderNear()
+    toast(e.code === 1
+      ? 'Bạn chưa cho phép vị trí. Muốn bật lại thì vào cài đặt trình duyệt, cho phép vị trí cho trang này nhé'
+      : 'Chưa lấy được vị trí. Ra chỗ thoáng hơn rồi bấm thử lại nhé')
+  }, { timeout: 10000, maximumAge: 60000 })
+}
+
+// Số px ở đáy bản đồ bị ngăn kéo hoặc thẻ gợi ý che (điện thoại). Laptop: hai thứ này nằm cột bên trái, không che.
+function coveredBottom() {
+  const m = $('map').getBoundingClientRect()
+  const over = ['sheet', 'near'].map(id => $(id).getBoundingClientRect()).filter(r => r.height && r.left < m.right && r.right > m.left)
+  return Math.max(0, m.bottom - Math.min(m.bottom, ...over.map(r => r.top)))
+}
+
+// Đã cho phép từ trước thì lấy luôn (trình duyệt không hỏi lại). Chưa thì mời bằng thẻ, chỉ xin quyền khi người dùng bấm
+// (xin ngay lúc mở trang thì Lighthouse trừ điểm và người dùng hay bấm chặn). Đã chặn thì không làm phiền.
+async function initNear() {
+  if (!navigator.geolocation) return
+  let s = 'prompt'
+  try { s = (await navigator.permissions.query({ name: 'geolocation' })).state } catch {} // Safari cũ, trình duyệt trong app
+  if (s === 'granted') locate()
+  else if (s === 'prompt') { near = 'ask'; renderNear() }
 }
 
 function placeItem(p) {
@@ -250,6 +332,7 @@ function startMap() {
     },
   }).then(() => {
     renderHome()
+    if (state.userPos) showUser(state.userPos, coveredBottom()) // vị trí lấy xong trước khi bản đồ kịp vẽ
     // Địa danh: dữ liệu tĩnh lấy từ Wikidata/Wikipedia bằng scripts/landmarks.mjs. Lỗi thì bản đồ vẫn chạy, chỉ thiếu địa danh
     fetch('landmarks.json').then(r => r.json()).then(list => {
       showLandmarks(list, openLandmark)
@@ -306,20 +389,7 @@ function setupHome() {
     const open = $('sheet').classList.toggle('open')
     e.currentTarget.setAttribute('aria-expanded', String(open))
   }
-  $('locate').onclick = () => {
-    if (!navigator.geolocation) return toast('Máy bạn không lấy được vị trí. App tính khoảng cách từ tâm cụm trường nhé')
-    toast('Đang lấy vị trí…')
-    navigator.geolocation.getCurrentPosition(g => {
-      state.userPos = { lat: g.coords.latitude, lng: g.coords.longitude }
-      showUser(state.userPos)
-      state.sort = 'dist'
-      $('sort').value = 'dist'
-      renderHome()
-      toast('Đã xếp quán theo khoảng cách tới bạn')
-    }, e => toast(e.code === 1
-      ? 'Bạn chưa cho phép vị trí. App vẫn tính khoảng cách từ tâm cụm trường nhé'
-      : 'Chưa lấy được vị trí, thử lại sau nhé'), { timeout: 10000, maximumAge: 60000 })
-  }
+  $('locate').onclick = locate
 }
 
 // ───────── Router ─────────
@@ -341,6 +411,7 @@ function renderAbout() {
 const routes = [
   [/^\/$/, showHome],
   [/^\/quan\/(\d+)\/?$/, id => renderPlace(+id)],
+  [/^\/quan\/(\d+)\/chi-duong\/?$/, id => renderDirections(+id)],
   [/^\/quan\/(\d+)\/danh-gia\/?$/, id => requireLogin('viết đánh giá', () => renderReview(+id))],
   [/^\/de-xuat\/?$/, () => requireLogin('đề xuất quán mới', renderSuggest)],
   [/^\/cua-toi\/?$/, () => requireLogin('xem đánh giá của bạn', renderMine)],
@@ -388,3 +459,4 @@ initAuth()
 loadData() // trước route(): mở thẳng link quán (vd /quan/12) lần đầu thì trang quán chờ được dữ liệu
 route()
 if (cached) startMap()
+initNear()

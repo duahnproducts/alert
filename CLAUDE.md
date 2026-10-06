@@ -21,7 +21,8 @@ Bản thiết kế là nguồn gốc về sản phẩm; bản kỹ thuật là n
 - Vite + JavaScript thuần, 3 gói chạy trên trình duyệt: `@supabase/supabase-js`, `leaflet`, `protomaps-leaflet` (vẽ bản đồ chibi từ dữ liệu vector).
 - Bản đồ: không có thẻ thanh toán nên không dùng Google Maps (chốt 06/10/2026, mục 11 bản kỹ thuật). App tự vẽ bản đồ kiểu chibi (màu kẹo, đường to bo tròn, ghim tròn phồng) từ dữ liệu vector của OpenFreeMap: miễn phí, không key, không giới hạn lượt. Không dùng `openstreetmap.org`: không kết nối được từ Việt Nam.
 - Mọi quy tắc tin cậy (quyền, check-in 150 m, giới hạn đánh giá, hàng chờ ảnh, tự ẩn khi đủ 3 báo cáo) nằm trong Postgres (RLS, hàm, trigger), không nằm ở frontend.
-- Không lấy điểm Google. `place_id` của Google (không bắt buộc) chỉ dùng để link "Chỉ đường" và "Xem đánh giá trên Google Maps" mở đúng quán.
+- Không lấy điểm Google. `place_id` của Google (không bắt buộc) chỉ dùng để link "Mở bằng Google Maps" và "Xem đánh giá trên Google Maps" mở đúng quán.
+- Chỉ đường ngay trong app (`/quan/:id/chi-duong`): Valhalla trên máy chủ miễn phí của FOSSGIS (`valhalla1.openstreetmap.de`, không key, có xe máy và câu tiếng Việt). Bắt buộc ghi nguồn OSM kèm link "Sửa bản đồ", tối đa 1 yêu cầu/giây, không dùng nặng. Là máy chủ demo nên luôn giữ nút "Mở bằng Google Maps" dự phòng. Vị trí người dùng được gửi tới FOSSGIS khi mở trang này; trang và chính sách quyền riêng tư phải nói rõ.
 - Không lưu tọa độ người dùng; xóa EXIF ảnh bằng cách vẽ lại qua canvas.
 
 Google Cloud chỉ còn dùng cho nút "Tiếp tục với Google" (OAuth, miễn phí, không cần thẻ).
