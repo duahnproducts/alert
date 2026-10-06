@@ -88,6 +88,14 @@ alter table reviews  enable row level security;
 alter table photos   enable row level security;
 alter table reports  enable row level security;
 
+-- Cấp quyền tường minh, không dựa vào quyền mặc định của Supabase (dự án mới có thể tắt việc tự cấp quyền cho bảng mới).
+-- RLS bên dưới vẫn quyết định từng dòng; các lệnh revoke sau đó thu hẹp lại theo cột.
+grant usage on schema public to anon, authenticated;
+grant select on areas, profiles, places, photos to anon, authenticated;
+grant insert, delete on photos to authenticated;
+grant insert on reports to authenticated;
+grant usage on all sequences in schema public to authenticated;
+
 -- reviews: giấu checkin_distance_m. Hệ quả: select=* trên reviews bị từ chối, phải liệt kê cột.
 revoke select, insert, update on reviews from anon, authenticated;
 grant select (id, place_id, user_id, stars, price_paid, dishes, comment, is_sample, status, review_date, created_at)
