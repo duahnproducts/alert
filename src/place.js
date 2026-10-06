@@ -65,7 +65,7 @@ export async function renderPlace(id) {
     h('section', null, h('h2', null, 'Đánh giá'), reviewsBox),
 
     h('nav', { class: 'actionbar', 'aria-label': 'Hành động' },
-      !DEMO && h('a', { class: 'btn-ghost', href: `quan/${p.id}/chi-duong` }, 'Chỉ đường'),
+      h('a', { class: 'btn-ghost', href: `quan/${p.id}/chi-duong` }, 'Chỉ đường'),
       h('a', { class: 'btn', href: `quan/${p.id}/danh-gia` }, 'Viết đánh giá'),
       h('button', { type: 'button', class: 'btn-ghost icon-only', 'aria-label': 'Chia sẻ quán', onclick: () => share(p) }, '↗')),
   ])
@@ -105,8 +105,6 @@ const gmapsDir = p => `https://www.google.com/maps/dir/?api=1&destination=${p.la
   (p.google_place_id ? `&destination_place_id=${encodeURIComponent(p.google_place_id)}` : '')
 
 export async function renderDirections(id) {
-  // Quán minh họa của bản demo không có thật: không chỉ đường tới một tọa độ bịa
-  if (DEMO) return page('Bản demo', errorBox('Bản demo chưa có chỉ đường vì quán đang hiện là minh họa, không có thật. Khi app chạy thật, bấm "Chỉ đường" ở trang quán nhé.'))
   const path = location.pathname
   let p = state.places.find(x => x.id === id)
   if (!p) {
@@ -131,6 +129,8 @@ export async function renderDirections(id) {
 
   page(`Đường tới ${p.name}`, [
     h('h1', { tabindex: -1 }, `Đường tới ${p.name}`),
+    // Bản demo là bài dự thi, chưa có người dùng thật: vẫn chỉ đường tới quán minh họa để xem thử, nhưng ghi rõ
+    DEMO && h('p', { class: 'note' }, 'Quán minh họa, không có thật ở vị trí này: đường đi chỉ để xem thử tính năng.'),
     modes, sum, mapEl, arrived, steps,
     h('p', { class: 'small muted' },
       'Để vẽ đường, vị trí của bạn và của quán được gửi tới máy chủ tìm đường miễn phí của FOSSGIS (Đức). App không lưu vị trí của bạn.'),
@@ -155,7 +155,7 @@ export async function renderDirections(id) {
       if (!here() || mode !== key) return
       sum.textContent = `${formatDistance(r.length * 1000)} · khoảng ${formatDuration(r.time)} ${key === 'pedestrian' ? 'đi bộ' : 'đi xe máy'}`
       steps.replaceChildren(...r.steps.map(s => h('li', null, s.instruction,
-        s.length > 0 && h('span', { class: 'muted' }, ` · ${formatDistance(s.length * 1000)}`))))
+        s.length >= 0.01 && h('span', { class: 'muted' }, ` · ${formatDistance(s.length * 1000)}`)))) // dưới 10 m thì làm tròn thành "0 m"
       ctl?.route(r.shape)
     } catch (err) {
       console.error(err)

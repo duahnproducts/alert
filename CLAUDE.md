@@ -40,7 +40,7 @@ Google Cloud chỉ còn dùng cho nút "Tiếp tục với Google" (OAuth, miễ
 - Ghi nguồn bản đồ ("OpenFreeMap © OpenMapTiles Data from OpenStreetMap") phải luôn nhìn thấy rõ: đặt ở góc trên, vì góc dưới bị ngăn kéo danh sách che.
 - Địa danh nổi tiếng là dữ liệu tĩnh `public/landmarks.json`, tạo bằng `node scripts/landmarks.mjs` từ Wikidata/Wikipedia/Commons, không lấy từ Google. Chỉ giữ địa danh có ảnh chụp thật; mọi ảnh phải hiện tên tác giả và giấy phép kèm link (yêu cầu của giấy phép CC).
 - Ngưỡng hiển thị: dưới 3 đánh giá hiện "Mới"; dưới 3 lượt báo giá hiện "giá tham khảo"; đánh giá `is_sample` không tính vào điểm hay giá.
-- **Bản demo** (chốt 06/10/2026): chưa có `VITE_SUPABASE_URL` thì app chạy bằng `public/demo.json` (tạo bằng `node scripts/demo-data.mjs`): quán tên tự đặt, đánh giá và cảm nhận địa danh là mẫu. Mọi nội dung demo phải có nhãn (dải "Bản demo", nhãn "Mẫu", "Giá mẫu", "đánh giá mẫu"); quán minh họa không có nút chỉ đường. Không bao giờ tạo đánh giá giả trông như của người thật, hay gắn đánh giá mẫu cho quán có thật.
+- **Bản demo** (chốt 06/10/2026): chưa có `VITE_SUPABASE_URL` thì app chạy bằng `public/demo.json` (tạo bằng `node scripts/demo-data.mjs`): quán tên tự đặt, đánh giá và cảm nhận địa danh là mẫu. Mọi nội dung demo phải có nhãn (dải "Bản demo", nhãn "Mẫu", "Giá mẫu", "đánh giá mẫu"); quán minh họa vẫn có chỉ đường (chốt 06/10/2026: bài dự thi, chưa có người dùng thật), trang chỉ đường ghi rõ "Quán minh họa, không có thật". Không bao giờ tạo đánh giá giả trông như của người thật, hay gắn đánh giá mẫu cho quán có thật.
 
 ## Còn mở
 

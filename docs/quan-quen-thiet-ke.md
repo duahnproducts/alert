@@ -77,7 +77,7 @@ Không cần dữ liệu lớn, nhưng không nên bịa đánh giá cho quán c
 - **Thông tin quán** (tên, vị trí, giờ mở cửa): lấy thật, gắn với `place_id` của Google.
 - **Đánh giá và ảnh:** chỉ do nhóm viết khi đã ăn thật. Ba người, mỗi người khoảng 10 quán trong tuần là đủ 30 quán.
 - **Chỗ nào cần lấp đầy để demo:** dùng đánh giá mẫu có nhãn "Mẫu" hiển thị rõ, và xóa hết trước khi đăng bài lên fanpage.
-- **Bản demo (chốt 06/10/2026):** trong lúc chưa có người dùng thật, app chạy bản demo có nhãn: khoảng 32 quán **tên tự đặt** (cố ý không trùng quán thật) quanh 4 cụm trường ở Hà Nội và TP.HCM, mỗi quán vài đánh giá mẫu, mỗi địa danh vài câu cảm nhận mẫu. Đầu mọi trang có dải "Bản demo: quán và đánh giá là minh họa", mỗi đánh giá có nhãn "Mẫu", giá ghi "Giá mẫu", điểm ghi "đánh giá mẫu"; quán minh họa không có nút chỉ đường. Đăng nhập, viết đánh giá, đề xuất quán hiện thông báo "bản demo chưa mở". Khi nối Supabase, app tự chuyển sang dữ liệu thật. Không tạo đánh giá giả trông như thật: như vậy là nói sai về quán có thật và đi ngược lời hứa "đánh giá thật" của app.
+- **Bản demo (chốt 06/10/2026):** trong lúc chưa có người dùng thật, app chạy bản demo có nhãn: khoảng 32 quán **tên tự đặt** (cố ý không trùng quán thật) quanh 4 cụm trường ở Hà Nội và TP.HCM, mỗi quán vài đánh giá mẫu, mỗi địa danh vài câu cảm nhận mẫu. Đầu mọi trang có dải "Bản demo: quán và đánh giá là minh họa", mỗi đánh giá có nhãn "Mẫu", giá ghi "Giá mẫu", điểm ghi "đánh giá mẫu"; quán minh họa vẫn có chỉ đường để giám khảo xem thử, trang chỉ đường ghi rõ "Quán minh họa, không có thật ở vị trí này" (chốt 06/10/2026: bài dự thi, chưa có người dùng thật). Đăng nhập, viết đánh giá, đề xuất quán hiện thông báo "bản demo chưa mở". Khi nối Supabase, app tự chuyển sang dữ liệu thật. Không tạo đánh giá giả trông như thật: như vậy là nói sai về quán có thật và đi ngược lời hứa "đánh giá thật" của app.
 
 ## 4. Màn hình và luồng
 
@@ -123,7 +123,7 @@ Bản đồ ──> Chi tiết quán ──> [Đã đăng nhập?] ──rồi�
   - Đi lệch khỏi đường quá 40 m (hoặc quá sai số GPS lúc đó) thì Bao báo "Bạn đi khác đường rồi" và tự tìm đường mới từ chỗ bạn đứng, tối đa 30 giây một lần.
   - Chọn xe máy hay đi bộ trước khi có vị trí thì app nhớ lựa chọn đó. Cách quán dưới 50 m thì hiện "Tới nơi rồi! Chúc bạn ăn ngon" và nút "Ăn xong viết đánh giá".
   - Ghi rõ trên trang: để vẽ đường, vị trí của bạn và của quán được gửi tới máy chủ tìm đường của FOSSGIS (Đức); app không lưu vị trí. Kèm ghi nguồn OpenStreetMap và link "Sửa bản đồ" (điều kiện dùng máy chủ).
-  - Bản demo (quán minh họa) không có nút "Chỉ đường"; mở thẳng đường dẫn thì báo "Bản demo chưa có chỉ đường".
+  - Bản demo: quán minh họa vẫn có "Chỉ đường" để xem thử tính năng; đầu trang ghi "Quán minh họa, không có thật ở vị trí này: đường đi chỉ để xem thử tính năng".
   - Luôn có nút "Mở bằng Google Maps". Không lấy được vị trí, máy chủ tìm đường lỗi, hoặc bạn cách quán trên 30 km (thường là máy tính đoán sai vị trí) thì nói rõ lý do và chỉ sang nút này.
 
 ### Màn 3: Viết đánh giá
