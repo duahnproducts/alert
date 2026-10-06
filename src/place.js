@@ -1,6 +1,6 @@
 // Trang chi tiết quán: ảnh, giá thật, điểm của app, link sang Google Maps, đánh giá, báo cáo; trang chỉ đường trong app.
 import { DEMO, demoData, fetchReviews, fetchPhotos, photoUrl, thumbPath, report } from './supabase.js'
-import { CATEGORIES, h, hoursText, isOpenNow, formatPrice, formatStars, formatDistance, badgeFor, timeAgo, formatDate, priceShort, suggestNear, distanceM, decodePolyline, formatDuration, distanceToPath } from './util.js'
+import { CATEGORIES, h, hoursText, isOpenNow, formatPrice, formatStars, formatDistance, badgeFor, timeAgo, formatDate, priceShort, suggestNear, distanceM, decodePolyline, formatDuration, distanceToPath, CITIES, cityOf } from './util.js'
 import { routeMap } from './map.js'
 import { state, page, toast, mascot, errorBox, dataReady, dist } from './main.js'
 import { openLogin } from './auth.js'
@@ -38,7 +38,7 @@ export async function renderPlace(id) {
     h('h1', { tabindex: -1 }, p.name),
     h('p', { class: 'muted' }, [cat.label, p.address].filter(Boolean).join(' · ')),
     h('p', { class: 'meta' },
-      d != null && h('span', null, `Cách ${formatDistance(d)}${state.userPos ? '' : ' từ tâm cụm trường'}`),
+      d != null && h('span', null, `Cách ${formatDistance(d)}${state.userPos ? '' : ` từ ${state.city?.start.name}`}`),
       hours && h('span', { class: closed ? 'muted' : 'open' }, closed && mascot('ngu', 24), hours)),
     p.suggested_by_name && h('p', { class: 'suggested' }, `Gợi ý bởi ${p.suggested_by_name}`),
 
@@ -65,7 +65,7 @@ export async function renderPlace(id) {
     h('section', null, h('h2', null, 'Đánh giá'), reviewsBox),
 
     h('nav', { class: 'actionbar', 'aria-label': 'Hành động' },
-      !DEMO && h('a', { class: 'btn-ghost', href: `quan/${p.id}/chi-duong` }, 'Chỉ đường'),
+      h('a', { class: 'btn-ghost', href: `quan/${p.id}/chi-duong` }, 'Chỉ đường'),
       h('a', { class: 'btn', href: `quan/${p.id}/danh-gia` }, 'Viết đánh giá'),
       h('button', { type: 'button', class: 'btn-ghost icon-only', 'aria-label': 'Chia sẻ quán', onclick: () => share(p) }, '↗')),
   ])
@@ -105,8 +105,6 @@ const gmapsDir = p => `https://www.google.com/maps/dir/?api=1&destination=${p.la
   (p.google_place_id ? `&destination_place_id=${encodeURIComponent(p.google_place_id)}` : '')
 
 export async function renderDirections(id) {
-  // Quán minh họa của bản demo không có thật: không chỉ đường tới một tọa độ bịa
-  if (DEMO) return page('Bản demo', errorBox('Bản demo chưa có chỉ đường vì quán đang hiện là minh họa, không có thật. Khi app chạy thật, bấm "Chỉ đường" ở trang quán nhé.'))
   const path = location.pathname
   let p = state.places.find(x => x.id === id)
   if (!p) {
@@ -119,19 +117,22 @@ export async function renderDirections(id) {
   const here = () => location.pathname === path
   const mapEl = h('div', { class: 'route-map' })
   const sum = h('p', { class: 'route-sum', role: 'status' }, 'Bao đang tìm bạn…')
+  const fromLine = h('p', { class: 'note', hidden: true }) // lý do đang dùng điểm xuất phát dự phòng
   const steps = h('ol', { class: 'steps' })
   const arrived = h('div', { class: 'card ok-box', hidden: true }, mascot('vui', 48),
     h('div', { class: 'stack' }, h('strong', null, 'Tới nơi rồi! Chúc bạn ăn ngon'),
       h('a', { class: 'btn btn-sm', href: `quan/${p.id}/danh-gia` }, 'Ăn xong viết đánh giá')))
   const modes = h('div', { class: 'chips', role: 'group', 'aria-label': 'Đi bằng gì' },
     Object.entries(MODES).map(([key, label]) =>
-      h('button', { type: 'button', class: 'chip', 'aria-pressed': 'false', 'data-mode': key, onclick: () => draw(key) }, label)))
+      h('button', { type: 'button', class: 'chip', 'aria-pressed': 'false', 'data-mode': key, onclick: () => { picked = true; draw(key) } }, label)))
   const routes = {} // theo chế độ đi, để đổi qua lại không phải hỏi lại máy chủ
-  let from = null, mode = null, ctl = null, reroutedAt = 0
+  let from = null, gps = false, mode = null, picked = false, ctl = null, reroutedAt = 0 // picked: người dùng đã tự chọn xe máy/đi bộ
 
   page(`Đường tới ${p.name}`, [
     h('h1', { tabindex: -1 }, `Đường tới ${p.name}`),
-    modes, sum, mapEl, arrived, steps,
+    // Bản demo là bài dự thi, chưa có người dùng thật: vẫn chỉ đường tới quán minh họa để xem thử, nhưng ghi rõ
+    DEMO && h('p', { class: 'note' }, 'Quán minh họa, không có thật ở vị trí này: đường đi chỉ để xem thử tính năng.'),
+    modes, fromLine, sum, mapEl, arrived, steps,
     h('p', { class: 'small muted' },
       'Để vẽ đường, vị trí của bạn và của quán được gửi tới máy chủ tìm đường miễn phí của FOSSGIS (Đức). App không lưu vị trí của bạn.'),
     h('p', { class: 'small muted' }, 'Đường đi: Valhalla, máy chủ FOSSGIS · Dữ liệu © ',
@@ -155,7 +156,7 @@ export async function renderDirections(id) {
       if (!here() || mode !== key) return
       sum.textContent = `${formatDistance(r.length * 1000)} · khoảng ${formatDuration(r.time)} ${key === 'pedestrian' ? 'đi bộ' : 'đi xe máy'}`
       steps.replaceChildren(...r.steps.map(s => h('li', null, s.instruction,
-        s.length > 0 && h('span', { class: 'muted' }, ` · ${formatDistance(s.length * 1000)}`))))
+        s.length >= 0.01 && h('span', { class: 'muted' }, ` · ${formatDistance(s.length * 1000)}`)))) // dưới 10 m thì làm tròn thành "0 m"
       ctl?.route(r.shape)
     } catch (err) {
       console.error(err)
@@ -166,15 +167,21 @@ export async function renderDirections(id) {
     }
   }
 
-  // Có vị trí lần đầu thì tìm đường (gần thì mặc định đi bộ). Sau đó dời Bao theo bạn; đi lệch khỏi đường thì tìm lại.
+  // Có vị trí dùng được lần đầu (kể cả khi đang dùng điểm dự phòng) thì tìm đường từ chỗ bạn (gần thì mặc định đi bộ).
+  // Sau đó dời Bao theo bạn; đi lệch khỏi đường thì tìm lại.
   const onPos = (pos, acc = 0) => {
     state.userPos = pos
-    ctl?.user(pos)
     const left = distanceM(pos, p)
+    // Xa quá (thường là máy tính đoán vị trí theo IP): dùng điểm dự phòng, không làm nặng máy chủ miễn phí
+    if (left > MAX_ROUTE_M) return gps || fallback(`Bạn đang cách quán ${formatDistance(left)}`)
+    ctl?.user(pos)
     arrived.hidden = left > 50
-    if (!from) {
+    if (!gps) {
+      gps = true
       from = pos
-      return draw(mode ?? (left <= 1500 ? 'pedestrian' : 'motor_scooter'))
+      for (const k in routes) delete routes[k]
+      fromLine.hidden = true
+      return draw(picked ? mode : left <= 1500 ? 'pedestrian' : 'motor_scooter')
     }
     // Lệch quá 40 m (hoặc quá sai số GPS lúc đó) thì tìm đường mới từ chỗ đang đứng.
     // Tối đa 30 giây một lần: máy chủ miễn phí chỉ cho 1 yêu cầu/giây, và GPS trong phố hay nhảy.
@@ -191,19 +198,28 @@ export async function renderDirections(id) {
   if (!here()) return
   if (!ctl) mapEl.replaceChildren(h('p', { class: 'muted' }, 'Bản đồ đang nghỉ, bạn đi theo các bước bên dưới nhé.'))
   if (state.userPos) onPos(state.userPos)
-  if (!navigator.geolocation) {
-    if (!from) sum.textContent = 'Máy bạn không lấy được vị trí nên Bao chưa tìm được đường. Mở bằng Google Maps nhé.'
-    return
-  }
+  if (!navigator.geolocation) return fallback('Máy bạn không lấy được vị trí')
   const watch = navigator.geolocation.watchPosition(g => {
     if (!here()) return navigator.geolocation.clearWatch(watch) // đã rời trang chỉ đường
     onPos({ lat: g.coords.latitude, lng: g.coords.longitude }, g.coords.accuracy)
   }, e => {
-    if (from || !here()) return
-    sum.textContent = e.code === 1
-      ? 'Bạn chưa cho phép vị trí nên Bao chưa tìm được đường. Cho phép vị trí cho trang này rồi tải lại, hoặc mở bằng Google Maps nhé.'
-      : 'Chưa lấy được vị trí. Ra chỗ thoáng hơn chờ chút nhé, hoặc mở bằng Google Maps.'
-  }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 })
+    if (!here()) return
+    if (e.code !== 1) return fallback('Chưa lấy được vị trí của bạn', ' Lấy được vị trí là Bao vẽ lại từ chỗ bạn.')
+    navigator.geolocation.clearWatch(watch)
+    fallback('Bạn chưa cho phép vị trí', ' Muốn đi từ chỗ bạn thì cho phép vị trí cho trang này rồi tải lại nhé.')
+  }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 10000 })
+
+  // Không dùng được vị trí: xuất phát từ trường của thành phố chứa quán (Hà Nội: ĐH Kinh tế Quốc dân, TP.HCM: UEH) và nói rõ lý do,
+  // để trang luôn có đường (giám khảo mở trên laptop hay ở xa vẫn xem được). Đang có vị trí thật thì bỏ qua.
+  function fallback(reason, hint = '') {
+    if (from) return
+    const start = (cityOf(p) ?? state.city ?? CITIES[0]).start
+    from = start
+    ctl?.user(start)
+    fromLine.textContent = `${reason} nên Bao chỉ đường từ ${start.name}.${hint}`
+    fromLine.hidden = false
+    draw(picked ? mode : distanceM(start, p) <= 1500 ? 'pedestrian' : 'motor_scooter')
+  }
 }
 
 function photoAlt(p, photo, reviews) {

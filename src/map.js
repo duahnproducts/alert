@@ -1,13 +1,24 @@
 // File duy nhất biết đến thư viện bản đồ. Leaflet + protomaps-leaflet tự vẽ bản đồ kiểu chibi từ dữ liệu
 // vector của OpenFreeMap (miễn phí, không key, không giới hạn lượt; kiểm 06/10/2026, vào được từ Việt Nam).
 // Không dùng openstreetmap.org: không kết nối được từ mạng ở Việt Nam.
-import { CATEGORIES, isOpenNow, isTopPlace } from './util.js'
+import { CATEGORIES, CITIES, cityOf, isOpenNow, isTopPlace } from './util.js'
 
 const TILEJSON = 'https://tiles.openfreemap.org/planet'
 const ATTRIBUTION = '<a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> © <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'
 const CELL = 64 // px: các quán gần nhau hơn khoảng này trên màn hình thì gộp thành cụm
 const FONT = '"Be Vietnam Pro", system-ui, sans-serif'
 const dark = matchMedia('(prefers-color-scheme: dark)')
+// Khung nội thành chứa điểm p, ngoài cả hai thành phố thì undefined
+const boxOf = (L, p) => {
+  const c = cityOf(L.latLng(p))
+  return c && L.latLngBounds(c.box)
+}
+// Thu nhỏ hết cỡ vẫn nằm gọn trong khung nội thành, không lộ ra tỉnh lân cận. Tính lại khi đổi thành phố hay đổi cỡ khung.
+function fitCity(m) {
+  if (!m.getSize().x) return // khung đang ẩn: chưa đo được
+  m.options.minZoom = 0 // getBoundsZoom không trả về mức nhỏ hơn minZoom hiện tại
+  m.setMinZoom(m.getBoundsZoom(m.options.maxBounds, true))
+}
 
 let lib // Promise<{ L, pm, tiles }>
 let map, layer, lmLayer, userMarker, selectedId, onSelectCb
@@ -90,7 +101,11 @@ function rules(pm, c) {
 }
 
 function newMap({ L, pm, tiles }, el, center, zoom) {
-  const m = L.map(el, { zoomControl: false, attributionControl: false, maxZoom: 19, minZoom: 11 }).setView(center, zoom)
+  const city = boxOf(L, center) ?? L.latLngBounds(CITIES[0].box) // ở ngoài cả hai thành phố thì mở Hà Nội
+  const m = L.map(el, { zoomControl: false, attributionControl: false, maxZoom: 19, maxBounds: city, maxBoundsViscosity: 1 })
+  fitCity(m) // trước setView: zoom mở đầu nhỏ hơn mức vừa khung thì tự nâng lên
+  m.setView(city.contains(center) ? center : city.getCenter(), zoom)
+  m.on('resize', () => fitCity(m))
   L.control.zoom({ position: 'topright', zoomInTitle: 'Phóng to', zoomOutTitle: 'Thu nhỏ' }).addTo(m)
   // Ghi nguồn ở góc trên: góc dưới bị ngăn kéo danh sách che, mà điều khoản bắt buộc ghi nguồn
   L.control.attribution({ prefix: false, position: 'topleft' }).addTo(m)
@@ -184,7 +199,7 @@ export async function initMap(el, { center, onSelect, onIdle, onFail }) {
   setTimeout(watchdog, 8000)
   try {
     const lb = await loadLib()
-    const { m, base } = newMap(lb, el, center, 15)
+    const { m, base } = newMap(lb, el, center, 0) // 0: mở ở mức thu nhỏ nhất cho phép, nội thành phủ kín màn hình
     map = m
     map.qqL = lb.L
     onSelectCb = onSelect
@@ -266,6 +281,17 @@ export function toggleLandmarks(on) {
   else lmLayer.remove()
 }
 
+// Dời bản đồ tới điểm p; điểm ở thành phố kia thì đổi khung giới hạn trước, ngoài cả hai thành phố thì để yên
+function goTo(m, p, zoom) {
+  const city = boxOf(m.qqL, p)
+  if (!city) return
+  if (!city.equals(m.options.maxBounds)) {
+    m.setMaxBounds(city)
+    fitCity(m)
+  }
+  m.setView(p, zoom ?? m.getZoom())
+}
+
 const pinOf = id => markers.get(id)?.options.icon.options.html
 
 export function select(id) {
@@ -276,11 +302,11 @@ export function select(id) {
   if (!m || !map) return
   pinOf(id).classList.add('sel')
   m.setZIndexOffset(1000)
-  map.panTo(m.getLatLng())
+  goTo(map, m.getLatLng())
 }
 
 export function moveTo(center, zoom) {
-  if (map) map.setView([center.lat, center.lng], zoom ?? map.getZoom())
+  if (map) goTo(map, [center.lat, center.lng], zoom)
 }
 
 // Vị trí của bạn: Bao nhỏ có vòng sóng
@@ -299,7 +325,8 @@ export function showUser(pos, padBottom = 0) {
   if (!map) return
   userMarker ??= meMarker(map.qqL, pos).addTo(map)
   userMarker.setLatLng(pos)
-  map.panTo(map.unproject(map.project(pos).add([0, padBottom / 2])))
+  // Ngoài khung thành phố đang xem thì không dời (main.js đổi thành phố trước nếu bạn đang ở thành phố kia)
+  if (map.options.maxBounds.contains(pos)) map.panTo(map.unproject(map.project(pos).add([0, padBottom / 2])))
 }
 
 // Bản đồ chỉ đường: ghim quán, vị trí của bạn, đường đi kiểu nét kẹo viền trắng.
@@ -345,7 +372,8 @@ export async function pickLocation(el, start) {
   try {
     const lb = await loadLib()
     const { m } = newMap(lb, el, [start.lat, start.lng], 17)
-    const pin = lb.L.marker([start.lat, start.lng], {
+    m.qqL = lb.L
+    const pin = lb.L.marker(m.getCenter(), {
       icon: lb.L.divIcon({ html: pinEl('', 'icons/bebao-vui.svg'), className: 'qq-icon', iconSize: [48, 60], iconAnchor: [24, 58] }),
       draggable: true, autoPan: true, title: 'Ghim vị trí quán: kéo ghim hoặc chạm vào bản đồ để dời',
     }).addTo(m)
@@ -356,7 +384,7 @@ export async function pickLocation(el, start) {
         const { lat, lng } = pin.getLatLng()
         return { lat, lng }
       },
-      set: pos => { pin.setLatLng(pos); m.panTo(pos) },
+      set: pos => { pin.setLatLng(pos); goTo(m, pos) },
     }
   } catch {
     return null

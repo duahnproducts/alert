@@ -280,7 +280,7 @@ export async function renderSuggest() {
       h('input', { id: 'addr', maxlength: '200', placeholder: 'Số nhà, tên đường' })),
     state.areas.length > 0 && h('div', { class: 'field' }, h('label', { for: 'parea' }, 'Gần cụm trường nào?'),
       h('select', { id: 'parea' }, h('option', { value: '' }, 'Không rõ'),
-        state.areas.map(a => h('option', { value: String(a.id), selected: a.id === state.area }, a.name)))),
+        state.areas.map(a => h('option', { value: String(a.id) }, a.name)))),
     h('button', { type: 'submit', class: 'btn btn-block' }, 'Gửi đề xuất'),
   )
 

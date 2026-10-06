@@ -13,6 +13,19 @@ export const CATEGORIES = {
 export const normalizeVi = s =>
   s.normalize('NFD').replace(/\p{Diacritic}/gu, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase()
 
+// Hai thành phố của app. box = [[nam, tây], [bắc, đông]] ôm các quận nội thành: bản đồ chỉ kéo được trong khung này.
+// start: vị trí mặc định khi người dùng chưa chia sẻ hoặc chặn vị trí (khoảng cách, gợi ý quanh bạn),
+// và điểm xuất phát dự phòng của trang chỉ đường
+// (tọa độ đối chiếu Wikidata và OpenStreetMap, kiểm 06/10/2026)
+export const CITIES = [
+  { name: 'Hà Nội', box: [[20.94, 105.72], [21.12, 105.96]], center: { lat: 21.0285, lng: 105.8542 }, // tâm: hồ Hoàn Kiếm
+    start: { name: 'ĐH Kinh tế Quốc dân', lat: 20.9997, lng: 105.8448 } },
+  { name: 'TP. Hồ Chí Minh', box: [[10.69, 106.58], [10.89, 106.86]], center: { lat: 10.7725, lng: 106.698 }, // tâm: chợ Bến Thành
+    start: { name: 'ĐH Kinh tế TP.HCM (UEH)', lat: 10.783, lng: 106.6949 } },
+]
+// Thành phố có khung chứa điểm p ({ lat, lng }), không thuộc thành phố nào thì undefined
+export const cityOf = p => CITIES.find(({ box: [[s, w], [n, e]] }) => p.lat >= s && p.lat <= n && p.lng >= w && p.lng <= e)
+
 export function distanceM(a, b) {
   const rad = d => (d * Math.PI) / 180
   const h = Math.sin(rad(b.lat - a.lat) / 2) ** 2 +

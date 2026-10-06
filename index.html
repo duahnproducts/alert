@@ -48,7 +48,6 @@
       <p class="demo-only demo-banner">🧪 Bản demo: quán và đánh giá là minh họa, không phải quán thật</p>
     </header>
     <div class="filters" id="filters" role="group" aria-label="Bộ lọc">
-      <select id="area" class="chip" aria-label="Chọn cụm trường"><option value="0">Tất cả cụm trường</option></select>
     </div>
     <div id="map" role="region" aria-label="Bản đồ quán ăn"></div>
     <button type="button" id="locate" class="fab" aria-label="Vị trí của tôi">◎</button>
@@ -147,7 +146,7 @@
       <p><b>Vị trí:</b> khi bạn cho phép, app dùng vị trí để gợi ý quán gần bạn và tính khoảng cách. Việc này làm ngay trên máy bạn: vị trí không gửi đi, không lưu lại, đóng trang là mất. Riêng lúc check-in để viết đánh giá, vị trí được gửi một lần để kiểm tra bạn có đang ở quán không, và chỉ khoảng cách tới quán được lưu. Khi bạn mở trang “Chỉ đường”, vị trí của bạn và của quán được gửi tới máy chủ tìm đường của FOSSGIS (Đức) để vẽ đường; app không lưu, FOSSGIS ghi yêu cầu vào nhật ký máy chủ theo chính sách riêng tư của họ.</p>
       <p><b>Không thu:</b> tọa độ của bạn, lịch sử duyệt web, danh bạ. App không dùng công cụ phân tích hay quảng cáo của bên thứ ba.</p>
       <p><b>Ảnh:</b> trước khi tải lên, app vẽ lại ảnh ngay trên máy bạn nên mọi thông tin đi kèm ảnh (gồm vị trí GPS chụp ảnh) bị xóa. Ảnh chỉ dùng để hiện trong trang quán. Bạn xóa ảnh bằng cách xóa đánh giá chứa nó trong mục “Của tôi”.</p>
-      <p><b>Lưu ở đâu:</b> dữ liệu nằm trên Supabase (cơ sở dữ liệu và kho ảnh). Trình duyệt của bạn lưu tạm danh sách quán để xem được khi mất mạng, và lưu phiên đăng nhập. Bản đồ tải từ OpenFreeMap, ảnh địa danh tải từ Wikimedia; app không gửi thông tin gì của bạn cho hai nơi này.</p>
+      <p><b>Lưu ở đâu:</b> dữ liệu nằm trên Supabase (cơ sở dữ liệu và kho ảnh). Trình duyệt của bạn lưu tạm danh sách quán để xem được khi mất mạng, thành phố bạn chọn, và phiên đăng nhập. Bản đồ tải từ OpenFreeMap, ảnh địa danh tải từ Wikimedia; app không gửi thông tin gì của bạn cho hai nơi này.</p>
       <p><b>Đồng ý và rút lại:</b> khi đăng nhập, bạn đồng ý cho app xử lý các dữ liệu trên. Bạn rút lại sự đồng ý bất cứ lúc nào bằng nút “Xóa tài khoản” trong mục “Của tôi”: mọi đánh giá, ảnh và email của bạn bị xóa vĩnh viễn.</p>
       <p><b>Căn cứ pháp lý:</b> Luật Bảo vệ dữ liệu cá nhân 2025 và Nghị định 356/2025/NĐ-CP.</p>
 

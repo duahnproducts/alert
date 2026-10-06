@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { isOpenNow, hoursText, distanceM, normalizeVi, isInAppBrowser, filterPrice, priceShort, scoreShort, badgeFor, formatPrice, placeLabel, suggestNear, decodePolyline, formatDuration, distanceToPath } from './util.js'
+import { isOpenNow, hoursText, distanceM, normalizeVi, isInAppBrowser, filterPrice, priceShort, scoreShort, badgeFor, formatPrice, placeLabel, suggestNear, decodePolyline, formatDuration, distanceToPath, cityOf, CITIES } from './util.js'
 
 // Giờ Việt Nam = UTC+7. 05/10/2026 là thứ Hai, 04/10/2026 là Chủ nhật.
 const vn = (date, time) => new Date(`${date}T${time}:00+07:00`)
@@ -39,6 +39,13 @@ test('distanceM', () => {
   assert.ok(Math.abs(distanceM({ lat: 21, lng: 105.8 }, { lat: 22, lng: 105.8 }) - 111195) < 10, '1 độ vĩ ≈ 111,2 km')
   assert.ok(Math.abs(distanceM({ lat: 21, lng: 105.8 }, { lat: 21.0003, lng: 105.8 }) - 33.4) < 1)
   assert.equal(distanceM({ lat: 21, lng: 105.8 }, { lat: 21, lng: 105.8 }), 0)
+})
+
+test('cityOf', () => {
+  assert.equal(cityOf({ lat: 21.0285, lng: 105.8542 }), CITIES[0], 'hồ Hoàn Kiếm')
+  assert.equal(cityOf({ lat: 10.87, lng: 106.8 }), CITIES[1], 'ĐHQG TP.HCM ở Thủ Đức')
+  assert.equal(cityOf({ lat: 21.0128, lng: 105.5255 }), undefined, 'Hòa Lạc ngoài nội thành')
+  assert.equal(cityOf({ lat: 16.05, lng: 108.2 }), undefined, 'Đà Nẵng')
 })
 
 test('normalizeVi', () => {

@@ -5,6 +5,7 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { VectorTile } from '@mapbox/vector-tile' // có sẵn trong node_modules, đi kèm protomaps-leaflet
 import Pbf from 'pbf'
+import { CITIES } from '../src/util.js'
 
 // Số ngẫu nhiên có hạt giống: chạy lại ra đúng dữ liệu cũ
 let seed = 20261006
@@ -24,17 +25,13 @@ const AREAS = [
   { id: 8, name: 'ĐH Tôn Đức Thắng (Quận 7)', center_lat: 10.7326, center_lng: 106.6993, radius_m: 1500 },
 ]
 
-// Mỗi thành phố 100 quán rải đều khắp khung [nam, tây, bắc, đông] của nội thành, không dồn quanh tâm cụm trường
-const CITIES = [
-  { name: 'Hà Nội', box: [20.96, 105.76, 21.08, 105.90] },
-  { name: 'TP. Hồ Chí Minh', box: [10.71, 106.61, 10.89, 106.82] },
-]
+// Mỗi thành phố 100 quán rải đều khắp khung bản đồ của thành phố đó (CITIES trong util.js), không dồn quanh tâm cụm trường
 const PER_CITY = 100
 const meters = (a, b) => Math.hypot(a.lat - b.lat, (a.lng - b.lng) * Math.cos(a.lat * Math.PI / 180)) * 111320
 
 // Các điểm nằm trên đường phố trong khung, lấy từ ô bản đồ vector OpenFreeMap mà app đang dùng, để ghim không rơi xuống hồ, sông.
 // Bỏ cầu và hầm. Bản đồ cập nhật hằng tuần nên chạy lại sau này có thể lệch vị trí vài quán.
-async function roadSpots([s, w, n, e]) {
+async function roadSpots([[s, w], [n, e]]) {
   const Z = 14
   const tx = lng => Math.floor((lng + 180) / 360 * 2 ** Z)
   const ty = lat => Math.floor((1 - Math.asinh(Math.tan(lat * Math.PI / 180)) / Math.PI) / 2 * 2 ** Z)
