@@ -329,6 +329,9 @@ export function showUser(pos, padBottom = 0) {
   if (map.options.maxBounds.contains(pos)) map.panTo(map.unproject(map.project(pos).add([0, padBottom / 2])))
 }
 
+// Theo dõi liên tục: chỉ dời Bao, không kéo bản đồ (người dùng có thể đang xem chỗ khác)
+export const moveUser = pos => userMarker?.setLatLng(pos)
+
 // Bản đồ chỉ đường: ghim quán, vị trí của bạn, đường đi kiểu nét kẹo viền trắng.
 // Trả về { user(pos), route([[lat, lng], ...]) } hoặc null nếu không tải được bản đồ.
 export async function routeMap(el, place) {

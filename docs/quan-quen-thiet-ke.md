@@ -102,7 +102,7 @@ Bản đồ ──> Chi tiết quán ──> [Đã đăng nhập?] ──rồi�
 - **Bản đồ toàn màn:** mỗi quán là một biểu tượng theo loại món. Thu nhỏ bản đồ thì các quán gần nhau gộp thành một cụm có số. Nút "Vị trí của tôi" chỉ xin quyền GPS khi được bấm.
 - **Thẻ "Gợi ý quanh bạn"** (nổi trên mép ngăn kéo; laptop và chế độ danh sách thì nằm đầu danh sách):
   - Chưa có vị trí: Bao mời "Đói chưa? Cho Bao biết bạn đang ở đâu nhé", ghi rõ vị trí chỉ dùng trên máy, không lưu, không gửi đi; nút "Chia sẻ vị trí". App chỉ xin quyền GPS khi người dùng bấm nút này hoặc nút "Vị trí của tôi". Đã cho phép từ lần trước thì app tự lấy vị trí, không hỏi lại; đã chặn thì không hiện thẻ.
-  - Có vị trí: chuyển chip cụm trường sang "Tất cả cụm trường" (quán gần bạn có thể thuộc cụm khác), xếp danh sách theo khoảng cách, và thẻ gợi ý 3 quán trong 2 km, không đang đóng cửa, theo các bộ lọc đang bật. Thứ tự: số sao trừ khoảng cách, mỗi km trừ 1 sao; quán dưới 3 đánh giá tính 3,5 sao. Không có quán nào thì nói rõ cần bỏ bớt bộ lọc hoặc kéo bản đồ.
+  - Có vị trí: Bao trên bản đồ đi theo bạn theo thời gian thực (bản đồ không tự kéo theo; bấm "Vị trí của tôi" để về chỗ bạn), xếp danh sách theo khoảng cách (tính lại mỗi khi bạn đi thêm 30 m), và thẻ gợi ý 3 quán trong 2 km, không đang đóng cửa, theo các bộ lọc đang bật. Thứ tự: số sao trừ khoảng cách, mỗi km trừ 1 sao; quán dưới 3 đánh giá tính 3,5 sao. Không có quán nào thì nói rõ cần bỏ bớt bộ lọc hoặc kéo bản đồ.
   - Chạm ghim thì thẻ xem nhanh thế chỗ; bấm × thì ẩn thẻ.
 - **Chạm vào biểu tượng:** hiện thẻ xem nhanh ở đáy gồm ảnh, tên, giá thật, điểm, khoảng cách và nút "Xem quán".
 - **Ngăn kéo từ đáy lên:** danh sách các quán đang hiện trên bản đồ, sắp theo khoảng cách hoặc theo điểm. Nút "Bản đồ / Danh sách" chuyển hẳn sang chế độ danh sách.
@@ -118,10 +118,10 @@ Bản đồ ──> Chi tiết quán ──> [Đã đăng nhập?] ──rồi�
 - **Lưới ảnh thật,** rồi **danh sách đánh giá** mới nhất trước. Mỗi đánh giá gồm tên hiển thị, huy hiệu "Đã check-in", số sao, giá đã trả, món, một câu, ảnh, ngày và nút "Báo cáo".
 - **Thanh đáy cố định:** "Chỉ đường", "Viết đánh giá", biểu tượng chia sẻ.
 - **Chỉ đường ngay trong app** (`/quan/:id/chi-duong`), không phải rời sang Google Maps:
-  - Chọn "🛵 Xe máy" hoặc "🚶 Đi bộ"; mặc định đi bộ nếu quán cách dưới 1,5 km. Dòng tóm tắt "1,2 km · khoảng 15 phút đi bộ", bản đồ có đường đi, ghim quán và Bao ở vị trí của bạn, rồi danh sách từng bước bằng tiếng Việt ("Rẽ phải vào Phố Giảng Võ · 230 m").
+  - Chọn "🛵 Xe máy", "🚗 Ô tô" hoặc "🚶 Đi bộ"; mặc định đi bộ nếu quán cách dưới 1,5 km. Dòng tóm tắt "1,2 km · khoảng 15 phút đi bộ", bản đồ có đường đi, ghim quán và Bao ở vị trí của bạn, rồi danh sách từng bước bằng tiếng Việt ("Rẽ phải vào Phố Giảng Võ · 230 m").
   - Bao đi theo vị trí thật của bạn. Bản đồ giữ khung cả tuyến, chỉ dời khi Bao sắp ra khỏi khung; bạn tự kéo hoặc zoom thì bản đồ để yên 15 giây cho bạn xem.
   - Đi lệch khỏi đường quá 40 m (hoặc quá sai số GPS lúc đó) thì Bao báo "Bạn đi khác đường rồi" và tự tìm đường mới từ chỗ bạn đứng, tối đa 30 giây một lần.
-  - Người dùng đã tự chọn xe máy hay đi bộ thì app giữ lựa chọn đó khi vẽ lại đường; chưa chọn thì app tự chọn theo quãng đường (dưới 1,5 km là đi bộ). Cách quán dưới 50 m thì hiện "Tới nơi rồi! Chúc bạn ăn ngon" và nút "Ăn xong viết đánh giá".
+  - Người dùng đã tự chọn xe máy, ô tô hay đi bộ thì app giữ lựa chọn đó khi vẽ lại đường; chưa chọn thì app tự chọn theo quãng đường (dưới 1,5 km là đi bộ). Cách quán dưới 50 m thì hiện "Tới nơi rồi! Chúc bạn ăn ngon" và nút "Ăn xong viết đánh giá".
   - Ghi rõ trên trang: để vẽ đường, vị trí của bạn và của quán được gửi tới máy chủ tìm đường của FOSSGIS (Đức); app không lưu vị trí. Kèm ghi nguồn OpenStreetMap và link "Sửa bản đồ" (điều kiện dùng máy chủ).
   - Bản demo: quán minh họa vẫn có "Chỉ đường" để xem thử tính năng; đầu trang ghi "Quán minh họa, không có thật ở vị trí này: đường đi chỉ để xem thử tính năng".
   - **Điểm xuất phát dự phòng** (chốt 06/10/2026): bị từ chối vị trí, không lấy được vị trí, hoặc bạn cách quán trên 30 km (thường là máy tính đoán sai vị trí) thì đường vẽ từ ĐH Kinh tế Quốc dân (quán ở Hà Nội) hoặc ĐH Kinh tế TP.HCM (quán ở TP.HCM), kèm một dòng nói rõ lý do, ví dụ "Bạn chưa cho phép vị trí nên Bao chỉ đường từ ĐH Kinh tế Quốc dân. Muốn đi từ chỗ bạn thì cho phép vị trí cho trang này rồi tải lại nhé". Nhờ vậy trang luôn có đường, giám khảo mở trên laptop hay ở xa vẫn xem được. Sau đó lấy được vị trí gần quán thì vẽ lại từ chỗ bạn.
@@ -273,7 +273,7 @@ Dự án Supabase tạo sau tháng 11/2025 không còn "anon key" và "service_r
 | --- | --- | --- |
 | Frontend | Vite + JavaScript thuần (nếu nhóm quen React thì dùng React, thiết kế không đổi) | Nhẹ, build ra file tĩnh |
 | Bản đồ | Leaflet 1.9 + `protomaps-leaflet`, tự vẽ kiểu chibi từ dữ liệu vector của OpenFreeMap; ghim `L.divIcon` bằng HTML, gom cụm tự viết theo lưới | Không cần thẻ, không cần key; tự chọn được màu, nét, chữ cho ra chất chibi |
-| Chỉ đường | Valhalla trên máy chủ miễn phí của FOSSGIS (`valhalla1.openstreetmap.de`), chế độ `motor_scooter` (xe máy) và `pedestrian` (đi bộ), câu chỉ dẫn `vi-VN` | Miễn phí, không cần key, có sẵn chế độ xe máy và tiếng Việt. Điều kiện: ghi nguồn OSM kèm link sửa bản đồ, tối đa 1 yêu cầu/giây, không dùng nặng. Là máy chủ demo nên luôn giữ nút Google Maps dự phòng |
+| Chỉ đường | Valhalla trên máy chủ miễn phí của FOSSGIS (`valhalla1.openstreetmap.de`), chế độ `motor_scooter` (xe máy), `auto` (ô tô) và `pedestrian` (đi bộ), câu chỉ dẫn `vi-VN` | Miễn phí, không cần key, có sẵn chế độ xe máy và tiếng Việt. Điều kiện: ghi nguồn OSM kèm link sửa bản đồ, tối đa 1 yêu cầu/giây, không dùng nặng. Là máy chủ demo nên luôn giữ nút Google Maps dự phòng |
 | Google Maps | Chỉ dùng link Google Maps URLs cho "Mở bằng Google Maps" và "Xem đánh giá trên Google Maps" | Miễn phí, không cần key |
 | Dữ liệu và tài khoản | Supabase: Postgres, Auth (Google và mã qua email), Storage | Miễn phí, có sẵn đăng nhập và phân quyền theo dòng |
 | Gửi đánh giá | Hàm Postgres `submit_review` gọi qua RPC | Kiểm tra khoảng cách check-in và giới hạn 1 đánh giá/ngày ngay trong database |

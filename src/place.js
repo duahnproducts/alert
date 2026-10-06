@@ -87,7 +87,8 @@ export async function renderPlace(id) {
 // Điều kiện dùng: ghi nguồn OSM kèm link sửa bản đồ, tối đa 1 yêu cầu/giây, không dùng nặng (routing.openstreetmap.de/about.html).
 // ponytail: máy chủ demo, không cam kết chạy mãi; lỗi thì người dùng vẫn còn nút "Mở bằng Google Maps".
 const ROUTER = 'https://valhalla1.openstreetmap.de/route'
-const MODES = { motor_scooter: '🛵 Xe máy', pedestrian: '🚶 Đi bộ' }
+// Chế độ đi theo tên costing của Valhalla: [nhãn nút, chữ trong dòng tóm tắt]
+const MODES = { motor_scooter: ['🛵 Xe máy', 'đi xe máy'], auto: ['🚗 Ô tô', 'đi ô tô'], pedestrian: ['🚶 Đi bộ', 'đi bộ'] }
 const MAX_ROUTE_M = 30000 // xa hơn thì nhiều khả năng vị trí sai (máy tính đoán theo IP); không tốn máy chủ miễn phí
 
 async function fetchRoute(from, to, costing) {
@@ -123,10 +124,10 @@ export async function renderDirections(id) {
     h('div', { class: 'stack' }, h('strong', null, 'Tới nơi rồi! Chúc bạn ăn ngon'),
       h('a', { class: 'btn btn-sm', href: `quan/${p.id}/danh-gia` }, 'Ăn xong viết đánh giá')))
   const modes = h('div', { class: 'chips', role: 'group', 'aria-label': 'Đi bằng gì' },
-    Object.entries(MODES).map(([key, label]) =>
+    Object.entries(MODES).map(([key, [label]]) =>
       h('button', { type: 'button', class: 'chip', 'aria-pressed': 'false', 'data-mode': key, onclick: () => { picked = true; draw(key) } }, label)))
   const routes = {} // theo chế độ đi, để đổi qua lại không phải hỏi lại máy chủ
-  let from = null, gps = false, mode = null, picked = false, ctl = null, reroutedAt = 0 // picked: người dùng đã tự chọn xe máy/đi bộ
+  let from = null, gps = false, mode = null, picked = false, ctl = null, reroutedAt = 0 // picked: người dùng đã tự chọn cách đi
 
   page(`Đường tới ${p.name}`, [
     h('h1', { tabindex: -1 }, `Đường tới ${p.name}`),
@@ -154,7 +155,7 @@ export async function renderDirections(id) {
     try {
       const r = routes[key] ??= await fetchRoute(from, p, key)
       if (!here() || mode !== key) return
-      sum.textContent = `${formatDistance(r.length * 1000)} · khoảng ${formatDuration(r.time)} ${key === 'pedestrian' ? 'đi bộ' : 'đi xe máy'}`
+      sum.textContent = `${formatDistance(r.length * 1000)} · khoảng ${formatDuration(r.time)} ${MODES[key][1]}`
       steps.replaceChildren(...r.steps.map(s => h('li', null, s.instruction,
         s.length >= 0.01 && h('span', { class: 'muted' }, ` · ${formatDistance(s.length * 1000)}`)))) // dưới 10 m thì làm tròn thành "0 m"
       ctl?.route(r.shape)
