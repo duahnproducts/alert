@@ -1,0 +1,13 @@
+{
+  "name": "Hometown · Ăn ngon dưới 50k quanh trường",
+  "short_name": "Hometown",
+  "start_url": "./",
+  "scope": "./",
+  "background_color": "#FFF8EF",
+  "theme_color": "#FFF8EF",
+  "icons": [
+    { "src": "icons/app-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/app-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/app-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -152,7 +152,8 @@ src/supabase.js       client và mọi truy vấn
 src/util.js           hàm thuần (giờ mở cửa, khoảng cách, tìm không dấu…) + test
 supabase/schema.sql   bảng, view, RLS, hàm, trigger, bucket ảnh
 supabase/test.sql     kiểm tra RLS, place_stats và các hàm
-public/icons/         bộ icon tự vẽ (SVG): 7 biểu tượng món, 17 biểu tượng địa danh, 4 biểu cảm Bao
+public/icons/         bộ icon tự vẽ (SVG): 7 biểu tượng món, 17 biểu tượng địa danh, 4 biểu cảm Bao; avatar app-*.png (Bao)
+public/manifest.webmanifest  tên và icon khi thêm app ra màn hình chính
 public/covers/        7 tranh minh họa quán theo loại món, làm ảnh bìa khi quán chưa có ảnh thật
 public/og.png         ảnh xem trước khi dán link
 public/landmarks.json địa danh nổi tiếng kèm ảnh thật (tạo bằng scripts/landmarks.mjs)

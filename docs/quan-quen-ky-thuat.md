@@ -62,7 +62,10 @@ quan-quen/
     util.test.js        test cho util.js (node --test)
     style.css
   public/
-    icons/              bộ icon tự vẽ (SVG): 7 biểu tượng món, 17 biểu tượng địa danh `lm-*.svg`, 4 biểu cảm Bao
+    icons/              bộ icon tự vẽ (SVG): 7 biểu tượng món, 17 biểu tượng địa danh `lm-*.svg`, 4 biểu cảm Bao;
+                        avatar của app `app-180/192/512.png` (Bao trên nền kem, chụp từ bebao-vui.svg) cho Safari/Zalo,
+                        iPhone (apple-touch-icon) và "Thêm vào màn hình chính"
+    manifest.webmanifest tên Hometown và icon khi thêm app ra màn hình chính
     covers/             7 tranh minh họa quán theo loại món (SVG 640×320, mỗi tranh dưới 5 KB), làm ảnh bìa khi quán chưa có ảnh thật
     og.png              ảnh xem trước 1200×630 khi dán link
   supabase/
