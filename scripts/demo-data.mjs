@@ -25,8 +25,8 @@ const AREAS = [
   { id: 8, name: 'ĐH Tôn Đức Thắng (Quận 7)', center_lat: 10.7326, center_lng: 106.6993, radius_m: 1500 },
 ]
 
-// Mỗi thành phố 100 quán rải đều khắp khung bản đồ của thành phố đó (CITIES trong util.js), không dồn quanh tâm cụm trường
-const PER_CITY = 100
+// Mỗi thành phố 55 quán rải đều khắp khung bản đồ của thành phố đó (CITIES trong util.js), không dồn quanh tâm cụm trường
+const PER_CITY = 55
 const meters = (a, b) => Math.hypot(a.lat - b.lat, (a.lng - b.lng) * Math.cos(a.lat * Math.PI / 180)) * 111320
 
 // Các điểm nằm trên đường phố trong khung, lấy từ ô bản đồ vector OpenFreeMap mà app đang dùng, để ghim không rơi xuống hồ, sông.
