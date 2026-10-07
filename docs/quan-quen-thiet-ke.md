@@ -157,7 +157,7 @@ Bản đồ ──> Chi tiết quán ──> [Đã đăng nhập?] ──rồi�
 
 ## 5. Nhận diện hình ảnh
 
-Bản đồ trông như một tấm bản đồ ẩm thực vẽ tay kiểu chibi: nền kem, khuôn viên trường màu lavender, công viên xanh mint, hồ nước xanh baby có viền, đường trắng dày bo tròn, chữ tròn trịa có viền trắng. Bản đồ không vẽ biểu tượng cửa hàng, nên mọi điểm nhấn đều là biểu tượng món ăn của app và bản đồ không quảng cáo quán khác. Chế độ tối là bản đồ "ban đêm" tím đậm.
+Bản đồ trông như một tấm bản đồ ẩm thực vẽ tay kiểu chibi: nền kem, khuôn viên trường màu lavender, công viên xanh mint, hồ nước xanh baby có viền, đường trắng dày bo tròn, chữ tròn trịa có viền trắng. Bản đồ không vẽ biểu tượng cửa hàng, nên mọi điểm nhấn đều là biểu tượng món ăn của app và bản đồ không quảng cáo quán khác. Chế độ tối là bản đồ "ban đêm" xanh xám đậm, màu dịu để ghim quán màu kẹo nổi lên (đổi 07/10/2026, bản tím đậm cũ khó nhìn).
 
 **Biểu tượng theo loại món**
 

@@ -158,9 +158,9 @@ label, .label { display: block; font-weight: 600; margin-bottom: 6px; }
 }
 .leaflet-control-attribution a { color: #C2410C; }
 @media (prefers-color-scheme: dark) {
-  #map, .pick-map, .route-map { background: #3A3358; }
-  .leaflet-bar a, .leaflet-touch .leaflet-bar a { background: #3D3356; color: #FFD4D4; border-color: #5A4B7C; box-shadow: 0 4px 0 #1C172C; }
-  .leaflet-control-attribution { background: rgb(58 51 88 / .85) !important; color: var(--muted); }
+  #map, .pick-map, .route-map { background: #242B38; }
+  .leaflet-bar a, .leaflet-touch .leaflet-bar a { background: #2E3646; color: #FFD4D4; border-color: #46506A; box-shadow: 0 4px 0 #12161E; }
+  .leaflet-control-attribution { background: rgb(26 32 41 / .9) !important; color: #C9CFD9; }
   .leaflet-control-attribution a { color: var(--accent); }
 }
 .fab {

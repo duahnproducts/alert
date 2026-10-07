@@ -49,13 +49,15 @@ const PALETTE = {
     rail: '#D3C2FA', path: '#EBD6B8',
     text: '#6B4430', halo: '#FFFFFF', roadText: '#7A5644', waterText: '#1F78B4', campusText: '#6A4BC4',
   },
+  // Ban đêm: nền xanh xám đậm, đường xám nhạt dần theo cấp, chỉ đường lớn có màu (hổ phách dịu), nước tối hơn nền.
+  // Màu nhạt, ít tương phản giữa các vùng để ghim quán màu kẹo nổi lên; chữ sáng viền tối.
   dark: {
-    land: '#3A3358', residential: '#40385F', commercial: '#4A3A5C', campus: '#463A72', hospital: '#4D3858',
-    grass: '#3B6150', wood: '#355847', water: '#3E6A9E', waterEdge: '#6A98CF',
-    building: '#4E4470', buildingEdge: '#6E5E98',
-    minorCase: '#544A78', minor: '#6E6399', midCase: '#A9864D', mid: '#C9A46A', bigCase: '#AD6278', big: '#CF8AA0',
-    rail: '#8A77C4', path: '#6F6394',
-    text: '#FFF6EC', halo: '#3A3358', roadText: '#F1E6DA', waterText: '#B5DBFA', campusText: '#DCCBFF',
+    land: '#242B38', residential: '#27303E', commercial: '#2C2E3E', campus: '#2D2C47', hospital: '#302A3C',
+    grass: '#24392F', wood: '#20342A', water: '#16263B', waterEdge: '#26446A',
+    building: '#2E3646', buildingEdge: '#3A4456',
+    minorCase: '#242B38', minor: '#404A5B', midCase: '#2C3442', mid: '#535E70', bigCase: '#4E4232', big: '#8F7A58',
+    rail: '#5A5A80', path: '#3A4352',
+    text: '#E8E3DA', halo: '#1A2029', roadText: '#BCC3CF', waterText: '#80B6E4', campusText: '#C4B5F0',
   },
 }
 
@@ -63,12 +65,13 @@ function rules(pm, c) {
   const { PolygonSymbolizer: Poly, LineSymbolizer: Line, CenteredTextSymbolizer: Text, LineLabelSymbolizer: LineText, linear } = pm
   const is = (...v) => (z, f) => v.includes(f.props.class)
   const road = (classes, caseColor, color, width) => [
-    { dataLayer: 'transportation', filter: is(...classes), symbolizer: new Line({ color: caseColor, width: z => width(z) + 3, lineCap: 'round', lineJoin: 'round' }) },
+    { dataLayer: 'transportation', filter: is(...classes), symbolizer: new Line({ color: caseColor, width: z => width(z) + (z < 15 ? 1.5 : 3), lineCap: 'round', lineJoin: 'round' }) },
     { dataLayer: 'transportation', filter: is(...classes), symbolizer: new Line({ color, width, lineCap: 'round', lineJoin: 'round' }) },
   ]
-  const minorW = linear([[13, 1], [15, 4], [17, 11], [19, 26]])
-  const midW = linear([[11, 1.5], [14, 5], [16, 10], [18, 22], [19, 32]])
-  const bigW = linear([[10, 2], [14, 7], [16, 13], [18, 28], [19, 40]])
+  // Zoom xa (cả nội thành trên màn hình) đường mảnh cho đỡ rối; zoom gần vẫn to tròn kiểu chibi
+  const minorW = linear([[13, 0.8], [15, 3.5], [17, 10], [19, 24]])
+  const midW = linear([[11, 1], [14, 3], [16, 8], [18, 20], [19, 30]])
+  const bigW = linear([[10, 1.5], [14, 5], [16, 12], [18, 26], [19, 38]])
   const halo = (font, fill) => ({ font, fill, stroke: c.halo, width: 3 })
 
   const paintRules = [
