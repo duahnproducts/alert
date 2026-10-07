@@ -131,7 +131,8 @@ export function decodePolyline(s, precision = 6) {
   return pts
 }
 
-export const formatDistance = m => (m < 1000 ? `${Math.round(m / 10) * 10} m` : `${(m / 1000).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} km`)
+export const formatDistance = m => (m < 1000 ? `${Math.round(m / 10) * 10} m`
+  : `${(m / 1000).toLocaleString('vi-VN', { maximumFractionDigits: m < 10000 ? 1 : 0 })} km`) // từ 10 km bỏ số lẻ: "1.138 km"
 
 // Giá dùng để lọc và sắp xếp: giá thật nếu có từ 3 lượt báo giá, nếu không thì giá cao nhất nhóm ghi lúc khảo sát.
 export const filterPrice = p => (p.price_count >= 3 ? p.price_median : p.price_max)

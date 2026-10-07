@@ -100,9 +100,13 @@ export function loadData() {
 // Vị trí mặc định khi chưa chia sẻ hoặc chặn vị trí: trường của thành phố đang chọn (Hà Nội: KTQD, TP.HCM: UEH)
 export const defaultSpot = () => (state.city ?? CITIES[0]).start
 
-// Khoảng cách tính từ vị trí của bạn, chưa có thì từ vị trí mặc định
+// Vị trí của bạn, chỉ khi bạn đang ở thành phố đang xem: ở Hà Nội mà xem TP.HCM thì khoảng cách
+// tới bạn (hơn 1.000 km) vô nghĩa, nên tính từ vị trí mặc định của thành phố đó
+export const myPos = () => (state.userPos && (!state.city || cityOf(state.userPos) === state.city) ? state.userPos : null)
+
+// Khoảng cách tính từ vị trí của bạn, chưa có (hoặc đang xem thành phố kia) thì từ vị trí mặc định
 export function origin() {
-  return state.userPos ?? (state.city ? defaultSpot() : null)
+  return myPos() ?? (state.city ? defaultSpot() : null)
 }
 
 export function dist(p) {
@@ -163,15 +167,17 @@ function renderNear(list = filtered()) {
         near === 'wait' ? 'Bao đang tìm bạn…' : '📍 Chia sẻ vị trí'))
     return
   }
-  const mine = near === 'show'
+  const mine = near === 'show' && !!myPos()
   const spot = mine ? null : defaultSpot()
-  // Vị trí mặc định chỉ là ước lượng (và quán demo ở TP.HCM cách UEH khoảng 4 km) nên tìm rộng hơn
+  // Vị trí mặc định chỉ là ước lượng nên tìm rộng hơn
   const radius = mine ? 2000 : 5000
   const picks = suggestNear(list, mine ? state.userPos : spot, { radius })
   box.replaceChildren(close,
     h('div', { class: 'near-head' }, h('strong', null, mine ? 'Gợi ý quanh bạn' : `Gợi ý quanh ${spot.name}`),
       h('button', { type: 'button', class: 'link', onclick: locate }, mine ? 'Cập nhật vị trí' : '📍 Dùng vị trí của tôi')),
-    !mine && h('p', { class: 'muted' }, 'Bạn chưa chia sẻ vị trí nên Bao tạm tính khoảng cách từ đây.'),
+    !mine && h('p', { class: 'muted' }, state.userPos
+      ? `Bạn đang ở ngoài ${state.city.name} nên Bao tính khoảng cách từ đây.`
+      : 'Bạn chưa chia sẻ vị trí nên Bao tạm tính khoảng cách từ đây.'),
     picks.length
       ? h('ul', null, picks.map(({ p, d }) => h('li', null, h('a', { href: `quan/${p.id}` },
         placeIcon(p, 28),
@@ -333,7 +339,7 @@ function startMap() {
   if (mapStarted || appPath() !== '/') return
   if (!state.city) return askCity() // lần đầu mở app: hỏi thành phố trước, chọn xong mới vẽ bản đồ
   mapStarted = true
-  const o = state.userPos ?? state.city.center
+  const o = myPos() ?? state.city.center
   const go = () => initMap($('map'), {
     center: { lat: o.lat, lng: o.lng },
     onSelect: showQuick,

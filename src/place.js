@@ -2,7 +2,7 @@
 import { DEMO, demoData, fetchReviews, fetchPhotos, photoUrl, thumbPath, report } from './supabase.js'
 import { CATEGORIES, h, hoursText, isOpenNow, formatPrice, formatStars, formatDistance, badgeFor, timeAgo, formatDate, priceShort, suggestNear, distanceM, decodePolyline, formatDuration, distanceToPath, remainingOnPath, arriveAt, CITIES, cityOf } from './util.js'
 import { routeMap } from './map.js'
-import { state, page, toast, mascot, errorBox, dataReady, dist } from './main.js'
+import { state, page, toast, mascot, errorBox, dataReady, dist, myPos } from './main.js'
 import { openLogin } from './auth.js'
 
 export async function renderPlace(id) {
@@ -38,7 +38,7 @@ export async function renderPlace(id) {
     h('h1', { tabindex: -1 }, p.name),
     h('p', { class: 'muted' }, [cat.label, p.address].filter(Boolean).join(' · ')),
     h('p', { class: 'meta' },
-      d != null && h('span', null, `Cách ${formatDistance(d)}${state.userPos ? '' : ` từ ${state.city?.start.name}`}`),
+      d != null && h('span', null, `Cách ${formatDistance(d)}${myPos() ? '' : ` từ ${state.city?.start.name}`}`),
       hours && h('span', { class: closed ? 'muted' : 'open' }, closed && mascot('ngu', 24), hours)),
     p.suggested_by_name && h('p', { class: 'suggested' }, `Gợi ý bởi ${p.suggested_by_name}`),
 

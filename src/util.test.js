@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { isOpenNow, hoursText, distanceM, normalizeVi, isInAppBrowser, filterPrice, priceShort, scoreShort, badgeFor, formatPrice, placeLabel, suggestNear, decodePolyline, formatDuration, distanceToPath, remainingOnPath, arriveAt, cityOf, CITIES } from './util.js'
+import { isOpenNow, hoursText, distanceM, normalizeVi, isInAppBrowser, filterPrice, priceShort, scoreShort, badgeFor, formatPrice, placeLabel, suggestNear, decodePolyline, formatDuration, distanceToPath, remainingOnPath, arriveAt, cityOf, CITIES, formatDistance } from './util.js'
 
 // Giờ Việt Nam = UTC+7. 05/10/2026 là thứ Hai, 04/10/2026 là Chủ nhật.
 const vn = (date, time) => new Date(`${date}T${time}:00+07:00`)
@@ -138,4 +138,10 @@ test('remainingOnPath, arriveAt', () => {
   assert.equal(remainingOnPath({ lat: 21.003, lng: 105.8 }, path), 0, 'quá điểm cuối')
   assert.equal(arriveAt(15 * 60, vn('2026-10-05', '11:50')), '12:05')
   assert.equal(arriveAt(30 * 60, vn('2026-10-05', '23:45')), '00:15')
+})
+
+test('formatDistance: mét làm tròn 10, dưới 10 km một số lẻ, từ 10 km bỏ số lẻ', () => {
+  assert.equal(formatDistance(587), '590 m')
+  assert.equal(formatDistance(2532), '2,5 km')
+  assert.equal(formatDistance(1137500), '1.138 km', 'Hà Nội tới TP.HCM không ghi "1.137,5 km"')
 })
