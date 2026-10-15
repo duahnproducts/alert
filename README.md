@@ -125,6 +125,12 @@ update reviews set status = 'visible' where id = 123;
 delete from reports where target_type = 'review' and target_id = 123;
 ```
 
+## Kiểm thử chỉ đường
+
+`npm test` chạy kiểm thử hàm thuần. `npm run test:e2e` kiểm tra nút chỉ đường của toàn bộ 110 quán và 193 địa danh, mỗi điểm đến đủ xe máy, ô tô, đi bộ; thêm các ca link sâu, tải lại, GPS, lỗi mạng và giao diện desktop tối. Tuyến và nền bản đồ được giả lập trong bộ test này để không làm nặng dịch vụ công cộng.
+
+Máy Windows mặc định dùng Edge đã cài. Máy khác chạy `npx playwright install chromium`, rồi đặt `PW_CHANNEL=chromium` trước khi chạy test (CI tự dùng Chromium). Đặt `RUN_LIVE=1` và chạy `npm run test:e2e -- tests/live-directions.spec.js --workers=1` để kiểm tra thêm 6 tuyến thật ở hai thành phố với ba chế độ; bài này cần mạng và có giãn cách yêu cầu. Không bật tuyến thật trong CI.
+
 ## Deploy
 
 - **GitHub Pages:** Settings → Pages → Source: GitHub Actions (đã bật). Workflow `.github/workflows/pages.yml` tự build và deploy mỗi khi push vào nhánh mặc định của repo, ra https://duahnproducts.github.io/alert/. Khai 2 biến ở Settings → Secrets and variables → Actions → **Variables**: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (`VITE_SITE_URL` workflow tự điền). Chưa khai thì app vẫn mở được: bản đồ và địa danh chạy, danh sách quán báo không tải được.

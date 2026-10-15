@@ -20,6 +20,8 @@ jobs:
         with: { node-version: 22, cache: npm }
       - run: npm ci
       - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
       - run: npx vite build --base=/${{ github.event.repository.name }}/
         env:
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}

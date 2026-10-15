@@ -6,6 +6,7 @@ import {
   CATEGORIES, CITIES, cityOf, h, normalizeVi, distanceM, isOpenNow, filterPrice, priceShort, scoreShort, formatDistance, placeLabel, suggestNear,
 } from './util.js'
 import { renderPlace, renderDirections, openLandmark } from './place.js'
+import { loadLandmarks } from './destinations.js'
 import { renderReview, renderSuggest } from './review.js'
 import { initAuth, requireLogin, renderMine } from './auth.js'
 
@@ -354,7 +355,7 @@ function startMap() {
     renderHome()
     if (state.userPos) showUser(state.userPos, coveredBottom()) // vị trí lấy xong trước khi bản đồ kịp vẽ
     // Địa danh: dữ liệu tĩnh lấy từ Wikidata/Wikipedia bằng scripts/landmarks.mjs. Lỗi thì bản đồ vẫn chạy, chỉ thiếu địa danh
-    fetch('landmarks.json').then(r => r.json()).then(list => {
+    loadLandmarks().then(list => {
       showLandmarks(list, openLandmark)
       toggleLandmarks(state.landmarks)
     }, () => {})
@@ -446,6 +447,7 @@ const routes = [
   [/^\/$/, showHome],
   [/^\/quan\/(\d+)\/?$/, id => renderPlace(+id)],
   [/^\/quan\/(\d+)\/chi-duong\/?$/, id => renderDirections(+id)],
+  [/^\/dia-danh\/(Q\d+)\/chi-duong\/?$/, id => renderDirections(id, 'dia-danh')],
   [/^\/quan\/(\d+)\/danh-gia\/?$/, id => requireLogin('viết đánh giá', () => renderReview(+id))],
   [/^\/de-xuat\/?$/, () => requireLogin('đề xuất quán mới', renderSuggest)],
   [/^\/cua-toi\/?$/, () => requireLogin('xem đánh giá của bạn', renderMine)],

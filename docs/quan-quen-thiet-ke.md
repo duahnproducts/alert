@@ -118,7 +118,7 @@ Bản đồ ──> Chi tiết quán ──> [Đã đăng nhập?] ──rồi�
 - **Món được nhắc nhiều:** các chip như "Bún chả (12)", "Nem (5)".
 - **Lưới ảnh thật,** rồi **danh sách đánh giá** mới nhất trước. Mỗi đánh giá gồm tên hiển thị, huy hiệu "Đã check-in", số sao, giá đã trả, món, một câu, ảnh, ngày và nút "Báo cáo".
 - **Thanh đáy cố định:** "Chỉ đường", "Viết đánh giá", biểu tượng chia sẻ.
-- **Chỉ đường ngay trong app** (`/quan/:id/chi-duong`), không phải rời sang Google Maps:
+- **Chỉ đường ngay trong app** (`/quan/:id/chi-duong` cho quán, `/dia-danh/:id/chi-duong` cho địa danh), áp dụng cho mọi nút "Chỉ đường". Địa danh dùng cùng ba chế độ di chuyển và điểm xuất phát dự phòng; không gắn nhãn quán minh họa hoặc mời viết đánh giá quán cho địa danh thật. Google Maps là lựa chọn dự phòng trên trang chỉ đường:
   - Chọn "Xe máy", "Ô tô" hoặc "Đi bộ", mỗi nút có icon chibi tự vẽ (xe tay ga hồng, ô tô vàng, bạn sinh viên đeo ba lô); mặc định đi bộ nếu quán cách dưới 1,5 km. Dòng tóm tắt kèm giờ tới nơi: "1,2 km · khoảng 15 phút đi bộ · tới nơi lúc 12:45"; đang đi thì giờ tới nơi tính lại theo phần đường còn lại. Chọn cách đi nào thì icon đó chạy dọc tuyến từ chỗ bạn tới quán trong vài giây, nét đường mọc dần phía sau như animation máy bay bay trên bản đồ, rồi mờ đi khi tới quán. Bản đồ có đường đi, ghim quán và Bao ở vị trí của bạn, rồi danh sách từng bước bằng tiếng Việt ("Rẽ phải vào Phố Giảng Võ · 230 m").
   - Bao đi theo vị trí thật của bạn. Bản đồ giữ khung cả tuyến, chỉ dời khi Bao sắp ra khỏi khung; bạn tự kéo hoặc zoom thì bản đồ để yên 15 giây cho bạn xem.
   - Đi lệch khỏi đường quá 40 m (hoặc quá sai số GPS lúc đó) thì Bao báo "Bạn đi khác đường rồi" và tự tìm đường mới từ chỗ bạn đứng, tối đa 30 giây một lần.

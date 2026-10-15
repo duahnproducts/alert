@@ -103,8 +103,8 @@ function rules(pm, c) {
   return { paintRules, labelRules, backgroundColor: c.land }
 }
 
-function newMap({ L, pm, tiles }, el, center, zoom) {
-  const city = boxOf(L, center) ?? L.latLngBounds(CITIES[0].box) // ở ngoài cả hai thành phố thì mở Hà Nội
+function newMap({ L, pm, tiles }, el, center, zoom, bounds) {
+  const city = bounds ?? boxOf(L, center) ?? L.latLngBounds(CITIES[0].box) // ở ngoài cả hai thành phố thì mở Hà Nội
   const m = L.map(el, { zoomControl: false, attributionControl: false, maxZoom: 19, maxBounds: city, maxBoundsViscosity: 1 })
   fitCity(m) // trước setView: zoom mở đầu nhỏ hơn mức vừa khung thì tự nâng lên
   m.setView(city.contains(center) ? center : city.getCenter(), zoom)
@@ -341,9 +341,13 @@ export async function routeMap(el, place) {
   try {
     const lb = await loadLib()
     const { L } = lb
-    const { m } = newMap(lb, el, [place.lat, place.lng], 16)
+    // Một số địa danh nằm sát ngoài khung nội thành (Đền Đô, Chùa Keo).
+    // Mở rộng khung trang chỉ đường để ghim đích không bị chặn ngoài màn hình.
+    const city = CITIES.find(c => c.name === place.city) ?? cityOf(place) ?? CITIES[0]
+    const bounds = L.latLngBounds(city.box).extend([place.lat, place.lng]).pad(0.05)
+    const { m } = newMap(lb, el, [place.lat, place.lng], 16, bounds)
     L.marker([place.lat, place.lng], {
-      icon: L.divIcon({ html: pinEl(place.category), className: 'qq-icon', iconSize: [48, 60], iconAnchor: [24, 58] }),
+      icon: L.divIcon({ html: pinEl(place.category, place.type ? `icons/lm-${place.type}.svg` : undefined), className: 'qq-icon', iconSize: [48, 60], iconAnchor: [24, 58] }),
       title: place.name, keyboard: false, interactive: false, zIndexOffset: 1000,
     }).addTo(m)
     const me = meMarker(L, [place.lat, place.lng])

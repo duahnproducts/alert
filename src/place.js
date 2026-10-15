@@ -4,6 +4,7 @@ import { CATEGORIES, h, hoursText, isOpenNow, formatPrice, formatStars, formatDi
 import { routeMap } from './map.js'
 import { state, page, toast, mascot, errorBox, dataReady, dist, myPos } from './main.js'
 import { openLogin } from './auth.js'
+import { directionsHref, loadLandmarks } from './destinations.js'
 
 export async function renderPlace(id) {
   const path = location.pathname
@@ -65,7 +66,7 @@ export async function renderPlace(id) {
     h('section', null, h('h2', null, 'Đánh giá'), reviewsBox),
 
     h('nav', { class: 'actionbar', 'aria-label': 'Hành động' },
-      h('a', { class: 'btn-ghost', href: `quan/${p.id}/chi-duong` }, 'Chỉ đường'),
+      h('a', { class: 'btn-ghost', href: directionsHref(p.id) }, 'Chỉ đường'),
       h('a', { class: 'btn', href: `quan/${p.id}/danh-gia` }, 'Viết đánh giá'),
       h('button', { type: 'button', class: 'btn-ghost icon-only', 'aria-label': 'Chia sẻ quán', onclick: () => share(p) }, '↗')),
   ])
@@ -106,15 +107,22 @@ async function fetchRoute(from, to, costing) {
 const gmapsDir = p => `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}` +
   (p.google_place_id ? `&destination_place_id=${encodeURIComponent(p.google_place_id)}` : '')
 
-export async function renderDirections(id) {
+export async function renderDirections(id, kind = 'quan') {
   const path = location.pathname
-  let p = state.places.find(x => x.id === id)
-  if (!p) {
-    await dataReady()
-    p = state.places.find(x => x.id === id)
+  const landmark = kind === 'dia-danh'
+  let p
+  try {
+    if (landmark) p = (await loadLandmarks()).find(x => x.id === id)
+    else {
+      await dataReady()
+      p = state.places.find(x => x.id === id)
+    }
+  } catch {
+    if (location.pathname !== path) return
+    return page('Chưa tải được địa điểm', errorBox('Kiểm tra mạng rồi thử tải lại địa điểm nhé.', () => renderDirections(id, kind)))
   }
   if (location.pathname !== path) return
-  if (!p) return page('Không thấy quán', errorBox('Không thấy quán này. Có thể quán đang chờ duyệt, đã bị ẩn, hoặc bạn đang mất mạng.'))
+  if (!p) return page('Không thấy địa điểm', errorBox('Không thấy địa điểm này. Quay lại bản đồ chọn địa điểm khác nhé.'))
 
   const here = () => location.pathname === path
   const mapEl = h('div', { class: 'route-map' })
@@ -122,8 +130,8 @@ export async function renderDirections(id) {
   const fromLine = h('p', { class: 'note', hidden: true }) // lý do đang dùng điểm xuất phát dự phòng
   const steps = h('ol', { class: 'steps' })
   const arrived = h('div', { class: 'card ok-box', hidden: true }, mascot('vui', 48),
-    h('div', { class: 'stack' }, h('strong', null, 'Tới nơi rồi! Chúc bạn ăn ngon'),
-      h('a', { class: 'btn btn-sm', href: `quan/${p.id}/danh-gia` }, 'Ăn xong viết đánh giá')))
+    h('div', { class: 'stack' }, h('strong', null, landmark ? 'Tới nơi rồi! Chúc bạn tham quan vui vẻ' : 'Tới nơi rồi! Chúc bạn ăn ngon'),
+      !landmark && h('a', { class: 'btn btn-sm', href: `quan/${p.id}/danh-gia` }, 'Ăn xong viết đánh giá')))
   const modes = h('div', { class: 'chips', role: 'group', 'aria-label': 'Đi bằng gì' },
     Object.entries(MODES).map(([key, [label]]) =>
       h('button', { type: 'button', class: 'chip', 'aria-pressed': 'false', 'data-mode': key, onclick: () => { picked = true; draw(key) } },
@@ -134,15 +142,15 @@ export async function renderDirections(id) {
   page(`Đường tới ${p.name}`, [
     h('h1', { tabindex: -1 }, `Đường tới ${p.name}`),
     // Bản demo là bài dự thi, chưa có người dùng thật: vẫn chỉ đường tới quán minh họa để xem thử, nhưng ghi rõ
-    DEMO && h('p', { class: 'note' }, 'Quán minh họa, không có thật ở vị trí này: đường đi chỉ để xem thử tính năng.'),
+    DEMO && !landmark && h('p', { class: 'note' }, 'Quán minh họa, không có thật ở vị trí này: đường đi chỉ để xem thử tính năng.'),
     modes, fromLine, sum, mapEl, arrived, steps,
     h('p', { class: 'small muted' },
-      'Để vẽ đường, vị trí của bạn và của quán được gửi tới máy chủ tìm đường miễn phí của FOSSGIS (Đức). App không lưu vị trí của bạn.'),
+      'Để vẽ đường, vị trí của bạn và điểm đến được gửi tới máy chủ tìm đường miễn phí của FOSSGIS (Đức). App không lưu vị trí của bạn.'),
     h('p', { class: 'small muted' }, 'Đường đi: Valhalla, máy chủ FOSSGIS · Dữ liệu © ',
       h('a', { href: 'https://www.openstreetmap.org/copyright', target: '_blank', rel: 'noopener' }, 'OpenStreetMap'), ' · Thấy đường sai? ',
       h('a', { href: 'https://www.openstreetmap.org/fixthemap', target: '_blank', rel: 'noopener' }, 'Sửa bản đồ')),
     h('a', { class: 'btn-ghost', href: gmapsDir(p), target: '_blank', rel: 'noopener' }, 'Mở bằng Google Maps'),
-  ], { href: `quan/${p.id}`, label: p.name })
+  ], landmark ? { href: './', label: 'Bản đồ' } : { href: `quan/${p.id}`, label: p.name })
 
   async function draw(key) {
     mode = key
@@ -150,7 +158,7 @@ export async function renderDirections(id) {
     if (!from) return // chưa có vị trí: nhớ chế độ đã chọn, có vị trí thì tìm đường theo chế độ này
     const far = distanceM(from, p)
     if (far > MAX_ROUTE_M) {
-      sum.textContent = `Bạn đang cách quán ${formatDistance(far)}, xa quá nên Bao không vẽ đường. Nếu vị trí sai, bật GPS rồi tải lại trang, hoặc mở bằng Google Maps nhé.`
+      sum.textContent = `Bạn đang cách điểm đến ${formatDistance(far)}, xa quá nên Bao không vẽ đường. Nếu vị trí sai, bật GPS rồi tải lại trang, hoặc mở bằng Google Maps nhé.`
       return
     }
     sum.textContent = 'Bao đang tìm đường…'
@@ -182,7 +190,7 @@ export async function renderDirections(id) {
     state.userPos = pos
     const left = distanceM(pos, p)
     // Xa quá (thường là máy tính đoán vị trí theo IP): dùng điểm dự phòng, không làm nặng máy chủ miễn phí
-    if (left > MAX_ROUTE_M) return gps || fallback(`Bạn đang cách quán ${formatDistance(left)}`)
+    if (left > MAX_ROUTE_M) return gps || fallback(`Bạn đang cách điểm đến ${formatDistance(left)}`)
     ctl?.user(pos)
     arrived.hidden = left > 50
     if (!gps) {
@@ -222,7 +230,7 @@ export async function renderDirections(id) {
   // để trang luôn có đường (giám khảo mở trên laptop hay ở xa vẫn xem được). Đang có vị trí thật thì bỏ qua.
   function fallback(reason, hint = '') {
     if (from) return
-    const start = (cityOf(p) ?? state.city ?? CITIES[0]).start
+    const start = (CITIES.find(c => c.name === p.city) ?? cityOf(p) ?? state.city ?? CITIES[0]).start
     from = start
     ctl?.user(start)
     fromLine.textContent = `${reason} nên Bao chỉ đường từ ${start.name}.${hint}`
@@ -369,7 +377,7 @@ export function openLandmark(l) {
       ph.licenseUrl ? h('a', { href: ph.licenseUrl, target: '_blank', rel: 'noopener' }, ph.license) : ph.license,
       ' · Wikimedia Commons. Nội dung: ', h('a', { href: l.wiki, target: '_blank', rel: 'noopener' }, 'Wikipedia'), ' (CC BY-SA 4.0).'),
     h('div', { class: 'row' },
-      h('a', { class: 'btn', href: `https://www.google.com/maps/dir/?api=1&destination=${l.lat},${l.lng}`, target: '_blank', rel: 'noopener' }, 'Chỉ đường'),
+      h('a', { class: 'btn', href: directionsHref(l.id, 'dia-danh'), onclick: () => dlg.close() }, 'Chỉ đường'),
       h('button', { type: 'button', class: 'btn-ghost', onclick: () => dlg.close() }, 'Đóng')),
   )
   dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close() })
