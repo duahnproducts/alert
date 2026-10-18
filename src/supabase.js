@@ -6,7 +6,13 @@ import { createClient } from '@supabase/supabase-js'
 // Đăng nhập, viết đánh giá, đề xuất quán tắt trong bản demo. Nối Supabase xong thì tự chuyển sang dữ liệu thật.
 export const DEMO = !import.meta.env.VITE_SUPABASE_URL
 let demo
-export const demoData = () => (demo ??= fetch('demo.json').then(r => r.json()))
+export const demoData = () => (demo ??= fetch('demo.json').then(r => {
+  if (!r.ok) throw new Error(`demo ${r.status}`)
+  return r.json()
+}).catch(err => {
+  demo = null // cho phép nút Thử lại tải lại sau lỗi mạng/HTTP
+  throw err
+}))
 
 export const sb = createClient(
   import.meta.env.VITE_SUPABASE_URL || 'https://chua-cau-hinh.invalid',
@@ -24,7 +30,10 @@ const must = ({ data, error }) => {
 
 export function readCache() {
   if (DEMO) return null // không để bản lưu của dữ liệu thật lẫn với bản demo
-  try { return JSON.parse(localStorage.getItem(CACHE)) } catch { return null }
+  try {
+    const data = JSON.parse(localStorage.getItem(CACHE))
+    return Array.isArray(data?.places) && Array.isArray(data?.areas) && data.savedAt ? data : null
+  } catch { return null }
 }
 
 // Lấy quán và cụm trường, lưu lại để lần sau vẽ ngay và để xem được khi Supabase lỗi.

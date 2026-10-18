@@ -56,7 +56,7 @@ export async function renderPlace(id) {
         ? [h('b', { class: 'price big' }, `Thường ${formatPrice(p.price_median)}`),
            ` · từ ${formatPrice(p.price_p25)} đến ${formatPrice(p.price_p75)} · theo ${p.price_count} ${DEMO ? 'đánh giá mẫu' : 'người đã ăn'}`]
         : p.price_min && p.price_max
-          ? [h('b', null, `Khoảng ${formatPrice(p.price_min)}–${formatPrice(p.price_max)}`), ' · giá tham khảo lúc nhóm khảo sát']
+          ? [h('b', null, `Khoảng ${formatPrice(p.price_min)}–${formatPrice(p.price_max)}`), DEMO ? ' · giá mẫu minh họa' : ' · giá tham khảo lúc nhóm khảo sát']
           : 'Chưa có ai báo giá. Ăn xong báo giá giúp mọi người nhé!'),
       p.top_dishes.length > 0 && h('div', { class: 'chips' },
         h('span', { class: 'muted' }, 'Món được nhắc nhiều:'),

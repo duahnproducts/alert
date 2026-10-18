@@ -4,7 +4,9 @@ Bản đồ quán ăn ngon dưới 50k quanh trường, do sinh viên chấm đi
 
 Bài dự thi "From Idea to Impact" (CLB FPC). Thiết kế sản phẩm: [docs/quan-quen-thiet-ke.md](docs/quan-quen-thiet-ke.md). Phương án kỹ thuật: [docs/quan-quen-ky-thuat.md](docs/quan-quen-ky-thuat.md).
 
-Bản chạy thật: https://duahnproducts.github.io/alert/
+Bản triển khai công khai: https://duahnproducts.github.io/alert/
+
+**Trạng thái kiểm tra 18/10/2026:** GitHub Pages công khai, HTTPS được bật; hiện chạy bản demo có nhãn. Repository chưa khai biến Supabase, nên người ngoài có thể xem bản đồ, quán minh họa và địa danh, nhưng chưa đăng nhập/đóng góp đánh giá thật. Workflow sao lưu đang bỏ qua vì chưa khai cấu hình; trạng thái workflow xanh không chứng minh có bản sao lưu. Xem [biên bản kiểm tra](docs/kiem-tra-du-thi.md).
 
 Không có server riêng: GitHub Pages phục vụ file tĩnh, Leaflet vẽ bản đồ, Supabase giữ dữ liệu, tài khoản và ảnh. Mọi quy tắc tin cậy (quyền, check-in 150 m, giới hạn đánh giá, hàng chờ ảnh, tự ẩn khi đủ 3 báo cáo) nằm trong [supabase/schema.sql](supabase/schema.sql).
 
@@ -133,7 +135,7 @@ Máy Windows mặc định dùng Edge đã cài. Máy khác chạy `npx playwrig
 
 ## Deploy
 
-- **GitHub Pages:** Settings → Pages → Source: GitHub Actions (đã bật). Workflow `.github/workflows/pages.yml` tự build và deploy mỗi khi push vào nhánh mặc định của repo, ra https://duahnproducts.github.io/alert/. Khai 2 biến ở Settings → Secrets and variables → Actions → **Variables**: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (`VITE_SITE_URL` workflow tự điền). Chưa khai thì app vẫn mở được: bản đồ và địa danh chạy, danh sách quán báo không tải được.
+- **GitHub Pages:** Settings → Pages → Source: GitHub Actions (đã bật). Workflow `.github/workflows/pages.yml` tự build và deploy mỗi khi push vào nhánh mặc định của repo, ra https://duahnproducts.github.io/alert/. Khai 2 biến ở Settings → Secrets and variables → Actions → **Variables**: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (`VITE_SITE_URL` workflow tự điền). Chưa khai thì app chạy demo có nhãn với bản đồ, địa danh và quán minh họa; đăng nhập và đóng góp được tắt.
 - **Supabase Auth → URL Configuration:** Site URL và Redirect URLs gồm `https://duahnproducts.github.io/alert/` và `http://localhost:5173`.
 - **Đường dẫn:** app chạy dưới `/alert/`, nên trong code mọi đường dẫn đều tương đối theo thẻ `<base>` trong `index.html`. GitHub Pages không có rewrite, nên workflow chép `index.html` thành `404.html` để link sâu như `/alert/quan/12` vẫn mở được app.
 - **Sao lưu:** thêm 2 secret `SUPABASE_DB_URL` (Supabase → Connect → Session pooler) và `BACKUP_PASSPHRASE` (mật khẩu tự đặt). Workflow `.github/workflows/backup.yml` chạy mỗi đêm, mã hóa bản sao bằng gpg (repo công khai nên ai cũng tải được artifact), giữ 14 ngày, và giữ dự án Supabase miễn phí không bị tạm dừng. Giải mã: `gpg -d data.sql.gpg > data.sql`.
@@ -141,7 +143,7 @@ Máy Windows mặc định dùng Edge đã cài. Máy khác chạy `npx playwrig
 
 ## Trước khi nộp
 
-- [ ] Sửa các chỗ ghi `CẦN ĐIỀN` trong `index.html`: link bài dự thi trên fanpage (menu), tên thành viên, link fanpage, email liên hệ (trang Về dự án).
+- [ ] Bổ sung tên người dự thi và link bài thi chính thức khi có; hiện trang giới thiệu liên kết tới repo và Issues, không dùng thông tin liên hệ mẫu.
 - [ ] Xóa đánh giá mẫu, chạy lại `test.sql`, chạy tay workflow sao lưu một lần.
 - [ ] Lighthouse mobile từ 90 ở cả 4 mục; chạy hết ma trận thiết bị ở mục 11 bản thiết kế.
 

@@ -30,13 +30,17 @@ const loadLib = () => (lib ??= (async () => {
   const [L, , tilejson] = await Promise.all([
     import('leaflet/dist/leaflet-src.esm.js'),
     import('leaflet/dist/leaflet.css'),
-    fetch(TILEJSON).then(r => r.json()), // đường dẫn ô dữ liệu đổi theo mỗi bản cập nhật của OpenFreeMap
-    document.fonts?.load(`800 14px ${FONT}`), // chữ trên bản đồ vẽ bằng canvas: font phải tải xong trước
+    fetch(TILEJSON, { signal: AbortSignal.timeout(12000) }).then(r => {
+      if (!r.ok) throw new Error(`tiles ${r.status}`)
+      return r.json()
+    }),
+    // Font ngoài bị chặn thì dùng font hệ thống; không làm hỏng cả bản đồ.
+    document.fonts?.load(`800 14px ${FONT}`).catch(() => {}),
   ])
   window.L = L // protomaps-leaflet dùng biến toàn cục L
   const pm = await import('protomaps-leaflet')
   return { L, pm, tiles: tilejson.tiles[0] }
-})())
+})().catch(err => { lib = null; throw err }))
 
 // ───────── Kiểu bản đồ chibi: màu kẹo, đường to bo tròn, viền dày như hình dán ─────────
 
@@ -213,6 +217,7 @@ export async function initMap(el, { center, onSelect, onIdle, onFail }) {
     map.on('moveend', () => {
       const b = map.getBounds()
       onIdle(p => b.contains([p.lat, p.lng]))
+      placeLandmarks()
     })
     // Khung bản đồ đổi cỡ (xoay máy, quay lại từ trang khác) thì Leaflet cần đo lại
     new ResizeObserver(() => map.invalidateSize()).observe(el)
@@ -258,7 +263,8 @@ function placeLandmarks() {
   if (!lmLayer) return
   const n = lmLimit(map.getZoom())
   lmLayer.clearLayers()
-  for (const { l, m } of lmMarkers) if (l.order < n) lmLayer.addLayer(m)
+  const city = cityOf(map.getCenter())
+  for (const { l, m } of lmMarkers) if (l.order < n && l.city === city?.name) lmLayer.addLayer(m)
 }
 
 export function showLandmarks(list, onPick) {

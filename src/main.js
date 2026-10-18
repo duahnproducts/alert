@@ -21,6 +21,7 @@ export const state = {
   places: [], areas: [], savedAt: null,
   q: '', open: false, cats: new Set(), sort: 'dist',
   userPos: null, // chỉ giữ trong bộ nhớ, không lưu
+  dataError: false,
   inBounds: null, listMode: false, mapFailed: false, user: null, loading: false,
   landmarks: true, // hiện địa danh nổi tiếng trên bản đồ
 }
@@ -81,9 +82,11 @@ export function loadData() {
   renderList()
   ready = fetchPlaces().then(d => {
     setData(d)
+    state.dataError = false
     $('saved-at').hidden = true
   }, err => {
     console.error(err)
+    state.dataError = true
     if (state.savedAt) {
       const t = new Date(state.savedAt)
       const two = n => String(n).padStart(2, '0')
@@ -177,7 +180,7 @@ function renderNear(list = filtered()) {
     h('div', { class: 'near-head' }, h('strong', null, mine ? 'Gợi ý quanh bạn' : `Gợi ý quanh ${spot.name}`),
       h('button', { type: 'button', class: 'link', onclick: locate }, mine ? 'Cập nhật vị trí' : '📍 Dùng vị trí của tôi')),
     !mine && h('p', { class: 'muted' }, state.userPos
-      ? `Bạn đang ở ngoài ${state.city.name} nên Bao tính khoảng cách từ đây.`
+      ? `Bạn đang ở ngoài ${state.city?.name ?? CITIES[0].name} nên Bao tính khoảng cách từ đây.`
       : 'Bạn chưa chia sẻ vị trí nên Bao tạm tính khoảng cách từ đây.'),
     picks.length
       ? h('ul', null, picks.map(({ p, d }) => h('li', null, h('a', { href: `quan/${p.id}` },
@@ -277,9 +280,13 @@ function renderList(list = filtered()) {
     if (state.loading) {
       title.textContent = 'Đang tìm quán ngon…'
       ul.replaceChildren(h('li', { class: 'empty' }, mascot('doi', 72), h('p', null, 'Bao đang đi tìm quán…')))
-    } else {
+    } else if (state.dataError) {
       title.textContent = 'Chưa tải được quán'
       ul.replaceChildren(h('li', null, errorBox('Không tải được danh sách quán. Kiểm tra mạng rồi bấm thử lại nhé.', loadData)))
+    } else {
+      title.textContent = 'Chưa có quán nào'
+      ul.replaceChildren(h('li', { class: 'empty' }, mascot('doi', 72), h('p', null, 'Chưa có quán được duyệt. Bạn vẫn có thể xem địa danh hoặc đề xuất quán mới.'),
+        h('a', { href: 'de-xuat', class: 'btn-ghost' }, 'Đề xuất quán mới')))
     }
     return
   }
@@ -480,6 +487,16 @@ document.addEventListener('click', e => {
   if (!a || a.target || a.origin !== location.origin || !a.pathname.startsWith(BASE)) return
   if (e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
   e.preventDefault()
+  if (a.hash && a.pathname === location.pathname && a.search === location.search) {
+    const target = document.getElementById(decodeURIComponent(a.hash.slice(1)))
+    if (target) {
+      if (target.id === 'list') setListMode(true)
+      target.scrollIntoView()
+      target.focus({ preventScroll: true })
+      history.pushState(null, '', a.href)
+      return
+    }
+  }
   if (a.href !== location.href) navigate(a.href)
 })
 addEventListener('popstate', route)
